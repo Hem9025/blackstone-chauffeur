@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  /* BlackStone Chauffeur brand palette */
+  --color-brand-black: #0a0a0a;
+  --color-brand-black-soft: #141414;
+  --color-brand-gold: #c9a227;
+  --color-brand-champagne: #e8d9b5;
+  --color-brand-white: #f8f7f4;
+
+  --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Playfair Display', system-ui, serif;
+}
+
+body {
+  margin: 0;
+  background: var(--color-brand-white);
+  color: var(--color-brand-black);
+  font-family: var(--font-sans);
+}

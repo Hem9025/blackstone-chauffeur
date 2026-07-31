@@ -1,0 +1,6 @@
+# Root-level ignore (each app also has its own .gitignore)
+node_modules
+.DS_Store
+.env
+.env.*
+!.env.example
