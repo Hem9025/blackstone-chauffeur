@@ -1,5 +1,7 @@
 import { Router } from 'express'
 import { query } from '../db/index.js'
+import { sendMail } from '../emails/mailer.js'
+import { enquiryAdminTemplate } from '../emails/templates/enquiryAdmin.js'
 
 const router = Router()
 
@@ -12,13 +14,19 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const { rows } = await query(
-      `INSERT INTO enquiries (name, email, phone, message, type)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+    const inserted = await query(
+      `INSERT INTO enquiries (name, email, phone, message, type) VALUES (?, ?, ?, ?, ?)`,
       [name, email, phone, message, type],
     )
+    const { rows } = await query('SELECT * FROM enquiries WHERE id = ?', [inserted.insertId])
 
-    // TODO: send enquiry-admin email via emails/mailer.js
+    if (process.env.ADMIN_EMAIL) {
+      sendMail({
+        to: process.env.ADMIN_EMAIL,
+        subject: `New enquiry from ${name}`,
+        html: enquiryAdminTemplate({ name, email, phone, message, type }),
+      }).catch((err) => console.error('Failed to send enquiry-admin email', err))
+    }
 
     res.status(201).json(rows[0])
   } catch (err) {

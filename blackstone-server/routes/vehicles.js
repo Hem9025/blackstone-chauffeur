@@ -18,13 +18,28 @@ router.get('/', async (req, res) => {
 
 // POST /api/vehicles — admin only
 router.post('/', authCheck, requireRole('admin'), async (req, res) => {
-  const { name, type, description, capacity, price_per_km, image_url } = req.body || {}
+  const {
+    name, type, description, capacity, price_per_km, image_url,
+    passengers, suitcases, owned, starting_price,
+    price_per_minute, price_per_occupant, price_per_suitcase,
+    distance_tiers, features,
+  } = req.body || {}
   try {
-    const { rows } = await query(
-      `INSERT INTO vehicles (name, type, description, capacity, price_per_km, image_url, active)
-       VALUES ($1, $2, $3, $4, $5, $6, true) RETURNING *`,
-      [name, type, description, capacity, price_per_km, image_url],
+    const inserted = await query(
+      `INSERT INTO vehicles
+        (name, type, description, capacity, price_per_km, image_url,
+         passengers, suitcases, owned, starting_price,
+         price_per_minute, price_per_occupant, price_per_suitcase,
+         distance_tiers, features, active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true)`,
+      [
+        name, type, description, capacity, price_per_km, image_url,
+        passengers, suitcases, owned, starting_price,
+        price_per_minute, price_per_occupant, price_per_suitcase,
+        JSON.stringify(distance_tiers || []), JSON.stringify(features || []),
+      ],
     )
+    const { rows } = await query('SELECT * FROM vehicles WHERE id = ?', [inserted.insertId])
     res.status(201).json(rows[0])
   } catch (err) {
     console.error(err)
@@ -39,14 +54,20 @@ router.patch('/:id', authCheck, requireRole('admin'), async (req, res) => {
   const keys = Object.keys(fields)
   if (!keys.length) return res.status(400).json({ message: 'No fields to update' })
 
-  const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ')
-  const values = keys.map((k) => fields[k])
+  const setClause = keys.map((k) => `${k} = ?`).join(', ')
+  // distance_tiers/features are JSON columns — the admin panel sends them as
+  // parsed arrays. mysql2 doesn't JSON-encode plain object/array params for
+  // a `= ?` placeholder (arrays there are treated as bulk-insert value
+  // lists), so without this they'd be mis-serialized and corrupt the stored
+  // JSON. Stringify any object/array field before it becomes a query param.
+  const values = keys.map((k) => {
+    const v = fields[k]
+    return v !== null && typeof v === 'object' ? JSON.stringify(v) : v
+  })
 
   try {
-    const { rows } = await query(
-      `UPDATE vehicles SET ${setClause} WHERE id = $${keys.length + 1} RETURNING *`,
-      [...values, id],
-    )
+    await query(`UPDATE vehicles SET ${setClause} WHERE id = ?`, [...values, id])
+    const { rows } = await query('SELECT * FROM vehicles WHERE id = ?', [id])
     if (!rows.length) return res.status(404).json({ message: 'Vehicle not found' })
     res.json(rows[0])
   } catch (err) {
@@ -58,11 +79,9 @@ router.patch('/:id', authCheck, requireRole('admin'), async (req, res) => {
 // DELETE /api/vehicles/:id — admin only, soft delete
 router.delete('/:id', authCheck, requireRole('admin'), async (req, res) => {
   try {
-    const { rows } = await query(
-      'UPDATE vehicles SET active = false WHERE id = $1 RETURNING *',
-      [req.params.id],
-    )
+    const { rows } = await query('SELECT id FROM vehicles WHERE id = ?', [req.params.id])
     if (!rows.length) return res.status(404).json({ message: 'Vehicle not found' })
+    await query('UPDATE vehicles SET active = false WHERE id = ?', [req.params.id])
     res.json({ message: 'Vehicle deactivated' })
   } catch (err) {
     console.error(err)

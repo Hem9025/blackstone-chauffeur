@@ -3,9 +3,12 @@ import { Link } from 'react-router-dom'
 const base =
   'inline-flex items-center justify-center px-6 py-3 font-medium tracking-wide transition-colors rounded-sm'
 const variants = {
+  // Gold is used sparingly, as the one accent color — everything else is black/white.
   primary: 'bg-brand-gold text-brand-black hover:bg-brand-champagne',
   secondary:
-    'border border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-brand-black',
+    'border border-brand-black text-brand-black hover:bg-brand-black hover:text-white',
+  secondaryOnDark:
+    'border border-white text-white hover:bg-white hover:text-brand-black',
 }
 
 /**

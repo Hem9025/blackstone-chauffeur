@@ -23,7 +23,7 @@ router.post('/', async (req, res) => {
     const intent = event.data.object
     try {
       await query(
-        `UPDATE bookings SET payment_status = 'paid' WHERE stripe_payment_intent_id = $1`,
+        `UPDATE bookings SET payment_status = 'paid' WHERE stripe_payment_intent_id = ?`,
         [intent.id],
       )
       // TODO: trigger booking-confirmation + ride-receipt emails

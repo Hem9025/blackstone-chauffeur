@@ -7,12 +7,13 @@ import vehicleRoutes from './routes/vehicles.js'
 import bookingRoutes from './routes/bookings.js'
 import enquiryRoutes from './routes/enquiries.js'
 import adminRoutes from './routes/admin.js'
+import reviewRoutes from './routes/reviews.js'
 import stripeWebhookRoutes from './routes/stripeWebhook.js'
 
 dotenv.config()
 
 const app = express()
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 5050
 
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }))
 
@@ -28,6 +29,7 @@ app.use('/api/vehicles', vehicleRoutes)
 app.use('/api/bookings', bookingRoutes)
 app.use('/api/enquiries', enquiryRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/reviews', reviewRoutes)
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Not found' })

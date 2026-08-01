@@ -1,18 +1,22 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminLayout from './components/AdminLayout'
 
 import Home from './pages/Home'
 import About from './pages/About'
 import Services from './pages/Services'
-import LuxuryFleet from './pages/LuxuryFleet'
-import PremiumEconomy from './pages/PremiumEconomy'
+import FleetCategory from './pages/FleetCategory'
+import FleetDetail from './pages/FleetDetail'
 import Tour from './pages/Tour'
+import TourDetail from './pages/TourDetail'
 import Gallery from './pages/Gallery'
 import Contact from './pages/Contact'
 import Booking from './pages/Booking'
 import BookingSuccess from './pages/BookingSuccess'
+import PrivacyPolicy from './pages/Privacy'
+import TermsConditions from './pages/TermsConditions'
 
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -24,10 +28,22 @@ import DriverDashboard from './pages/DriverDashboard'
 import ProviderDashboard from './pages/ProviderDashboard'
 import SecondAdminDashboard from './pages/SecondAdminDashboard'
 import AdminUsersPanel from './pages/AdminUsersPanel'
+import AdminVehiclesPanel from './pages/AdminVehiclesPanel'
+import AdminStatsPanel from './pages/AdminStatsPanel'
+import Profile from './pages/Profile'
 
 import NotFound from './pages/NotFound'
 
+// Signed-in account areas (customer/driver/provider/admin dashboards +
+// profile) run as an "app" rather than the marketing site, so they don't
+// carry the marketing footer — it's dead weight below a dashboard and
+// pushes actual account content further down the page.
+const ACCOUNT_ROUTE_PREFIXES = ['/dashboard', '/driver', '/provider', '/admin', '/profile']
+
 function App() {
+  const { pathname } = useLocation()
+  const isAccountRoute = ACCOUNT_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
@@ -38,19 +54,29 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
-          <Route path="/fleet/luxury" element={<LuxuryFleet />} />
-          <Route path="/fleet/economy" element={<PremiumEconomy />} />
+          <Route path="/fleet" element={<Navigate to="/fleet/luxury" replace />} />
+          <Route path="/fleet/luxury" element={<FleetCategory category="luxury" />} />
+          <Route path="/fleet/comfort" element={<FleetCategory category="economy" />} />
+          <Route path="/fleet/:slug" element={<FleetDetail />} />
           <Route path="/tour" element={<Tour />} />
+          <Route path="/tour/:slug" element={<TourDetail />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/booking" element={<Booking />} />
           <Route path="/booking/success" element={<BookingSuccess />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsConditions />} />
 
           {/* Auth */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/apply" element={<DriverApply />} />
           <Route path="/pending" element={<Pending />} />
+
+          {/* Any authenticated user */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<Profile />} />
+          </Route>
 
           {/* Customer */}
           <Route element={<ProtectedRoute roles={['customer']} />}>
@@ -67,12 +93,17 @@ function App() {
             <Route path="/provider" element={<ProviderDashboard />} />
           </Route>
 
-          {/* Admin / Second Admin */}
+          {/* Admin / Second Admin — shares one sidebar shell (AdminLayout)
+              so every page can jump to any other admin section instantly. */}
           <Route element={<ProtectedRoute roles={['admin', 'second_admin']} />}>
-            <Route path="/admin" element={<SecondAdminDashboard />} />
-          </Route>
-          <Route element={<ProtectedRoute roles={['admin']} />}>
-            <Route path="/admin/users" element={<AdminUsersPanel />} />
+            <Route element={<AdminLayout />}>
+              <Route path="/admin" element={<SecondAdminDashboard />} />
+              <Route element={<ProtectedRoute roles={['admin']} />}>
+                <Route path="/admin/users" element={<AdminUsersPanel />} />
+                <Route path="/admin/vehicles" element={<AdminVehiclesPanel />} />
+                <Route path="/admin/stats" element={<AdminStatsPanel />} />
+              </Route>
+            </Route>
           </Route>
 
           {/* 404 */}
@@ -80,7 +111,7 @@ function App() {
         </Routes>
       </main>
 
-      <Footer />
+      {!isAccountRoute && <Footer />}
     </div>
   )
 }

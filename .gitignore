@@ -4,3 +4,8 @@ node_modules
 .env
 .env.*
 !.env.example
+
+# Client raw assets / working files — not part of the deployed app
+/Blackstone Chauffeur/
+/branding/
+/PRODUCTION_READINESS_REPORT.md

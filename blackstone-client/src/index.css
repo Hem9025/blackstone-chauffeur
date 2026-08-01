@@ -9,7 +9,7 @@
   --color-brand-white: #f8f7f4;
 
   --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-heading: 'Playfair Display', system-ui, serif;
+  --font-heading: 'Cormorant Garamond', 'Times New Roman', serif;
 }
 
 body {
@@ -17,4 +17,9 @@ body {
   background: var(--color-brand-white);
   color: var(--color-brand-black);
   font-family: var(--font-sans);
+}
+
+.font-heading {
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
