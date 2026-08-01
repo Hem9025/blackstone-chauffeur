@@ -1,8 +1,14 @@
 import PDFDocument from 'pdfkit'
+import path from 'path'
+import fs from 'fs'
+import { fileURLToPath } from 'url'
 
 const GOLD = '#c9a227'
 const BLACK = '#0a0a0a'
 const GREY = '#6b6b6b'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const LOGO_PATH = path.join(__dirname, '..', 'assets', 'logo.png')
 
 function money(n) {
   return `$${Number(n || 0).toFixed(2)}`
@@ -15,16 +21,28 @@ function money(n) {
  */
 export function streamInvoice(res, booking) {
   const doc = new PDFDocument({ size: 'A4', margin: 50 })
-  const invoiceNumber = `INV-${String(booking.id).padStart(6, '0')}`
+  // BSC = BlackStone Chauffeur. Booking IDs are already sequential and
+  // unique, so they double as the invoice sequence — no separate counter
+  // to maintain.
+  const invoiceNumber = `BSC-${String(booking.id).padStart(6, '0')}`
 
   res.setHeader('Content-Type', 'application/pdf')
   res.setHeader('Content-Disposition', `inline; filename="${invoiceNumber}.pdf"`)
   doc.pipe(res)
 
-  // Header
-  doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(20).text('BlackStone Chauffeur')
-  doc.fillColor(GOLD).font('Helvetica').fontSize(10).text('Premium Chauffeur Services — New Zealand')
-  doc.moveDown(1.5)
+  // Header — logo on the left, "BlackStone Chauffeur" wordmark stays as a
+  // fallback if the asset is ever missing so the PDF never breaks.
+  const headerTop = doc.y
+  if (fs.existsSync(LOGO_PATH)) {
+    doc.image(LOGO_PATH, 50, headerTop, { width: 60 })
+    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(16).text('BlackStone Chauffeur', 120, headerTop + 6)
+    doc.fillColor(GOLD).font('Helvetica').fontSize(10).text('Premium Chauffeur Services — New Zealand', 120, headerTop + 26)
+    doc.y = headerTop + 65
+  } else {
+    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(20).text('BlackStone Chauffeur')
+    doc.fillColor(GOLD).font('Helvetica').fontSize(10).text('Premium Chauffeur Services — New Zealand')
+    doc.moveDown(1.5)
+  }
 
   doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(16).text('INVOICE', { align: 'right' })
   doc.fillColor(GREY).font('Helvetica').fontSize(10)
@@ -109,15 +127,24 @@ export function streamInvoice(res, booking) {
   rowLine('Total (Incl. GST)', booking.total_price, true)
 
   doc.moveDown(1.5)
-  doc.font('Helvetica-Bold').fillColor(BLACK).fontSize(10).text('Payment status: ', { continued: true })
+  doc.font('Helvetica-Bold').fillColor(BLACK).fontSize(10).text('Payment status: ', 50, doc.y, { continued: true })
   doc.font('Helvetica').fillColor(GREY).text(
     booking.payment_status === 'paid' ? 'Paid' : booking.payment_status.replace('_', ' '),
   )
 
   doc.moveDown(2)
+  doc.strokeColor('#e5e5e5').lineWidth(1).moveTo(50, doc.y).lineTo(545, doc.y).stroke()
+  doc.moveDown(0.8)
+  // Explicit x/width here — without it, text() inherits the narrow x=450
+  // column left over from the charges table above and wraps badly.
+  doc.font('Helvetica-Bold').fontSize(10).fillColor(BLACK).text(
+    'Thank you for riding with BlackStone Chauffeur.',
+    50, doc.y, { width: 495, align: 'center' },
+  )
+  doc.moveDown(0.3)
   doc.font('Helvetica').fontSize(9).fillColor(GREY).text(
-    'Thank you for choosing BlackStone Chauffeur. For questions about this invoice, please contact us.',
-    { align: 'center' },
+    "It was a pleasure driving you, and we hope to welcome you aboard again soon. If anything about this invoice doesn't look right, just reply to your booking confirmation email and we'll sort it out.",
+    50, doc.y, { width: 495, align: 'center' },
   )
 
   doc.end()
