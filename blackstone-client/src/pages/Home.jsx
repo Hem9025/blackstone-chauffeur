@@ -51,7 +51,7 @@ const localBusinessJsonLd = {
   name: 'BlackStone Chauffeur',
   description: 'Premium chauffeur service offering airport transfers, corporate travel, weddings and private tours across New Zealand.',
   url: 'https://www.blackstonechauffeur.co.nz',
-  telephone: '+64-XX-XXX-XXXX',
+  telephone: '+64-20-452-5000',
   priceRange: '$$$',
   address: { '@type': 'PostalAddress', addressCountry: 'NZ' },
 }

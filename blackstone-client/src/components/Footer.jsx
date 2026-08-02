@@ -75,11 +75,11 @@ export default function Footer() {
 
           <div className="flex flex-col gap-3 text-sm">
             <p className="mb-1 text-xs uppercase tracking-widest text-brand-white/40">Contact</p>
-            <a href="tel:+64XXXXXXXXX" className="flex items-center gap-2 hover:text-brand-gold">
-              <Phone size={14} /> +64 XX XXX XXXX
+            <a href="tel:+64204525000" className="flex items-center gap-2 hover:text-brand-gold">
+              <Phone size={14} /> +64 20 452 5000
             </a>
-            <a href="mailto:bookings@blackstonechauffeur.co.nz" className="flex items-center gap-2 hover:text-brand-gold">
-              <Mail size={14} /> bookings@blackstonechauffeur.co.nz
+            <a href="mailto:info@blackstonechauffeur.co.nz" className="flex items-center gap-2 hover:text-brand-gold">
+              <Mail size={14} /> info@blackstonechauffeur.co.nz
             </a>
             <p className="flex items-center gap-2">
               <MapPin size={14} /> New Zealand

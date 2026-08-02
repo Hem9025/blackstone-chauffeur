@@ -24,8 +24,8 @@ export default function Contact() {
           <div>
             <h2 className="font-heading text-xl text-brand-black">Get in Touch</h2>
             <div className="mt-4 space-y-3 text-sm text-brand-black/70">
-              <p className="flex items-center gap-2"><Phone size={16} className="text-brand-gold" /> +64 XX XXX XXXX</p>
-              <p className="flex items-center gap-2"><Mail size={16} className="text-brand-gold" /> bookings@blackstonechauffeur.co.nz</p>
+              <a href="tel:+64204525000" className="flex items-center gap-2 hover:text-brand-gold"><Phone size={16} className="text-brand-gold" /> +64 20 452 5000</a>
+              <a href="mailto:info@blackstonechauffeur.co.nz" className="flex items-center gap-2 hover:text-brand-gold"><Mail size={16} className="text-brand-gold" /> info@blackstonechauffeur.co.nz</a>
               <p className="flex items-center gap-2"><Clock size={16} className="text-brand-gold" /> 24/7 booking availability</p>
             </div>
 
