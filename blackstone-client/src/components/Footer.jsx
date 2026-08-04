@@ -35,8 +35,27 @@ const social = [
 
 export default function Footer() {
   return (
-    <footer className="bg-brand-black text-brand-white/70">
-      <div className="mx-auto max-w-7xl px-4 py-14 md:px-8">
+    <footer className="relative overflow-hidden bg-brand-black text-brand-white/70">
+      {/* Decorative brand mark — the same abstract shape used everywhere
+          else, recoloured to a flat gold via CSS mask (rather than the
+          multi-colour source SVG) and kept very low-opacity so it reads as
+          texture, not a competing graphic. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-16 -bottom-20 h-[28rem] w-[28rem] opacity-[0.05]"
+        style={{
+          backgroundColor: 'var(--color-brand-gold)',
+          WebkitMaskImage: 'url(/favicon.svg)',
+          maskImage: 'url(/favicon.svg)',
+          WebkitMaskSize: 'contain',
+          maskSize: 'contain',
+          WebkitMaskRepeat: 'no-repeat',
+          maskRepeat: 'no-repeat',
+          WebkitMaskPosition: 'center',
+          maskPosition: 'center',
+        }}
+      />
+      <div className="relative mx-auto max-w-7xl px-4 py-14 md:px-8">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 md:grid-cols-4">
           <div>
             <img src="/images/brand/logo.png" alt="BlackStone Chauffeur" className="h-20 w-auto" />

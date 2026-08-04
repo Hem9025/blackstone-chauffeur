@@ -24,6 +24,7 @@ export default function SecondAdminDashboard() {
   const [driverInputs, setDriverInputs] = useState({})
   const [assigningId, setAssigningId] = useState(null)
   const [cancellingId, setCancellingId] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
   const [view, setView] = useState('list')
   const [selectedDate, setSelectedDate] = useState(new Date())
 
@@ -84,6 +85,31 @@ export default function SecondAdminDashboard() {
     } finally {
       setCancellingId(null)
     }
+  }
+
+  async function deleteBooking(id) {
+    if (!window.confirm('Permanently delete this booking? This removes it entirely and can\'t be undone.')) return
+    setDeletingId(id)
+    try {
+      await bookingsApi.remove(id)
+      load()
+    } catch (err) {
+      setError(err.message || 'Failed to delete booking')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  function DeleteControl({ b }) {
+    return (
+      <button
+        disabled={deletingId === b.id}
+        onClick={() => deleteBooking(b.id)}
+        className="text-xs text-red-600 hover:underline disabled:opacity-40"
+      >
+        {deletingId === b.id ? 'Deleting…' : 'Delete'}
+      </button>
+    )
   }
 
   function CancelControl({ b }) {
@@ -216,6 +242,7 @@ export default function SecondAdminDashboard() {
                 <tr className="border-b border-brand-black/10 text-left text-brand-black/50">
                   <th className="py-2 pr-4">Date</th>
                   <th className="py-2 pr-4">Customer</th>
+                  <th className="py-2 pr-4">Email</th>
                   <th className="py-2 pr-4">Route</th>
                   <th className="py-2 pr-4">Vehicle</th>
                   <th className="py-2 pr-4">Status</th>
@@ -226,6 +253,7 @@ export default function SecondAdminDashboard() {
                   <th className="py-2 pr-4">Invoice</th>
                   <th className="py-2 pr-4">Calendar</th>
                   <th className="py-2 pr-4">Cancel</th>
+                  <th className="py-2 pr-4">Delete</th>
                 </tr>
               </thead>
               <tbody>
@@ -233,6 +261,7 @@ export default function SecondAdminDashboard() {
                   <tr key={b.id} className="border-b border-brand-black/5">
                     <td className="py-2 pr-4">{formatDate(b.date)}</td>
                     <td className="py-2 pr-4">{b.passenger_name || b.customer_name || '—'}</td>
+                    <td className="py-2 pr-4">{b.passenger_email || b.customer_email || '—'}</td>
                     <td className="py-2 pr-4">{b.pickup} → {b.dropoff}</td>
                     <td className="py-2 pr-4">{b.vehicle_name || '—'}</td>
                     <td className="py-2 pr-4"><StatusBadge status={b.booking_status} /></td>
@@ -254,6 +283,9 @@ export default function SecondAdminDashboard() {
                     </td>
                     <td className="py-2 pr-4">
                       <CancelControl b={b} />
+                    </td>
+                    <td className="py-2 pr-4">
+                      <DeleteControl b={b} />
                     </td>
                   </tr>
                 ))}
@@ -279,7 +311,7 @@ export default function SecondAdminDashboard() {
                       {String(b.time).slice(0, 5)} — {b.pickup} → {b.dropoff}
                     </p>
                     <p className="mt-1 text-xs text-brand-black/50">
-                      {b.passenger_name || b.customer_name || '—'} · {b.vehicle_name || '—'} · {formatCurrency(b.total_price)}
+                      {b.passenger_name || b.customer_name || '—'} · {b.passenger_email || b.customer_email || '—'} · {b.vehicle_name || '—'} · {formatCurrency(b.total_price)}
                     </p>
                     <div className="mt-1 flex items-center gap-2">
                       <StatusBadge status={b.booking_status} />
@@ -299,6 +331,7 @@ export default function SecondAdminDashboard() {
                         <CalendarPlus size={13} /> Add to Google Calendar
                       </a>
                       <CancelControl b={b} />
+                      <DeleteControl b={b} />
                     </div>
                   </div>
                 ))}

@@ -60,8 +60,8 @@ export default function Navbar() {
     >
       {/* Single nav row — no separate utility bar, kept short */}
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 md:px-8">
-        <Link to="/" className="flex items-center gap-2">
-          <img src="/images/brand/logo.png" alt="BlackStone Chauffeur" className="h-11 w-auto md:h-12" />
+        <Link to="/" className="flex shrink-0 items-center gap-2">
+          <img src="/images/brand/logo.png" alt="BlackStone Chauffeur" className="h-16 w-auto md:h-20" />
         </Link>
 
         <nav className="hidden items-center gap-5 lg:flex">

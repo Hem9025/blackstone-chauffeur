@@ -9,7 +9,7 @@ import { bookingAssignedTemplate } from '../emails/templates/bookingAssigned.js'
 import { rideReceiptTemplate } from '../emails/templates/rideReceipt.js'
 import { newBookingAdminTemplate } from '../emails/templates/newBookingAdmin.js'
 import { bookingCancelledTemplate } from '../emails/templates/bookingCancelled.js'
-import { calculateFare } from '../utils/pricing.js'
+import { calculateFare, resolveExtraWaitCharge } from '../utils/pricing.js'
 import { streamInvoice } from '../utils/invoice.js'
 import { streamBookingsReport } from '../utils/bookingsReport.js'
 import { isDateFarEnoughAhead, MIN_ADVANCE_DAYS } from '../utils/bookingRules.js'
@@ -79,7 +79,7 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
   const {
     vehicle_id, pickup, dropoff, date, time, extras, distance_km, duration_min,
     trip_type, service_type, hours, flight_number, stops, stop_addresses, child_seats, notes,
-    passengers, suitcases,
+    passengers, suitcases, extra_wait_minutes,
   } = req.body || {}
 
   if (!isDateFarEnoughAhead(date)) {
@@ -142,6 +142,14 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
     if (requestedNames.length) {
       const { rows } = await query('SELECT name, price FROM add_ons WHERE name IN (?)', [requestedNames])
       matchedAddOns = rows
+    }
+    // Extra Wait Time is priced per-minute (slider), not a flat add_ons
+    // table lookup — clamp + price it server-side, then fold it into the
+    // same extras list so it still shows on invoices/admin like any other
+    // add-on, without needing a dedicated DB column.
+    const { minutes: resolvedExtraWaitMinutes, price: extraWaitCharge } = resolveExtraWaitCharge(extra_wait_minutes)
+    if (extraWaitCharge > 0) {
+      matchedAddOns = [...matchedAddOns, { name: `Extra Wait Time (${resolvedExtraWaitMinutes} min)`, price: extraWaitCharge }]
     }
     const flatAddOnsTotal = matchedAddOns.reduce((sum, a) => sum + Number(a.price), 0)
     const qtyAddOnsTotal = await quantityAddOnsTotal(resolvedChildSeats, resolvedStops)
@@ -603,6 +611,23 @@ router.patch('/:id/cancel', authCheck, async (req, res) => {
   } catch (err) {
     console.error(err)
     res.status(500).json({ message: 'Failed to cancel booking' })
+  }
+})
+
+// DELETE /api/bookings/:id — admin/second_admin. Permanently removes a
+// booking record entirely (unlike /cancel, which just marks it cancelled
+// but keeps it in the list/reports). Meant for cleaning up test bookings,
+// duplicates, or mistakes — not a normal part of the booking lifecycle.
+router.delete('/:id', authCheck, requireRole('admin', 'second_admin'), async (req, res) => {
+  try {
+    const { rows: existingRows } = await query('SELECT id FROM bookings WHERE id = ?', [req.params.id])
+    if (!existingRows.length) return res.status(404).json({ message: 'Booking not found' })
+
+    await query('DELETE FROM bookings WHERE id = ?', [req.params.id])
+    res.json({ message: 'Booking deleted' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to delete booking' })
   }
 })
 

@@ -111,6 +111,7 @@ export const FLEET = [
   {
     slug: 'bmw-7-series',
     category: 'luxury',
+    bodyType: 'sedan',
     title: 'BMW 7 Series',
     tagline: 'Premium Chauffeur',
     passengers: 2,
@@ -126,6 +127,7 @@ export const FLEET = [
   {
     slug: 'mercedes-gls',
     category: 'luxury',
+    bodyType: 'suv',
     title: 'Mercedes-Benz GLS',
     tagline: 'Luxury SUV',
     passengers: 3,
@@ -141,6 +143,7 @@ export const FLEET = [
   {
     slug: 'mercedes-vito-eqv',
     category: 'luxury',
+    bodyType: 'van',
     title: 'Mercedes-Benz Vito / EQV',
     tagline: 'Executive Van',
     passengers: 5,
@@ -156,6 +159,7 @@ export const FLEET = [
   {
     slug: 'range-rover',
     category: 'luxury',
+    bodyType: 'suv',
     title: 'Range Rover',
     tagline: 'Prestige SUV',
     passengers: 3,
@@ -171,6 +175,7 @@ export const FLEET = [
   {
     slug: 'mercedes-s-class',
     category: 'luxury',
+    bodyType: 'sedan',
     title: 'Mercedes-Benz S-Class',
     tagline: 'Flagship Sedan',
     passengers: 2,
@@ -186,6 +191,7 @@ export const FLEET = [
   {
     slug: 'mercedes-e-class',
     category: 'luxury',
+    bodyType: 'sedan',
     title: 'Mercedes-Benz E-Class',
     tagline: 'Executive Sedan',
     passengers: 2,
@@ -201,6 +207,7 @@ export const FLEET = [
   {
     slug: 'toyota-alphard',
     category: 'luxury',
+    bodyType: 'van',
     title: 'Toyota Alphard',
     tagline: 'VIP People Mover',
     passengers: 5,
@@ -216,6 +223,7 @@ export const FLEET = [
   {
     slug: 'audi-q7',
     category: 'luxury',
+    bodyType: 'suv',
     title: 'Audi Q7',
     tagline: 'Luxury SUV',
     passengers: 3,
@@ -231,6 +239,10 @@ export const FLEET = [
   {
     slug: 'mercedes-sprinter-519',
     category: 'luxury',
+    bodyType: 'sprinter',
+    // Group vehicle — priced/handled as a custom quote, not instant online
+    // booking. See FleetCard's "Get a Quote" CTA override for this slug.
+    quoteOnly: true,
     title: 'Mercedes-Benz Sprinter 519',
     tagline: 'Group Chauffeur',
     passengers: 16,
@@ -248,6 +260,7 @@ export const FLEET = [
   {
     slug: 'tesla-model-y',
     category: 'economy',
+    bodyType: 'suv',
     title: 'Tesla Model Y',
     tagline: 'Electric Comfort',
     passengers: 4,
@@ -264,6 +277,7 @@ export const FLEET = [
   {
     slug: 'volkswagen-id4',
     category: 'economy',
+    bodyType: 'suv',
     title: 'Volkswagen ID.4',
     tagline: 'Electric Comfort',
     passengers: 4,
@@ -279,6 +293,7 @@ export const FLEET = [
   {
     slug: 'skoda-superb',
     category: 'economy',
+    bodyType: 'sedan',
     title: 'Škoda Superb',
     tagline: 'Premium Comfort',
     passengers: 3,
@@ -294,6 +309,7 @@ export const FLEET = [
   {
     slug: 'haval-h6',
     category: 'economy',
+    bodyType: 'suv',
     title: 'Haval H6',
     tagline: 'Comfort SUV',
     passengers: 4,
@@ -309,6 +325,7 @@ export const FLEET = [
   {
     slug: 'honda-crv',
     category: 'economy',
+    bodyType: 'suv',
     title: 'Honda CR-V',
     tagline: 'Comfort SUV',
     passengers: 4,
@@ -324,6 +341,7 @@ export const FLEET = [
   {
     slug: 'byd-atto-3',
     category: 'economy',
+    bodyType: 'suv',
     title: 'BYD Atto 3',
     tagline: 'Electric Comfort',
     passengers: 4,
@@ -339,6 +357,7 @@ export const FLEET = [
   {
     slug: 'toyota-camry',
     category: 'economy',
+    bodyType: 'sedan',
     title: 'Toyota Camry',
     tagline: 'Premium Comfort',
     passengers: 3,
@@ -354,6 +373,7 @@ export const FLEET = [
   {
     slug: 'haval-jolion',
     category: 'economy',
+    bodyType: 'suv',
     title: 'Haval Jolion',
     tagline: 'Comfort SUV',
     passengers: 4,
@@ -410,3 +430,24 @@ export function categoryPath(category) {
 export function getCategoryByUrlSlug(urlSlug) {
   return Object.values(FLEET_CATEGORIES).find((c) => c.urlSlug === urlSlug)
 }
+
+// The 6 category tiles shown on the homepage fleet section (3 columns x 2
+// rows) — "Business" is the client-facing name for the internal 'luxury'
+// category, "Economy" for 'economy'. Sprinter is a 7th, quote-only category
+// that intentionally isn't shown here (only on the booking form) since it's
+// not an instant-book vehicle. Each tile links to the matching fleet page
+// pre-filtered to that body type via ?type=. `sample` is just used to pick a
+// representative tile image — the tile links through to the full filtered
+// list, it doesn't limit it to one vehicle.
+function sampleImage(list) {
+  return list[0]?.heroImage
+}
+
+export const HOME_FLEET_CATEGORIES = [
+  { label: 'Economy Sedan', bodyType: 'sedan', category: 'economy', image: sampleImage(ECONOMY_FLEET.filter((v) => v.bodyType === 'sedan')) },
+  { label: 'Economy SUV', bodyType: 'suv', category: 'economy', image: sampleImage(ECONOMY_FLEET.filter((v) => v.bodyType === 'suv')) },
+  { label: 'Economy Van', bodyType: 'van', category: 'economy', image: sampleImage(ECONOMY_FLEET.filter((v) => v.bodyType === 'van')) || IMAGES.fleet.vwID4 },
+  { label: 'Business Sedan', bodyType: 'sedan', category: 'luxury', image: sampleImage(LUXURY_FLEET.filter((v) => v.bodyType === 'sedan')) },
+  { label: 'Business SUV', bodyType: 'suv', category: 'luxury', image: sampleImage(LUXURY_FLEET.filter((v) => v.bodyType === 'suv')) },
+  { label: 'Business Van', bodyType: 'van', category: 'luxury', image: sampleImage(LUXURY_FLEET.filter((v) => v.bodyType === 'van')) },
+].map((c) => ({ ...c, href: `${categoryPath(c.category)}?type=${c.bodyType}` }))

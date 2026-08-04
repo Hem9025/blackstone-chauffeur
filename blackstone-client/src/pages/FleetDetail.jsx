@@ -29,11 +29,15 @@ export default function FleetDetail() {
       {/* Photo left / details right */}
       <section className="bg-white">
         <div className="mx-auto grid max-w-7xl grid-cols-1 md:grid-cols-2">
-          <div className="aspect-[4/3] md:aspect-auto md:h-full">
+          {/* object-contain (not object-cover) so the whole vehicle is
+              always visible rather than cropped to fill the box — sits on a
+              soft gradient backdrop so the letterboxing still looks
+              intentional rather than like empty space. */}
+          <div className="aspect-[4/3] bg-gradient-to-br from-black/[0.04] to-black/[0.08] p-6 md:aspect-auto md:h-full md:p-10">
             <img
               src={vehicle.heroImage}
               alt={vehicle.title}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain"
             />
           </div>
 
@@ -59,7 +63,14 @@ export default function FleetDetail() {
               ))}
             </div>
 
-            <Button to="/booking" className="mt-8 self-start">Book Now</Button>
+            {/* The Sprinter is a group vehicle handled via custom quote
+                rather than instant online booking — see quoteOnly on its
+                entry in constants/fleet.js. */}
+            {vehicle.quoteOnly ? (
+              <Button to="/contact" className="mt-8 self-start">Get a Quote</Button>
+            ) : (
+              <Button to="/booking" className="mt-8 self-start">Book Now</Button>
+            )}
           </div>
         </div>
       </section>

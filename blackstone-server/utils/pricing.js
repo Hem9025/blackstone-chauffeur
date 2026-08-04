@@ -22,6 +22,24 @@ export function tierPriceForDistance(distanceTiers, distanceKm) {
   return Number(sorted[sorted.length - 1].price) || 0
 }
 
+// Extra Wait Time slider (5-60 min) — priced proportionally up to $20 at the
+// 60-minute mark. Mirrors blackstone-client/src/pages/Booking.jsx's
+// extraWaitPrice() exactly — this is the authoritative copy actually used to
+// charge the customer; the client-side one is only for the live estimate.
+const EXTRA_WAIT_MAX_MINUTES = 60
+const EXTRA_WAIT_MAX_PRICE = 20
+
+/**
+ * Clamps a client-supplied minute count to the valid 0-60 range and returns
+ * both the resolved minutes and the price for them — never trust a
+ * client-supplied price for this add-on directly.
+ */
+export function resolveExtraWaitCharge(minutesInput) {
+  const minutes = Math.min(EXTRA_WAIT_MAX_MINUTES, Math.max(0, Number(minutesInput) || 0))
+  const price = minutes > 0 ? Math.round((minutes / EXTRA_WAIT_MAX_MINUTES) * EXTRA_WAIT_MAX_PRICE * 100) / 100 : 0
+  return { minutes, price }
+}
+
 /**
  * Computes the full fare for a booking.
  * vehicle: row from the vehicles table (distance_tiers/features as JS values,

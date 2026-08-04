@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react'
-import { ShieldCheck, BadgeDollarSign, Lock, Star } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ShieldCheck, BadgeDollarSign, Lock, Star, ArrowRight } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
 import Reveal from '../components/Reveal'
-import FleetCard from '../components/FleetCard'
 import FaqAccordion from '../components/FaqAccordion'
 import QuickBookWidget from '../components/QuickBookWidget'
 import TestimonialCard from '../components/TestimonialCard'
 import StatsBand from '../components/StatsBand'
 import OccasionStrip from '../components/OccasionStrip'
 import { IMAGES } from '../constants/images'
-import { LUXURY_FLEET } from '../constants/fleet'
+import { HOME_FLEET_CATEGORIES } from '../constants/fleet'
 import { reviews as reviewsApi } from '../utils/api'
 
 const services = [
@@ -57,7 +57,6 @@ const localBusinessJsonLd = {
 }
 
 export default function Home() {
-  const fleetPreview = LUXURY_FLEET.slice(0, 3)
   const [googleReviews, setGoogleReviews] = useState(null)
 
   useEffect(() => {
@@ -84,14 +83,17 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
 
-        <div className="relative z-10 flex h-full flex-col">
-          <div className="flex flex-1 items-center px-4 md:px-8">
+        <div className="relative z-10 flex h-full flex-col justify-end">
+          {/* Text block anchored to the bottom-left corner rather than
+              vertically centered — a more editorial, "moment" feel than the
+              default dead-centre hero treatment. */}
+          <div className="w-full px-4 md:px-8">
             <div className="mx-auto w-full max-w-7xl">
               <div className="flex max-w-xl flex-col gap-6">
                 <p className="text-sm uppercase tracking-[0.25em] text-brand-gold">
                   Premium Chauffeur Service
                 </p>
-                <h1 className="font-heading text-5xl leading-tight md:text-6xl">
+                <h1 className="font-hero text-5xl italic leading-[1.05] tracking-tight md:text-7xl">
                   Arrive in style, every time.
                 </h1>
                 <p className="max-w-md text-white/70">
@@ -103,7 +105,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="w-full px-4 pb-8 md:px-8 md:pb-10">
+          <div className="mt-10 w-full px-4 pb-8 md:px-8 md:pb-10">
             <div className="mx-auto max-w-7xl">
               <QuickBookWidget />
             </div>
@@ -129,7 +131,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Fleet preview */}
+      {/* Fleet preview — 6 category tiles (3x2), each clickable through to
+          the relevant fleet page pre-filtered to that body type. */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <Reveal>
@@ -141,9 +144,25 @@ export default function Home() {
             </div>
           </Reveal>
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-            {fleetPreview.map((v, i) => (
-              <Reveal key={v.slug} delay={i * 100}>
-                <FleetCard vehicle={v} />
+            {HOME_FLEET_CATEGORIES.map((c, i) => (
+              <Reveal key={c.label} delay={i * 100}>
+                <Link
+                  to={c.href}
+                  className="group relative flex aspect-[4/3] items-end overflow-hidden rounded-2xl"
+                >
+                  <img
+                    src={c.image}
+                    alt={c.label}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="relative flex w-full items-center justify-between p-5">
+                    <h3 className="font-heading text-lg text-white">{c.label}</h3>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white transition-colors group-hover:bg-brand-gold group-hover:text-brand-black">
+                      <ArrowRight size={15} />
+                    </span>
+                  </div>
+                </Link>
               </Reveal>
             ))}
           </div>
@@ -184,17 +203,26 @@ export default function Home() {
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
             {services.map((s, i) => (
               <Reveal key={s.title} delay={i * 80}>
-                <div className="group overflow-hidden border border-black/10">
-                  <div className="h-40 overflow-hidden">
-                    <img
-                      src={s.image}
-                      alt={s.title}
-                      className="h-full w-full object-cover grayscale-[15%] transition-transform duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-heading text-lg text-black">{s.title}</h3>
-                    <p className="mt-2 text-sm text-black/60">{s.desc}</p>
+                {/* Tall enough (aspect-[3/4]) that the hover-expanded gradient
+                    has room to cover the whole image without ever clipping
+                    the description. */}
+                <div className="group relative aspect-[3/4] overflow-hidden rounded-2xl">
+                  <img
+                    src={s.image}
+                    alt={s.title}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  {/* Gradient sits as a short strip at rest (just enough for
+                      the title to read), then grows to cover the full card
+                      on hover so the description has a legible backdrop. */}
+                  <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/90 via-black/50 to-transparent transition-all duration-500 ease-out group-hover:h-full group-hover:via-black/70" />
+                  <div className="absolute inset-x-0 bottom-0 p-5">
+                    <h3 className="font-heading text-lg text-white transition-transform duration-500 ease-out group-hover:-translate-y-1">
+                      {s.title}
+                    </h3>
+                    <p className="mt-0 max-h-0 overflow-hidden text-sm text-white/80 opacity-0 transition-all duration-500 ease-out group-hover:mt-2 group-hover:max-h-32 group-hover:opacity-100">
+                      {s.desc}
+                    </p>
                   </div>
                 </div>
               </Reveal>

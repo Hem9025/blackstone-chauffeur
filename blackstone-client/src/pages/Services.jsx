@@ -32,8 +32,8 @@ export default function Services() {
         description="Airport transfers, corporate travel, weddings, VIP service, city tours and more from BlackStone Chauffeur."
       />
 
-      {/* Intro hero — half the viewport, same style as About */}
-      <section className="relative flex h-[50vh] min-h-[420px] w-full items-center overflow-hidden bg-brand-black text-white">
+      {/* Intro hero — 70% of the viewport, same style as About */}
+      <section className="relative flex h-[70vh] min-h-[560px] w-full items-center overflow-hidden bg-brand-black text-white">
         <img
           src={IMAGES.services.corporate}
           alt="BlackStone Chauffeur services"
@@ -53,7 +53,7 @@ export default function Services() {
 
           <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {services.map((s) => (
-              <div key={s.title} className="flex flex-col overflow-hidden border border-black/10">
+              <div key={s.title} className="flex flex-col overflow-hidden rounded-3xl border border-black/10">
                 <div className="h-44 overflow-hidden">
                   <img src={s.image} alt={s.title} className="h-full w-full object-cover" />
                 </div>

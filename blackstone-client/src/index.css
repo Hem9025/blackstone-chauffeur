@@ -10,6 +10,10 @@
 
   --font-sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-heading: 'Cormorant Garamond', 'Times New Roman', serif;
+  /* Reserved for hero-scale display text — a bolder, more editorial serif
+     than the Cormorant Garamond used everywhere else, so the homepage hero
+     reads as a distinct "moment" rather than just a bigger page heading. */
+  --font-hero: 'Playfair Display', 'Cormorant Garamond', 'Times New Roman', serif;
 }
 
 body {

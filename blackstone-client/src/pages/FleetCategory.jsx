@@ -1,16 +1,29 @@
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import PageMeta from '../components/PageMeta'
 import FleetCard from '../components/FleetCard'
 import { FLEET_CATEGORIES } from '../constants/fleet'
 
+const TYPE_LABELS = { sedan: 'Sedan', suv: 'SUV', van: 'Van', sprinter: 'Sprinter' }
+
 /**
  * Renders one of the two standalone fleet pages (Luxury or Comfort).
  * `category` is the internal key from FLEET_CATEGORIES ('luxury' | 'economy').
+ * Supports an optional ?type=sedan|suv|van filter (used by the homepage's
+ * category tiles) — falls back to the full list if the type is missing,
+ * unrecognised, or matches nothing.
  */
 export default function FleetCategory({ category }) {
   const config = FLEET_CATEGORIES[category]
-  const vehicles = config.vehicles()
+  const allVehicles = config.vehicles()
   const other = category === 'luxury' ? FLEET_CATEGORIES.economy : FLEET_CATEGORIES.luxury
+
+  const [searchParams, setSearchParams] = useSearchParams()
+  const typeFilter = searchParams.get('type')
+  const filtered = typeFilter ? allVehicles.filter((v) => v.bodyType === typeFilter) : allVehicles
+  // An empty filtered result (e.g. a body type with zero vehicles right now)
+  // falls back to showing the full category rather than a dead end.
+  const vehicles = filtered.length ? filtered : allVehicles
+  const showingFallback = Boolean(typeFilter) && filtered.length === 0
 
   return (
     <div>
@@ -19,8 +32,8 @@ export default function FleetCategory({ category }) {
         description={`BlackStone Chauffeur's ${config.label.toLowerCase()} — ${config.intro}`}
       />
 
-      {/* Intro hero */}
-      <section className="relative flex h-[50vh] min-h-[420px] w-full items-center overflow-hidden bg-brand-black text-white">
+      {/* Intro hero — 70% of the viewport on first glance */}
+      <section className="relative flex h-[70vh] min-h-[560px] w-full items-center overflow-hidden bg-brand-black text-white">
         <img
           src={config.heroImage}
           alt={config.label}
@@ -37,6 +50,25 @@ export default function FleetCategory({ category }) {
       {/* Vehicle grid */}
       <section className="bg-white py-16">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
+          {typeFilter && TYPE_LABELS[typeFilter] && (
+            <div className="mb-8 flex flex-wrap items-center gap-3">
+              <span className="border border-brand-gold/40 bg-brand-gold/10 px-3 py-1.5 text-sm text-brand-black">
+                Showing: {TYPE_LABELS[typeFilter]}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSearchParams({})}
+                className="text-sm text-black/50 hover:text-brand-gold hover:underline"
+              >
+                Clear filter — view all {config.label}
+              </button>
+            </div>
+          )}
+          {showingFallback && (
+            <p className="mb-8 text-sm text-black/50">
+              No {TYPE_LABELS[typeFilter]?.toLowerCase()} vehicles are listed here yet — showing the full {config.label} instead.
+            </p>
+          )}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {vehicles.map((v) => (
               <FleetCard key={v.slug} vehicle={v} />

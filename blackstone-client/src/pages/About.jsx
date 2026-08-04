@@ -12,7 +12,22 @@ import PageMeta from '../components/PageMeta'
 import StatsBand from '../components/StatsBand'
 import { IMAGES } from '../constants/images'
 
-const CITIES = ['Queenstown', 'Auckland', 'Hamilton', 'Rotorua', 'Christchurch', 'Wellington', 'Napier', 'Taupō']
+// Placeholder photography reused from the existing stock set (see
+// constants/images.js) — swap each `image` for a real per-city photo
+// whenever the client supplies one. A couple of these are regional
+// stand-ins rather than the city itself (no exact match existed yet):
+// Hamilton uses a Waikato-region shot, and Wellington/Napier/Taupō use
+// generic scenic placeholders.
+const CITIES = [
+  { name: 'Queenstown', image: IMAGES.places.queenstown },
+  { name: 'Auckland', image: IMAGES.places.skyTower },
+  { name: 'Hamilton', image: IMAGES.places.waitomoCaves },
+  { name: 'Rotorua', image: IMAGES.places.rotoruaGeothermal },
+  { name: 'Christchurch', image: IMAGES.places.christchurch },
+  { name: 'Wellington', image: IMAGES.places.milfordSoundAlt },
+  { name: 'Napier', image: IMAGES.places.pihaBeachAlt },
+  { name: 'Taupō', image: IMAGES.places.bayOfIslands },
+]
 
 const stats = [
   { value: '3+', label: 'Years' },
@@ -28,12 +43,12 @@ const coreValues = [
 ]
 
 const differences = [
-  { icon: UserCheck, title: 'Expert Chauffeurs', desc: 'All our chauffeurs are professionally trained, background checked, and dedicated to your comfort and safety.' },
-  { icon: Car, title: 'Premium Fleet', desc: 'From luxury sedans to SUVs, our immaculately maintained vehicles provide the ultimate travel experience.' },
-  { icon: Clock, title: '24/7 Availability', desc: 'We are available around the clock to ensure your transportation needs are always met, day or night.' },
-  { icon: BadgeDollarSign, title: 'Competitive Pricing', desc: "Luxury doesn't have to break the bank. We offer transparent, competitive pricing with no hidden fees." },
-  { icon: MapPin, title: 'NZ Wide Coverage', desc: 'Servicing Auckland, Hamilton, Tauranga, Wellington and surrounding areas across New Zealand.' },
-  { icon: Heart, title: 'Personalised Service', desc: 'Every client receives our full attention. We tailor each journey to your specific requirements.' },
+  { icon: UserCheck, title: 'Expert Chauffeurs', desc: 'All our chauffeurs are professionally trained, background checked, and dedicated to your comfort and safety.', image: IMAGES.services.businessMeeting },
+  { icon: Car, title: 'Premium Fleet', desc: 'From luxury sedans to SUVs, our immaculately maintained vehicles provide the ultimate travel experience.', image: IMAGES.services.luxuryFleet },
+  { icon: Clock, title: '24/7 Availability', desc: 'We are available around the clock to ensure your transportation needs are always met, day or night.', image: IMAGES.services.airport },
+  { icon: BadgeDollarSign, title: 'Competitive Pricing', desc: "Luxury doesn't have to break the bank. We offer transparent, competitive pricing with no hidden fees.", image: IMAGES.services.pointToPoint },
+  { icon: MapPin, title: 'NZ Wide Coverage', desc: 'Servicing Auckland, Hamilton, Tauranga, Wellington and surrounding areas across New Zealand.', image: IMAGES.places.queenstown },
+  { icon: Heart, title: 'Personalised Service', desc: 'Every client receives our full attention. We tailor each journey to your specific requirements.', image: IMAGES.services.vip },
 ]
 
 export default function About() {
@@ -44,8 +59,8 @@ export default function About() {
         description="Learn about BlackStone Chauffeur — New Zealand's premier luxury chauffeur service."
       />
 
-      {/* Intro hero — half the viewport on first glance */}
-      <section className="relative flex h-[50vh] min-h-[420px] w-full items-center overflow-hidden bg-brand-black text-white">
+      {/* Intro hero — 70% of the viewport on first glance */}
+      <section className="relative flex h-[70vh] min-h-[560px] w-full items-center overflow-hidden bg-brand-black text-white">
         <img
           src={IMAGES.about}
           alt="BlackStone Chauffeur"
@@ -69,19 +84,40 @@ export default function About() {
         dark={false}
       />
 
-      {/* Core Values */}
+      {/* Core Values — text left, image right */}
       <section className="bg-white py-16">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
-          <p className="text-sm uppercase tracking-[0.25em] text-brand-gold">What Drives Us</p>
-          <h2 className="mt-2 font-heading text-3xl text-black">Our Core Values</h2>
-          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
-            {coreValues.map((v) => (
-              <div key={v.title} className="border border-black/10 p-6">
-                <v.icon size={24} className="text-black" />
-                <h3 className="mt-4 font-heading text-lg text-black">{v.title}</h3>
-                <p className="mt-2 text-sm text-black/60">{v.desc}</p>
+          <div className="grid grid-cols-1 gap-12 md:grid-cols-2 md:items-center">
+            <div>
+              <p className="text-sm uppercase tracking-[0.25em] text-brand-gold">What Drives Us</p>
+              <h2 className="mt-2 font-heading text-3xl text-black md:text-4xl">Our Core Values</h2>
+              <p className="mt-4 max-w-md text-black/60">
+                Four principles that shape every booking, every driver, and every journey we run.
+              </p>
+
+              <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                {coreValues.map((v) => (
+                  <div key={v.title} className="flex items-start gap-4">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-gold/10">
+                      <v.icon size={20} className="text-brand-gold" />
+                    </span>
+                    <div>
+                      <h3 className="font-heading text-base text-black">{v.title}</h3>
+                      <p className="mt-1 text-sm text-black/60">{v.desc}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl md:aspect-[3/4]">
+              <img
+                src={IMAGES.fleet.mercedesGLS}
+                alt="BlackStone Chauffeur fleet"
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/10" />
+            </div>
           </div>
         </div>
       </section>
@@ -95,58 +131,71 @@ export default function About() {
             BlackStone Chauffeur provides premium chauffeur transport in destinations across
             both islands of New Zealand.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-10 flex flex-wrap justify-center gap-x-8 gap-y-8 sm:flex-nowrap sm:justify-between sm:overflow-x-auto sm:pb-2">
             {CITIES.map((city) => (
-              <span
-                key={city}
-                className="flex items-center gap-2 border border-black/10 bg-white px-4 py-2 text-sm text-black"
-              >
-                <MapPin size={14} className="text-brand-gold" />
-                {city}
-              </span>
+              <div key={city.name} className="flex shrink-0 flex-col items-center gap-3">
+                <div className="h-20 w-20 overflow-hidden rounded-full ring-2 ring-brand-gold/40 ring-offset-2 ring-offset-black/[0.02] md:h-24 md:w-24">
+                  <img src={city.image} alt={city.name} className="h-full w-full object-cover" />
+                </div>
+                <p className="text-sm font-medium text-black">{city.name}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Mission */}
-      <section className="bg-brand-black-soft py-16 text-white">
-        <div className="mx-auto max-w-7xl px-4 md:px-8">
-          <div className="grid gap-10 md:grid-cols-2 md:items-center">
-            <div>
+      {/* Mission — image runs the full height of the section, edge to edge,
+          rather than sitting inset with padding like a normal content block. */}
+      <section className="bg-brand-black-soft text-white">
+        <div className="mx-auto max-w-7xl md:px-8">
+          <div className="grid grid-cols-1 md:min-h-[520px] md:grid-cols-2">
+            <div className="flex flex-col justify-center gap-4 px-4 py-16 md:px-12 md:py-0">
               <p className="text-sm uppercase tracking-[0.25em] text-brand-gold">Our Mission</p>
-              <h2 className="mt-2 font-heading text-3xl">Delivering Excellence in Every Journey</h2>
-              <p className="mt-4 text-white/70">
+              <h2 className="font-heading text-3xl">Delivering Excellence in Every Journey</h2>
+              <p className="mt-2 text-white/70">
                 At BlackStone Chauffeur, we are committed to providing the highest standard
                 of luxury transportation across New Zealand. Our mission is simple — to
                 exceed your expectations every single time.
               </p>
-              <p className="mt-4 text-white/70">
+              <p className="text-white/70">
                 We believe every journey should be seamless, comfortable, and memorable.
                 From the moment you book to the moment you arrive — your experience is
                 our priority.
               </p>
             </div>
-            <img
-              src={IMAGES.aboutSecondary}
-              alt="BlackStone Chauffeur professional driver"
-              className="aspect-[4/3] w-full object-cover"
-            />
+            <div className="aspect-[4/3] overflow-hidden md:aspect-auto md:h-full">
+              <img
+                src={IMAGES.aboutSecondary}
+                alt="BlackStone Chauffeur professional driver"
+                className="h-full w-full object-cover"
+              />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* The BlackStone Difference */}
+      {/* The BlackStone Difference — image-led cards instead of plain
+          icon+text boxes */}
       <section className="bg-white py-16">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <p className="text-sm uppercase tracking-[0.25em] text-brand-gold">Why BlackStone</p>
           <h2 className="mt-2 font-heading text-3xl text-black">The BlackStone Difference</h2>
           <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {differences.map((d) => (
-              <div key={d.title} className="border border-black/10 p-6">
-                <d.icon size={24} className="text-black" />
-                <h3 className="mt-4 font-heading text-lg text-black">{d.title}</h3>
-                <p className="mt-2 text-sm text-black/60">{d.desc}</p>
+              <div key={d.title} className="group relative aspect-[4/5] overflow-hidden rounded-2xl">
+                <img
+                  src={d.image}
+                  alt={d.title}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/5" />
+                <div className="absolute inset-x-0 bottom-0 p-5">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-gold/90">
+                    <d.icon size={18} className="text-brand-black" />
+                  </span>
+                  <h3 className="mt-3 font-heading text-lg text-white">{d.title}</h3>
+                  <p className="mt-1 text-sm text-white/70">{d.desc}</p>
+                </div>
               </div>
             ))}
           </div>
