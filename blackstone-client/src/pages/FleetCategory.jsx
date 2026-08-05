@@ -52,7 +52,7 @@ export default function FleetCategory({ category }) {
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           {typeFilter && TYPE_LABELS[typeFilter] && (
             <div className="mb-8 flex flex-wrap items-center gap-3">
-              <span className="border border-brand-gold/40 bg-brand-gold/10 px-3 py-1.5 text-sm text-brand-black">
+              <span className="rounded-full border border-brand-gold/40 bg-brand-gold/10 px-4 py-1.5 text-sm text-brand-black">
                 Showing: {TYPE_LABELS[typeFilter]}
               </span>
               <button
@@ -69,7 +69,7 @@ export default function FleetCategory({ category }) {
               No {TYPE_LABELS[typeFilter]?.toLowerCase()} vehicles are listed here yet — showing the full {config.label} instead.
             </p>
           )}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3">
             {vehicles.map((v) => (
               <FleetCard key={v.slug} vehicle={v} />
             ))}

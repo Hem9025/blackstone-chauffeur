@@ -9,3 +9,7 @@ node_modules
 /Blackstone Chauffeur/
 /branding/
 /PRODUCTION_READINESS_REPORT.md
+
+# Scratch folder used to relocate stray build-output copies out of the
+# way — never part of the app itself.
+/_trash/
