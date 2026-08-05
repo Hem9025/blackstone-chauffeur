@@ -220,7 +220,11 @@ function NewBookingTab({ mapsLoaded }) {
     (!needsHours || hours) &&
     date &&
     time &&
-    vehicleId
+    // A matched vehicle object, not just a non-empty id — otherwise a
+    // stale/invalid vehicleId could pass this check while no vehicle tile
+    // is actually highlighted, letting a booking through with no vehicle
+    // (and no vehicle cost) attached.
+    selectedVehicle
 
   async function handleSubmit(e) {
     e.preventDefault()

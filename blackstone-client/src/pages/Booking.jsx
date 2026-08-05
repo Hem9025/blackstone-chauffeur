@@ -189,6 +189,18 @@ function BookingContent({ mapsLoaded }) {
 
   const selectedVehicle = vehicleList.find((v) => String(v.id) === String(vehicleId))
 
+  // A vehicleId can be sitting in state without actually matching a real
+  // vehicle — e.g. a pre-filled ?vehicleId= that's since been deactivated,
+  // or a resumed sessionStorage draft from before a vehicle was removed.
+  // Once the real vehicle list has loaded, clear it in that case so the
+  // Select Vehicle step doesn't silently look "chosen" with nothing
+  // actually highlighted, and so Continue can't be clicked through to
+  // payment with no vehicle (and no vehicle cost) attached.
+  useEffect(() => {
+    if (!vehicleId || !vehicleList.length) return
+    if (!vehicleList.some((v) => String(v.id) === String(vehicleId))) setVehicleId('')
+  }, [vehicleList, vehicleId])
+
   // Passengers/luggage are capped to whichever vehicle is selected — with
   // none selected yet, there's no capacity to check against, so cap at the
   // bare minimum (1 passenger, 0 luggage) rather than letting the counters
@@ -271,6 +283,14 @@ function BookingContent({ mapsLoaded }) {
   async function handleCreateBooking() {
     if (!user) {
       navigate('/login')
+      return
+    }
+    // Belt-and-braces alongside the Continue button's disabled state below —
+    // a booking must never reach payment without a real, matched vehicle
+    // (otherwise the vehicle's fare is silently $0 and only add-ons like a
+    // child seat get charged).
+    if (!selectedVehicle) {
+      setError('Please select a vehicle before continuing to payment.')
       return
     }
     setSubmitting(true)
@@ -941,7 +961,7 @@ function BookingContent({ mapsLoaded }) {
               )}
               <button
                 type="button"
-                disabled={(step === 1 && !goToStep1Valid()) || (step === 2 && (!vehicleId || submitting))}
+                disabled={(step === 1 && !goToStep1Valid()) || (step === 2 && (!selectedVehicle || submitting))}
                 onClick={() => {
                   if (step === 1) setStep(2)
                   else handleCreateBooking()
