@@ -207,12 +207,13 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
   }
 })
 
-// POST /api/bookings/parse-whatsapp — admin only. Takes raw pasted text
-// (e.g. copied straight out of a WhatsApp chat) and returns a best-effort
-// guess at each booking field. This never touches the database — it's
-// purely a convenience for pre-filling the New Booking form, which the
-// admin still reviews and edits before anything is created.
-router.post('/parse-whatsapp', authCheck, requireRole('admin'), (req, res) => {
+// POST /api/bookings/parse-whatsapp — admin or provider. Takes raw pasted
+// text (e.g. copied straight out of a WhatsApp chat) and returns a
+// best-effort guess at each booking field. This never touches the
+// database — it's purely a convenience for pre-filling the New Booking
+// form, which the admin/provider still reviews and edits before anything
+// is created.
+router.post('/parse-whatsapp', authCheck, requireRole('admin', 'provider'), (req, res) => {
   const { text } = req.body || {}
   const parsed = parseWhatsappBooking(text)
   res.json(parsed)
@@ -305,7 +306,7 @@ router.post('/provider', authCheck, requireRole('provider', 'admin'), async (req
         (customer_id, vehicle_id, pickup, dropoff, date, time, passenger_name, passenger_phone, passenger_email,
          trip_type, service_type, hours, flight_number, stops, stop_addresses, child_seats, notes,
          extras, total_price, distance_km, duration_min, payment_status, booking_status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')`,
       [
         req.user.id,
         vehicle_id,

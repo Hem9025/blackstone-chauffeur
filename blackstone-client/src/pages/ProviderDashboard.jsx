@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useJsApiLoader } from '@react-google-maps/api'
-import { Check, Download, FileText, Users, Briefcase, Plus, X, Info } from 'lucide-react'
+import { Check, Download, FileText, Users, Briefcase, Plus, X, Info, Wand2, AlertTriangle } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
 import PlacesAutocompleteInput from '../components/PlacesAutocompleteInput'
@@ -87,8 +87,15 @@ function ProviderDashboardContent({ mapsLoaded }) {
 
 function NewBookingTab({ mapsLoaded }) {
   const [vehicleList, setVehicleList] = useState([])
+
+  const [whatsappText, setWhatsappText] = useState('')
+  const [parsing, setParsing] = useState(false)
+  const [parseWarnings, setParseWarnings] = useState([])
+  const [parsed, setParsed] = useState(false)
+
   const [passengerName, setPassengerName] = useState('')
   const [passengerPhone, setPassengerPhone] = useState('')
+  const [passengerEmail, setPassengerEmail] = useState('')
   const [tripType, setTripType] = useState('one_way')
   const [serviceType, setServiceType] = useState('Chauffeur Service')
   const [pickup, setPickup] = useState({ address: '', lat: null, lng: null })
@@ -176,6 +183,36 @@ function NewBookingTab({ mapsLoaded }) {
     setStops((prev) => prev.map((s, i) => (i === index ? place : s)))
   }
 
+  // Sends the pasted WhatsApp text to the server-side heuristic parser and
+  // fills in whatever it could confidently detect. Nothing is created yet —
+  // every field below stays editable so a bad guess is easy to fix before
+  // hitting "Create Booking".
+  async function handleParse() {
+    if (!whatsappText.trim()) return
+    setParsing(true)
+    setError('')
+    try {
+      const result = await bookingsApi.parseWhatsapp(whatsappText)
+      if (result.trip_type) setTripType(result.trip_type)
+      if (result.service_type) setServiceType(result.service_type)
+      if (result.passenger_name) setPassengerName(result.passenger_name)
+      if (result.passenger_phone) setPassengerPhone(result.passenger_phone)
+      if (result.passenger_email) setPassengerEmail(result.passenger_email)
+      if (result.pickup) setPickup({ address: result.pickup, lat: null, lng: null })
+      if (result.dropoff) setDropoff({ address: result.dropoff, lat: null, lng: null })
+      if (result.date) setDate(result.date)
+      if (result.time) setTime(result.time)
+      if (result.hours) setHours(String(result.hours))
+      if (result.flight_number) setFlightNumber(result.flight_number)
+      setParseWarnings(result.warnings || [])
+      setParsed(true)
+    } catch (err) {
+      setError(err.message || 'Failed to parse text')
+    } finally {
+      setParsing(false)
+    }
+  }
+
   const canSubmit =
     passengerName &&
     pickup.address &&
@@ -197,6 +234,7 @@ function NewBookingTab({ mapsLoaded }) {
         vehicle_id: vehicleId,
         passenger_name: passengerName,
         passenger_phone: passengerPhone,
+        passenger_email: passengerEmail,
         pickup: pickup.address,
         dropoff: needsDropoff ? dropoff.address : undefined,
         date,
@@ -216,8 +254,12 @@ function NewBookingTab({ mapsLoaded }) {
       })
       setSuccess(booking)
       // Reset form for the next booking.
+      setWhatsappText('')
+      setParseWarnings([])
+      setParsed(false)
       setPassengerName('')
       setPassengerPhone('')
+      setPassengerEmail('')
       setTripType('one_way')
       setServiceType('Chauffeur Service')
       setPickup({ address: '', lat: null, lng: null })
@@ -257,6 +299,42 @@ function NewBookingTab({ mapsLoaded }) {
         </div>
       )}
 
+      {/* Paste-from-WhatsApp box */}
+      <div className="mb-8 border border-black/10 bg-white p-6 md:p-8">
+        <h2 className="flex items-center gap-2 font-heading text-xl text-black">
+          <Wand2 size={18} className="text-brand-gold" /> Paste from WhatsApp
+        </h2>
+        <p className="mt-1 text-sm text-black/50">
+          Paste the raw message a client sent you and it'll try to fill in the form below — check every field
+          before creating the booking.
+        </p>
+        <textarea
+          rows={4}
+          value={whatsappText}
+          onChange={(e) => setWhatsappText(e.target.value)}
+          placeholder={'e.g. "Hi, need a pickup from Auckland Airport to Sky City on 25/07 at 3pm, John Smith, 021 234 5678, wedding car"'}
+          className="mt-4 w-full border border-black/15 px-4 py-3 text-sm"
+        />
+        <div className="mt-3 flex items-center gap-3">
+          <Button type="button" onClick={handleParse} disabled={!whatsappText.trim() || parsing}>
+            {parsing ? 'Parsing…' : 'Parse & Autofill'}
+          </Button>
+          {parsed && parseWarnings.length === 0 && (
+            <span className="text-xs text-green-700">All fields detected — please double-check them anyway.</span>
+          )}
+        </div>
+        {parseWarnings.length > 0 && (
+          <div className="mt-3 flex flex-col gap-1 border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+            {parseWarnings.map((w, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <AlertTriangle size={13} className="mt-0.5 shrink-0" />
+                <span>{w}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8 lg:grid-cols-[1.6fr_1fr]">
         <div className="flex min-w-0 flex-col gap-8">
           <div className="border border-black/10 bg-white p-6 md:p-8">
@@ -280,6 +358,16 @@ function NewBookingTab({ mapsLoaded }) {
                   value={passengerPhone}
                   onChange={(e) => setPassengerPhone(e.target.value)}
                   placeholder="Client's phone number"
+                  className="w-full border border-black/15 px-4 py-3 text-sm"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm text-black/60">Passenger Email (optional)</label>
+                <input
+                  type="email"
+                  value={passengerEmail}
+                  onChange={(e) => setPassengerEmail(e.target.value)}
+                  placeholder="Client's email"
                   className="w-full border border-black/15 px-4 py-3 text-sm"
                 />
               </div>
