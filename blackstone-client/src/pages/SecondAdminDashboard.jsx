@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Download, FileText, List, CalendarDays, CalendarPlus, PlusCircle } from 'lucide-react'
+import { Download, FileText, List, CalendarDays, CalendarPlus, PlusCircle, ChevronRight } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import BookingCalendar from '../components/BookingCalendar'
 import StatusBadge from '../components/StatusBadge'
 import AdminNewBookingTab from '../components/AdminNewBookingTab'
+import BookingDetailsModal from '../components/BookingDetailsModal'
 import { bookings as bookingsApi } from '../utils/api'
 import { formatCurrency, formatDate } from '../utils/helpers'
 import { bookingsToCSV } from '../utils/exportBookings'
@@ -27,6 +28,7 @@ export default function SecondAdminDashboard() {
   const [deletingId, setDeletingId] = useState(null)
   const [view, setView] = useState('list')
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [selectedBooking, setSelectedBooking] = useState(null)
 
   const [status, setStatus] = useState('')
   const [paymentStatus, setPaymentStatus] = useState('')
@@ -59,6 +61,16 @@ export default function SecondAdminDashboard() {
   useEffect(() => {
     bookingsApi.drivers().then(setDrivers).catch(() => setDrivers([]))
   }, [])
+
+  // Keeps an open detail popup showing live data — e.g. assigning a driver
+  // or cancelling from inside the popup updates `list` via load(), and this
+  // reflects that back into the still-open selectedBooking instead of going
+  // stale until the popup is closed and reopened.
+  useEffect(() => {
+    if (!selectedBooking) return
+    const updated = list.find((b) => b.id === selectedBooking.id)
+    if (updated) setSelectedBooking(updated)
+  }, [list])
 
   async function assignDriver(id) {
     const driverId = driverInputs[id]
@@ -236,56 +248,32 @@ export default function SecondAdminDashboard() {
         {error && <p className="mt-8 text-red-500">{error}</p>}
 
         {!loading && !error && view === 'list' && (
-          <div className="mt-6 overflow-x-auto">
+          <div className="mt-6">
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b border-brand-black/10 text-left text-brand-black/50">
                   <th className="py-2 pr-4">Date</th>
                   <th className="py-2 pr-4">Customer</th>
-                  <th className="py-2 pr-4">Email</th>
-                  <th className="py-2 pr-4">Route</th>
-                  <th className="py-2 pr-4">Vehicle</th>
                   <th className="py-2 pr-4">Status</th>
                   <th className="py-2 pr-4">Payment</th>
                   <th className="py-2 pr-4">Total</th>
-                  <th className="py-2 pr-4">Driver</th>
-                  <th className="py-2 pr-4">Assign Driver</th>
-                  <th className="py-2 pr-4">Invoice</th>
-                  <th className="py-2 pr-4">Calendar</th>
-                  <th className="py-2 pr-4">Cancel</th>
-                  <th className="py-2 pr-4">Delete</th>
+                  <th className="py-2 pr-4" />
                 </tr>
               </thead>
               <tbody>
                 {list.map((b) => (
-                  <tr key={b.id} className="border-b border-brand-black/5">
-                    <td className="py-2 pr-4">{formatDate(b.date)}</td>
-                    <td className="py-2 pr-4">{b.passenger_name || b.customer_name || '—'}</td>
-                    <td className="py-2 pr-4">{b.passenger_email || b.customer_email || '—'}</td>
-                    <td className="py-2 pr-4">{b.pickup} → {b.dropoff}</td>
-                    <td className="py-2 pr-4">{b.vehicle_name || '—'}</td>
-                    <td className="py-2 pr-4"><StatusBadge status={b.booking_status} /></td>
-                    <td className="py-2 pr-4 capitalize">{b.payment_status}</td>
-                    <td className="py-2 pr-4">{formatCurrency(b.total_price)}</td>
-                    <td className="py-2 pr-4">{b.driver_id || '—'}</td>
-                    <td className="py-2 pr-4">
-                      <AssignDriverControl b={b} />
-                    </td>
-                    <td className="py-2 pr-4">
-                      <button onClick={() => bookingsApi.downloadInvoice(b.id)} className="text-xs text-brand-gold hover:underline">
-                        Download
-                      </button>
-                    </td>
-                    <td className="py-2 pr-4">
-                      <a href={googleCalendarUrl(b)} target="_blank" rel="noreferrer" className="text-brand-black/40 hover:text-brand-gold" aria-label="Add to Google Calendar">
-                        <CalendarPlus size={15} />
-                      </a>
-                    </td>
-                    <td className="py-2 pr-4">
-                      <CancelControl b={b} />
-                    </td>
-                    <td className="py-2 pr-4">
-                      <DeleteControl b={b} />
+                  <tr
+                    key={b.id}
+                    onClick={() => setSelectedBooking(b)}
+                    className="cursor-pointer border-b border-brand-black/5 hover:bg-brand-black/[0.03]"
+                  >
+                    <td className="py-3 pr-4">{formatDate(b.date)}</td>
+                    <td className="py-3 pr-4">{b.passenger_name || b.customer_name || '—'}</td>
+                    <td className="py-3 pr-4"><StatusBadge status={b.booking_status} /></td>
+                    <td className="py-3 pr-4 capitalize">{b.payment_status}</td>
+                    <td className="py-3 pr-4">{formatCurrency(b.total_price)}</td>
+                    <td className="py-3 pr-4 text-brand-black/30">
+                      <ChevronRight size={16} />
                     </td>
                   </tr>
                 ))}
@@ -306,34 +294,26 @@ export default function SecondAdminDashboard() {
               <div className="mt-4 flex flex-col gap-4">
                 {dayBookings.length === 0 && <p className="text-sm text-brand-black/40">No bookings on this day.</p>}
                 {dayBookings.map((b) => (
-                  <div key={b.id} className="border-b border-brand-black/5 pb-4 last:border-0 last:pb-0">
-                    <p className="text-sm font-medium text-brand-black">
-                      {String(b.time).slice(0, 5)} — {b.pickup} → {b.dropoff}
-                    </p>
-                    <p className="mt-1 text-xs text-brand-black/50">
-                      {b.passenger_name || b.customer_name || '—'} · {b.passenger_email || b.customer_email || '—'} · {b.vehicle_name || '—'} · {formatCurrency(b.total_price)}
-                    </p>
-                    <div className="mt-1 flex items-center gap-2">
-                      <StatusBadge status={b.booking_status} />
-                      <span className="text-xs capitalize text-brand-black/50">Payment: {b.payment_status}</span>
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => setSelectedBooking(b)}
+                    className="flex items-center justify-between gap-3 border-b border-brand-black/5 pb-4 text-left last:border-0 last:pb-0 hover:opacity-70"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-brand-black">
+                        {String(b.time).slice(0, 5)} — {b.pickup} → {b.dropoff}
+                      </p>
+                      <p className="mt-1 text-xs text-brand-black/50">
+                        {b.passenger_name || b.customer_name || '—'} · {formatCurrency(b.total_price)}
+                      </p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <StatusBadge status={b.booking_status} />
+                        <span className="text-xs capitalize text-brand-black/50">Payment: {b.payment_status}</span>
+                      </div>
                     </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-3">
-                      <AssignDriverControl b={b} />
-                      <button onClick={() => bookingsApi.downloadInvoice(b.id)} className="text-xs text-brand-gold hover:underline">
-                        Invoice
-                      </button>
-                      <a
-                        href={googleCalendarUrl(b)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-1 text-xs text-brand-black/50 hover:text-brand-gold"
-                      >
-                        <CalendarPlus size={13} /> Add to Google Calendar
-                      </a>
-                      <CancelControl b={b} />
-                      <DeleteControl b={b} />
-                    </div>
-                  </div>
+                    <ChevronRight size={16} className="shrink-0 text-brand-black/30" />
+                  </button>
                 ))}
               </div>
             </div>
@@ -342,6 +322,35 @@ export default function SecondAdminDashboard() {
         </>
         )}
       </section>
+
+      <BookingDetailsModal
+        booking={selectedBooking}
+        drivers={drivers}
+        onClose={() => setSelectedBooking(null)}
+        actions={
+          selectedBooking && (
+            <>
+              <AssignDriverControl b={selectedBooking} />
+              <button
+                onClick={() => bookingsApi.downloadInvoice(selectedBooking.id)}
+                className="text-xs text-brand-gold hover:underline"
+              >
+                Download invoice
+              </button>
+              <a
+                href={googleCalendarUrl(selectedBooking)}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1 text-xs text-brand-black/50 hover:text-brand-gold"
+              >
+                <CalendarPlus size={13} /> Add to Google Calendar
+              </a>
+              <CancelControl b={selectedBooking} />
+              <DeleteControl b={selectedBooking} />
+            </>
+          )
+        }
+      />
     </div>
   )
 }

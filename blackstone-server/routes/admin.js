@@ -196,4 +196,51 @@ router.get('/stats', async (req, res) => {
   }
 })
 
+// GET /api/admin/provider-payments/:providerId — every recorded monthly
+// settlement for one provider, most recent first. A month with no row here
+// simply hasn't been recorded yet — the client treats that as "unpaid".
+router.get('/provider-payments/:providerId', async (req, res) => {
+  try {
+    const { rows } = await query(
+      'SELECT month, status, updated_at FROM provider_payments WHERE provider_id = ? ORDER BY month DESC',
+      [req.params.providerId],
+    )
+    res.json(rows)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to load payment history' })
+  }
+})
+
+// PATCH /api/admin/provider-payments — upsert one month's settlement status
+// for a provider. Admin decides when a payment actually lands, so this can
+// mark any month (past, current, or future) paid or unpaid at any time —
+// there's no automatic monthly rollover to keep in sync with.
+router.patch('/provider-payments', async (req, res) => {
+  const { provider_id, month, status } = req.body || {}
+  if (!provider_id || !month || !['paid', 'unpaid'].includes(status)) {
+    return res.status(400).json({ message: 'provider_id, month (YYYY-MM), and status (paid/unpaid) are required' })
+  }
+  if (!/^\d{4}-\d{2}$/.test(month)) {
+    return res.status(400).json({ message: 'month must be in YYYY-MM format' })
+  }
+
+  try {
+    await query(
+      `INSERT INTO provider_payments (provider_id, month, status)
+       VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE status = VALUES(status)`,
+      [provider_id, month, status],
+    )
+    const { rows } = await query(
+      'SELECT month, status, updated_at FROM provider_payments WHERE provider_id = ? AND month = ?',
+      [provider_id, month],
+    )
+    res.json(rows[0])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to update payment status' })
+  }
+})
+
 export default router

@@ -107,6 +107,8 @@ export const admin = {
   changeRole: (id, role) => api.patch(`/admin/users/${id}/role`, { role }),
   vehicles: () => api.get('/admin/vehicles'),
   stats: (role, userId) => api.get(`/admin/stats?role=${role}${userId ? `&user_id=${userId}` : ''}`),
+  providerPayments: (providerId) => api.get(`/admin/provider-payments/${providerId}`),
+  setProviderPayment: (payload) => api.patch('/admin/provider-payments', payload),
 }
 
 export { getToken }

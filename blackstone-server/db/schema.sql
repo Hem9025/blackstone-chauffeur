@@ -102,6 +102,24 @@ CREATE TABLE IF NOT EXISTS add_ons (
   price DECIMAL(10, 2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Monthly settlement record between admin and a provider. Providers place
+-- bookings on behalf of their own clients and settle up with BlackStone
+-- periodically (not per-booking) — one row per provider per calendar month
+-- (e.g. '2026-07'), toggled paid/unpaid manually by admin whenever payment
+-- actually comes in. No row for a given month means "unpaid" by default —
+-- admin only needs to write a row once they want to mark it paid (or to
+-- explicitly flag it unpaid for the record).
+CREATE TABLE IF NOT EXISTS provider_payments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  provider_id INT NOT NULL,
+  month CHAR(7) NOT NULL,
+  status VARCHAR(10) NOT NULL DEFAULT 'unpaid'
+    CHECK (status IN ('paid', 'unpaid')),
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_provider_payments_provider FOREIGN KEY (provider_id) REFERENCES users(id),
+  UNIQUE KEY uq_provider_payments_provider_month (provider_id, month)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS enquiries (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,

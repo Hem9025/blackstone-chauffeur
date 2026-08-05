@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Search, X } from 'lucide-react'
+import { Search, X, ChevronRight } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
+import PersonDetailsModal from '../components/PersonDetailsModal'
 import { admin as adminApi } from '../utils/api'
 import { formatCurrency } from '../utils/helpers'
 
@@ -22,6 +23,7 @@ export default function AdminStatsPanel() {
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState('')
+  const [detailPerson, setDetailPerson] = useState(null)
 
   function load() {
     setLoading(true)
@@ -39,6 +41,7 @@ export default function AdminStatsPanel() {
   useEffect(() => {
     setSelectedId('')
     setSearch('')
+    setDetailPerson(null)
     load()
   }, [role])
 
@@ -169,11 +172,16 @@ export default function AdminStatsPanel() {
                     <th className="py-2 pr-4">{role === 'driver' ? 'Fare Value' : 'Revenue'}</th>
                     {role === 'driver' && <th className="py-2 pr-4">Payout</th>}
                     <th className="py-2 pr-4">Admin Margin</th>
+                    <th className="py-2 pr-4" />
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((u) => (
-                    <tr key={u.id} className="border-b border-brand-black/5">
+                    <tr
+                      key={u.id}
+                      onClick={() => setDetailPerson(u)}
+                      className="cursor-pointer border-b border-brand-black/5 hover:bg-brand-black/[0.03]"
+                    >
                       <td className="py-2 pr-4">{u.name}</td>
                       <td className="py-2 pr-4 text-brand-black/60">
                         <div>{u.email}</div>
@@ -186,6 +194,9 @@ export default function AdminStatsPanel() {
                       <td className="py-2 pr-4">{formatCurrency(u.completed_revenue)}</td>
                       {role === 'driver' && <td className="py-2 pr-4">{formatCurrency(u.driver_payout)}</td>}
                       <td className="py-2 pr-4">{formatCurrency(u.admin_margin)}</td>
+                      <td className="py-2 pr-4 text-brand-black/30">
+                        <ChevronRight size={16} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -197,6 +208,8 @@ export default function AdminStatsPanel() {
           </>
         )}
       </section>
+
+      <PersonDetailsModal person={detailPerson} role={role} onClose={() => setDetailPerson(null)} />
     </div>
   )
 }

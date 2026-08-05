@@ -66,6 +66,18 @@ function buildBookingFilters(query) {
     clauses.push('b.date <= ?')
     params.push(query.date_to)
   }
+  // Used by the admin Drivers & Providers panel to pull one person's actual
+  // booking list (not just aggregate counts) — driver_id matches the ride
+  // they fulfil, provider_id matches bookings.customer_id (the account that
+  // placed the booking), same distinction used everywhere else in this file.
+  if (query.driver_id) {
+    clauses.push('b.driver_id = ?')
+    params.push(query.driver_id)
+  }
+  if (query.provider_id) {
+    clauses.push('b.customer_id = ?')
+    params.push(query.provider_id)
+  }
 
   const orderClause = SORT_OPTIONS[query.sort] || SORT_OPTIONS.created_desc
   return { whereExtra: clauses.length ? `AND ${clauses.join(' AND ')}` : '', params, orderClause }
