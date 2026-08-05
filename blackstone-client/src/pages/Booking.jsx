@@ -68,6 +68,32 @@ const KEY_TERMS = [
 
 const HAS_MAPS_KEY = Boolean(import.meta.env.VITE_GOOGLE_MAPS_API_KEY)
 
+// Persists the in-progress booking form (current step + every filled field)
+// across a page refresh, so reloading /booking lands back on the exact same
+// step with the exact same details instead of resetting. sessionStorage
+// (not localStorage) is deliberate — it survives a refresh but clears when
+// the tab closes, so a finished or abandoned booking doesn't linger and
+// resurface in a later, unrelated visit. Cleared explicitly once payment
+// succeeds — see handlePaymentSuccess().
+const DRAFT_KEY = 'bc_booking_draft'
+
+function loadBookingDraft() {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function clearBookingDraft() {
+  try {
+    sessionStorage.removeItem(DRAFT_KEY)
+  } catch {
+    // sessionStorage unavailable — nothing to clean up either way.
+  }
+}
+
 // Only calls useJsApiLoader (and so only injects Google's script tag) when a
 // key is actually configured — with no key, Google's script still loads but
 // responds with its own on-page error/watermark, which is what caused the
@@ -89,42 +115,73 @@ function BookingContent({ mapsLoaded }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
-  const [step, setStep] = useState(1)
+  // Loaded once, synchronously, before any of the state below initializes —
+  // a saved draft (from a previous visit in this same tab) takes priority
+  // over the URL's query params, since resuming an in-progress booking
+  // matters more than re-applying a homepage Quick Book link.
+  const [draft] = useState(loadBookingDraft)
+
+  const [step, setStep] = useState(draft?.step ?? 1)
   const [vehicleList, setVehicleList] = useState([])
-  const [tripType, setTripType] = useState('one_way')
+  const [tripType, setTripType] = useState(draft?.tripType ?? 'one_way')
   // Replaces the old Service Type dropdown — a plain checkbox toggling
   // airport handling (flight number requirement, waiting-time messaging)
   // instead of a "Chauffeur Service" / "Airport Transfer" select. Still
   // sent to the backend as service_type so the DB column/reporting is
   // unchanged.
-  const [isAirport, setIsAirport] = useState(false)
+  const [isAirport, setIsAirport] = useState(draft?.isAirport ?? false)
   const serviceType = isAirport ? 'Airport Transfer' : 'Chauffeur Service'
   // Pre-filled from the homepage Quick Book widget's query params, if present
   // (e.g. /booking?pickup=...&dropoff=...&date=...). The widget only sends
   // addresses as text — no lat/lng — so the map/route won't compute until
   // the user re-picks the address from the autocomplete dropdown.
-  const [pickup, setPickup] = useState({ address: searchParams.get('pickup') || '', lat: null, lng: null })
-  const [dropoff, setDropoff] = useState({ address: searchParams.get('dropoff') || '', lat: null, lng: null })
-  const [date, setDate] = useState(searchParams.get('date') || '')
-  const [time, setTime] = useState('')
-  const [hours, setHours] = useState('')
-  const [passengers, setPassengers] = useState(1)
-  const [luggage, setLuggage] = useState(0)
-  const [notes, setNotes] = useState('')
+  const [pickup, setPickup] = useState(draft?.pickup ?? { address: searchParams.get('pickup') || '', lat: null, lng: null })
+  const [dropoff, setDropoff] = useState(draft?.dropoff ?? { address: searchParams.get('dropoff') || '', lat: null, lng: null })
+  const [date, setDate] = useState(draft?.date ?? searchParams.get('date') ?? '')
+  const [time, setTime] = useState(draft?.time ?? '')
+  const [hours, setHours] = useState(draft?.hours ?? '')
+  const [passengers, setPassengers] = useState(draft?.passengers ?? 1)
+  const [luggage, setLuggage] = useState(draft?.luggage ?? 0)
+  const [notes, setNotes] = useState(draft?.notes ?? '')
   const [route, setRoute] = useState(null)
-  const [vehicleId, setVehicleId] = useState(searchParams.get('vehicleId') || '')
-  const [selectedAddOns, setSelectedAddOns] = useState([])
+  const [vehicleId, setVehicleId] = useState(draft?.vehicleId ?? searchParams.get('vehicleId') ?? '')
+  const [selectedAddOns, setSelectedAddOns] = useState(draft?.selectedAddOns ?? [])
   // Each stop is { address, lat, lng } — same shape as pickup/dropoff — so
   // it can be routed as a Directions waypoint once resolved via autocomplete.
-  const [stops, setStops] = useState([])
-  const [childSeats, setChildSeats] = useState(0)
-  const [flightNumber, setFlightNumber] = useState('')
-  const [extraWaitMinutes, setExtraWaitMinutes] = useState(0)
-  const [acceptedTerms, setAcceptedTerms] = useState(false)
-  const [clientSecret, setClientSecret] = useState('')
-  const [bookingId, setBookingId] = useState(null)
+  const [stops, setStops] = useState(draft?.stops ?? [])
+  const [childSeats, setChildSeats] = useState(draft?.childSeats ?? 0)
+  const [flightNumber, setFlightNumber] = useState(draft?.flightNumber ?? '')
+  const [extraWaitMinutes, setExtraWaitMinutes] = useState(draft?.extraWaitMinutes ?? 0)
+  const [acceptedTerms, setAcceptedTerms] = useState(draft?.acceptedTerms ?? false)
+  const [clientSecret, setClientSecret] = useState(draft?.clientSecret ?? '')
+  const [bookingId, setBookingId] = useState(draft?.bookingId ?? null)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // Keeps the draft in sessionStorage in sync with every field above, so a
+  // refresh at any point in the flow (including mid-payment on step 3)
+  // restores exactly where the user left off.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({
+          step, tripType, isAirport, pickup, dropoff, date, time, hours,
+          passengers, luggage, notes, vehicleId, selectedAddOns, stops,
+          childSeats, flightNumber, extraWaitMinutes, acceptedTerms,
+          clientSecret, bookingId,
+        }),
+      )
+    } catch {
+      // sessionStorage unavailable (e.g. private browsing) — the form still
+      // works, it just won't survive a refresh. Not worth surfacing.
+    }
+  }, [
+    step, tripType, isAirport, pickup, dropoff, date, time, hours,
+    passengers, luggage, notes, vehicleId, selectedAddOns, stops,
+    childSeats, flightNumber, extraWaitMinutes, acceptedTerms,
+    clientSecret, bookingId,
+  ])
 
   useEffect(() => {
     vehiclesApi.list().then(setVehicleList).catch(() => setVehicleList([]))
@@ -267,6 +324,7 @@ function BookingContent({ mapsLoaded }) {
         console.error('Failed to confirm booking after payment', err)
       }
     }
+    clearBookingDraft()
     navigate('/booking/success')
   }
 

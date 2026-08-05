@@ -7,7 +7,10 @@ import RouteMap from './RouteMap'
 import { vehicles as vehiclesApi, bookings as bookingsApi } from '../utils/api'
 import { formatCurrency } from '../utils/helpers'
 import { calculateFare, tierPriceForDistance } from '../utils/pricing'
-import { minBookingDate, isDateFarEnoughAhead, MIN_ADVANCE_DAYS } from '../utils/bookingRules'
+// Note: unlike the customer-facing Booking.jsx, admin-created bookings have
+// no minimum-advance-days restriction — staff can book last-minute or
+// same-day rides on a client's behalf. bookingRules.js is intentionally not
+// used here.
 
 const GOOGLE_MAPS_LIBRARIES = ['places']
 const HAS_MAPS_KEY = Boolean(import.meta.env.VITE_GOOGLE_MAPS_API_KEY)
@@ -185,8 +188,7 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
     (!needsHours || hours) &&
     date &&
     time &&
-    vehicleId &&
-    isDateFarEnoughAhead(date)
+    vehicleId
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -398,19 +400,10 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
                 <input
                   required
                   type="date"
-                  min={minBookingDate()}
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   className="w-full border border-black/15 px-4 py-3 text-sm"
                 />
-                <p className="mt-1 text-xs text-black/40">
-                  Bookings must be made at least {MIN_ADVANCE_DAYS} days in advance.
-                </p>
-                {date && !isDateFarEnoughAhead(date) && (
-                  <p className="mt-1 text-xs text-red-500">
-                    Please choose a date at least {MIN_ADVANCE_DAYS} days from today.
-                  </p>
-                )}
               </div>
               <div>
                 <label className="mb-2 block text-sm text-black/60">Time</label>

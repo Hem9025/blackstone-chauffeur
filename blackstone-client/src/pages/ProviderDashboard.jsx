@@ -9,7 +9,10 @@ import { vehicles as vehiclesApi, bookings as bookingsApi } from '../utils/api'
 import { formatCurrency, formatDate } from '../utils/helpers'
 import { calculateFare, tierPriceForDistance } from '../utils/pricing'
 import { bookingsToCSV } from '../utils/exportBookings'
-import { minBookingDate, isDateFarEnoughAhead, MIN_ADVANCE_DAYS } from '../utils/bookingRules'
+// Note: unlike the customer-facing Booking.jsx, provider-created bookings
+// have no minimum-advance-days restriction — providers can book last-minute
+// or same-day rides for their clients. bookingRules.js is intentionally not
+// used here.
 import StatusBadge from '../components/StatusBadge'
 
 const GOOGLE_MAPS_LIBRARIES = ['places']
@@ -180,8 +183,7 @@ function NewBookingTab({ mapsLoaded }) {
     (!needsHours || hours) &&
     date &&
     time &&
-    vehicleId &&
-    isDateFarEnoughAhead(date)
+    vehicleId
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -341,19 +343,10 @@ function NewBookingTab({ mapsLoaded }) {
                 <input
                   required
                   type="date"
-                  min={minBookingDate()}
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   className="w-full border border-black/15 px-4 py-3 text-sm"
                 />
-                <p className="mt-1 text-xs text-black/40">
-                  Bookings must be made at least {MIN_ADVANCE_DAYS} days in advance.
-                </p>
-                {date && !isDateFarEnoughAhead(date) && (
-                  <p className="mt-1 text-xs text-red-500">
-                    Please choose a date at least {MIN_ADVANCE_DAYS} days from today.
-                  </p>
-                )}
               </div>
               <div>
                 <label className="mb-2 block text-sm text-black/60">Time</label>

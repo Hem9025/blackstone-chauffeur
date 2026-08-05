@@ -236,9 +236,9 @@ router.post('/provider', authCheck, requireRole('provider', 'admin'), async (req
     return res.status(400).json({ message: 'passenger_name, vehicle_id, pickup, date, and time are required' })
   }
 
-  if (!isDateFarEnoughAhead(date)) {
-    return res.status(400).json({ message: `Bookings must be made at least ${MIN_ADVANCE_DAYS} days in advance.` })
-  }
+  // Unlike the customer-facing POST / route, provider/admin bookings skip
+  // the MIN_ADVANCE_DAYS check entirely — dispatch trusts staff to book
+  // last-minute or even same-day rides on a client's behalf.
 
   const resolvedTripType = ['one_way', 'return', 'hourly'].includes(trip_type) ? trip_type : 'one_way'
   const resolvedServiceType = service_type === 'Airport Transfer' ? 'Airport Transfer' : 'Chauffeur Service'
