@@ -685,6 +685,32 @@ router.patch(
   },
 )
 
+// PATCH /api/bookings/:id/payment-status — admin/second_admin, manually set
+// a booking's payment_status. Customer bookings normally only reach 'paid'
+// automatically via POST /confirm (which re-checks the real Stripe
+// PaymentIntent before writing it) — this route is for the cases nothing
+// automatic covers: provider/admin-placed bookings (invoiced outside the
+// system, so payment_status starts and stays 'pending' until someone here
+// marks it paid), correcting a mistake, or recording a refund/failure.
+const PAYMENT_STATUS_OPTIONS = ['pending', 'paid', 'failed', 'refunded']
+router.patch('/:id/payment-status', authCheck, requireRole('admin', 'second_admin'), async (req, res) => {
+  const { status } = req.body || {}
+  if (!PAYMENT_STATUS_OPTIONS.includes(status)) {
+    return res.status(400).json({ message: `status must be one of: ${PAYMENT_STATUS_OPTIONS.join(', ')}` })
+  }
+  try {
+    const { rows: existingRows } = await query('SELECT id FROM bookings WHERE id = ?', [req.params.id])
+    if (!existingRows.length) return res.status(404).json({ message: 'Booking not found' })
+
+    await query('UPDATE bookings SET payment_status = ? WHERE id = ?', [status, req.params.id])
+    const { rows } = await query('SELECT * FROM bookings WHERE id = ?', [req.params.id])
+    res.json(rows[0])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to update payment status' })
+  }
+})
+
 // PATCH /api/bookings/:id/status — driver, update ride status
 router.patch('/:id/status', authCheck, requireRole('driver'), async (req, res) => {
   const { status } = req.body || {} // en_route | arrived | completed

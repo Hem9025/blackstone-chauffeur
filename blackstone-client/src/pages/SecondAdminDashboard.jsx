@@ -327,6 +327,7 @@ export default function SecondAdminDashboard() {
         booking={selectedBooking}
         drivers={drivers}
         onClose={() => setSelectedBooking(null)}
+        onUpdated={load}
         actions={
           selectedBooking && (
             <>

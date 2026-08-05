@@ -61,6 +61,7 @@ export const bookings = {
   assignDriver: (id, driverId) => api.patch(`/bookings/${id}/assign-driver`, { driverId }),
   drivers: () => api.get('/bookings/drivers'),
   updateStatus: (id, status) => api.patch(`/bookings/${id}/status`, { status }),
+  setPaymentStatus: (id, status) => api.patch(`/bookings/${id}/payment-status`, { status }),
   cancel: (id) => api.patch(`/bookings/${id}/cancel`),
   remove: (id) => api.delete(`/bookings/${id}`),
   driver: () => api.get('/bookings/driver'),

@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import Modal from './Modal'
 import StatusBadge from './StatusBadge'
+import { bookings as bookingsApi } from '../utils/api'
 import { formatCurrency, formatDate } from '../utils/helpers'
 
 const TRIP_TYPE_LABELS = { one_way: 'One Way', return: 'Return', hourly: 'Hourly' }
+const PAYMENT_STATUS_OPTIONS = ['pending', 'paid', 'failed', 'refunded']
 
 function Field({ label, value }) {
   if (value === null || value === undefined || value === '') return null
@@ -29,7 +32,11 @@ function Section({ title, children }) {
 // `actions` is an optional slot for whatever action controls the caller
 // wants (assign driver, cancel, delete, invoice, calendar) — kept as
 // caller-supplied JSX so this component doesn't duplicate that logic.
-export default function BookingDetailsModal({ booking, drivers = [], onClose, actions }) {
+// `onUpdated` is called after the payment status is changed here, so the
+// caller can refresh its list (e.g. SecondAdminDashboard's load()).
+export default function BookingDetailsModal({ booking, drivers = [], onClose, actions, onUpdated }) {
+  const [savingPayment, setSavingPayment] = useState(false)
+
   if (!booking) return null
 
   const passengerName = booking.passenger_name || booking.customer_name || '—'
@@ -38,14 +45,37 @@ export default function BookingDetailsModal({ booking, drivers = [], onClose, ac
   const stopAddresses = Array.isArray(booking.stop_addresses) ? booking.stop_addresses : []
   const extras = Array.isArray(booking.extras) ? booking.extras : []
 
+  async function handlePaymentStatusChange(e) {
+    const status = e.target.value
+    setSavingPayment(true)
+    try {
+      await bookingsApi.setPaymentStatus(booking.id, status)
+      onUpdated?.()
+    } catch (err) {
+      window.alert(err.message || 'Failed to update payment status')
+    } finally {
+      setSavingPayment(false)
+    }
+  }
+
   return (
     <Modal open={Boolean(booking)} onClose={onClose} title={`Booking #${booking.id}`}>
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={booking.booking_status} />
-          <span className="rounded-full border border-black/15 px-2.5 py-1 text-xs capitalize text-black/60">
-            Payment: {booking.payment_status}
-          </span>
+          <label className="flex items-center gap-1.5 text-xs text-black/60">
+            Payment:
+            <select
+              value={booking.payment_status}
+              onChange={handlePaymentStatusChange}
+              disabled={savingPayment}
+              className="rounded-full border border-black/15 bg-white px-2.5 py-1 text-xs capitalize text-black/80 disabled:opacity-40"
+            >
+              {PAYMENT_STATUS_OPTIONS.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </label>
         </div>
 
         <Section title="Passenger">
