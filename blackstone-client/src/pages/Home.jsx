@@ -320,16 +320,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FAQ — full-bleed background photo (a moody Mercedes S-Class shot,
-          not used anywhere else on the homepage) at a literal 50% opacity
-          blended into a solid black section background — rather than a
-          separate dark overlay div on top of a full-opacity image — so the
-          image itself genuinely reads as half-strength, with a frosted
-          glass card holding the accordion so it stays legible without
-          needing a dark-mode variant of FaqAccordion itself. */}
+      {/* FAQ — full-bleed background photo: a real BlackStone chauffeur
+          greeting guests beside the fleet (from the gallery, not a stock
+          car shot), at a literal 50% opacity blended into a solid black
+          section background — rather than a separate dark overlay div on
+          top of a full-opacity image — so the image itself genuinely reads
+          as half-strength, with a frosted glass card holding the accordion
+          so it stays legible without needing a dark-mode variant of
+          FaqAccordion itself. */}
       <section className="relative overflow-hidden bg-brand-black py-20">
         <img
-          src={IMAGES.fleet.mercedesSClass}
+          src={IMAGES.gallery[3]}
           alt=""
           className="absolute inset-0 h-full w-full object-cover opacity-50"
         />
