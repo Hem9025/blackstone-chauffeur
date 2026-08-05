@@ -26,26 +26,24 @@ export default function FleetDetail() {
     <div>
       <PageMeta title={vehicle.title} description={vehicle.shortDesc} image={vehicle.heroImage} />
 
-      {/* Photo left / details right — 60/40 rather than an even 50/50 split,
-          since the client wants the car itself to dominate the page over
-          the copy. object-contain (not object-cover) so the whole vehicle
-          is always visible regardless of that particular photo's own
-          proportions, sitting on a soft gradient backdrop so the
-          letterboxing still looks intentional rather than like empty
-          space. The container also gets a generous min-height independent
-          of the text column's length, so a short description never
-          shrinks the photo down to fit a short row. */}
+      {/* Full-bleed photo on top, details stacked below — replaces the
+          previous side-by-side split so the car photo itself gets the
+          whole width of the page rather than sharing it with copy.
+          object-contain (not object-cover) so the whole vehicle is always
+          visible regardless of that particular photo's own proportions,
+          sitting on a soft gradient backdrop so the letterboxing still
+          looks intentional rather than like empty space. */}
       <section className="bg-white">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 md:grid-cols-[3fr_2fr]">
-          <div className="aspect-[4/3] bg-gradient-to-br from-black/[0.04] to-black/[0.08] p-6 sm:aspect-[3/2] md:aspect-auto md:min-h-[560px] md:p-10 lg:min-h-[660px]">
-            <img
-              src={vehicle.heroImage}
-              alt={vehicle.title}
-              className="h-full w-full object-contain"
-            />
-          </div>
+        <div className="aspect-[4/3] w-full bg-gradient-to-br from-black/[0.04] to-black/[0.08] p-6 sm:aspect-[16/9] md:min-h-[520px] md:p-10 lg:min-h-[640px]">
+          <img
+            src={vehicle.heroImage}
+            alt={vehicle.title}
+            className="h-full w-full object-contain"
+          />
+        </div>
 
-          <div className="flex flex-col justify-center bg-brand-black px-6 py-12 text-white md:px-12 md:py-16">
+        <div className="bg-brand-black px-6 py-12 text-white md:px-12 md:py-16">
+          <div className="mx-auto max-w-3xl">
             <Link to={backTo} className="text-sm uppercase tracking-[0.2em] text-brand-gold hover:underline">
               ← All Vehicles
             </Link>
