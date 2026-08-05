@@ -169,18 +169,33 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Feature highlights */}
-      <section className="bg-brand-black-soft py-16 text-white">
-        <div className="mx-auto max-w-7xl px-4 md:px-8">
+      {/* Feature highlights — full-bleed moody background image (rather than
+          a flat dark fill) with glass-style cards for a more editorial,
+          less "plain corporate" feel. */}
+      <section className="relative overflow-hidden bg-brand-black py-20 text-white">
+        <img
+          src={IMAGES.heroAlt}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-20"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-brand-black via-brand-black/95 to-brand-black" />
+
+        <div className="relative mx-auto max-w-7xl px-4 md:px-8">
           <Reveal>
-            <h2 className="font-heading text-3xl text-white">Why Choose BlackStone</h2>
+            <p className="text-sm uppercase tracking-[0.25em] text-brand-gold">The BlackStone Standard</p>
+            <h2 className="mt-3 font-heading text-3xl text-white md:text-4xl">Why Choose BlackStone</h2>
+            <p className="mt-3 max-w-xl text-white/60">
+              What sets every BlackStone ride apart, from the first booking to the final drop-off.
+            </p>
           </Reveal>
-          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
             {features.map((f, i) => (
               <Reveal key={f.title} variant="scale" delay={i * 100}>
-                <div className="border border-white/10 p-6">
-                  <f.icon size={24} className="text-white" />
-                  <h3 className="mt-4 font-heading text-lg text-white">{f.title}</h3>
+                <div className="group h-full rounded-2xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-brand-gold/40 hover:bg-white/[0.06]">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-gold/10 text-brand-gold transition-colors duration-300 group-hover:bg-brand-gold group-hover:text-brand-black">
+                    <f.icon size={22} />
+                  </span>
+                  <h3 className="mt-6 font-heading text-lg text-white">{f.title}</h3>
                   <p className="mt-2 text-sm text-white/60">{f.desc}</p>
                 </div>
               </Reveal>
@@ -305,14 +320,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="mx-auto max-w-3xl px-4 py-16 md:px-8">
-        <Reveal variant="fade">
-          <h2 className="font-heading text-3xl text-black">Frequently Asked Questions</h2>
-          <div className="mt-8">
-            <FaqAccordion items={faqs} />
-          </div>
-        </Reveal>
+      {/* FAQ — full-bleed background photo with a frosted glass card holding
+          the accordion, so it reads clearly over the image without needing
+          a dark-mode variant of FaqAccordion itself. */}
+      <section className="relative overflow-hidden py-20">
+        <img src={IMAGES.about} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-black/75" />
+
+        <div className="relative mx-auto max-w-3xl px-4 md:px-8">
+          <Reveal variant="fade">
+            <p className="text-center text-sm uppercase tracking-[0.25em] text-brand-gold">Got Questions?</p>
+            <h2 className="mt-3 text-center font-heading text-3xl text-white">Frequently Asked Questions</h2>
+            <div className="mt-8 rounded-2xl bg-white/95 p-6 shadow-xl backdrop-blur-sm md:p-8">
+              <FaqAccordion items={faqs} />
+            </div>
+          </Reveal>
+        </div>
       </section>
     </div>
   )
