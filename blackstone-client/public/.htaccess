@@ -1,0 +1,31 @@
+# This is a single-page React app — every "page" (/booking, /provider,
+# /admin, /fleet/economy, etc.) only really exists as a client-side route
+# inside index.html; there's no actual /provider file on the server.
+#
+# Without this file, a hard refresh (or typing/bookmarking a URL directly)
+# sends a real request straight to the Hostinger web server for that exact
+# path. Since no such file exists, Hostinger's own 404 page answers instead
+# of the app ever getting a chance to load and hand off to React Router.
+#
+# This rule tells Apache: for any request that isn't a real file or folder
+# already on disk (i.e. not one of the built JS/CSS/image assets), just
+# serve index.html instead. React Router then reads the URL and renders the
+# right page client-side, exactly as if you'd navigated there normally.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Leave real API calls alone if they're ever proxied through this same
+  # domain instead of a separate API subdomain — harmless no-op otherwise.
+  RewriteCond %{REQUEST_URI} ^/api/ [NC]
+  RewriteRule ^ - [L]
+
+  # Already-existing files/folders (JS, CSS, images, favicon, etc.) are
+  # served as-is.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Everything else falls back to index.html.
+  RewriteRule ^ /index.html [L]
+</IfModule>
