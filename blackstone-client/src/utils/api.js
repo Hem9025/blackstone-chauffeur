@@ -58,6 +58,7 @@ export const bookings = {
   confirm: (payload) => api.post('/bookings/confirm', payload),
   my: (query = '') => api.get(`/bookings/my${query}`),
   all: (query = '') => api.get(`/bookings/all${query}`),
+  updateDetails: (id, payload) => api.patch(`/bookings/${id}`, payload),
   assignDriver: (id, driverId) => api.patch(`/bookings/${id}/assign-driver`, { driverId }),
   drivers: () => api.get('/bookings/drivers'),
   updateStatus: (id, status) => api.patch(`/bookings/${id}/status`, { status }),

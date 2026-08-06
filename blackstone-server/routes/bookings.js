@@ -653,6 +653,113 @@ router.delete('/:id', authCheck, requireRole('admin', 'second_admin'), async (re
   }
 })
 
+// PATCH /api/bookings/:id — admin/second_admin, edit most fields on an
+// existing booking (contact info, trip details, vehicle, passenger/luggage
+// counts, notes, and — unlike everywhere else in this file — total_price
+// itself). Every field is optional and only whatever keys are present in
+// the request body get updated, so the client can send just the one field
+// the admin changed. Deliberately does not touch customer_id, driver_id
+// (see /assign-driver), booking_status (see /cancel and the driver-only
+// /status route), payment_status (see /payment-status), or the Stripe
+// fields — those all have their own dedicated, more careful routes.
+router.patch('/:id', authCheck, requireRole('admin', 'second_admin'), async (req, res) => {
+  try {
+    const { rows: existingRows } = await query('SELECT id FROM bookings WHERE id = ?', [req.params.id])
+    if (!existingRows.length) return res.status(404).json({ message: 'Booking not found' })
+
+    const body = req.body || {}
+    const sets = []
+    const params = []
+    const set = (col, val) => {
+      sets.push(`${col} = ?`)
+      params.push(val)
+    }
+
+    if ('passenger_name' in body) {
+      const name = String(body.passenger_name || '').trim()
+      if (!name) return res.status(400).json({ message: 'Passenger name cannot be empty' })
+      set('passenger_name', name)
+    }
+    if ('passenger_phone' in body) set('passenger_phone', body.passenger_phone ? String(body.passenger_phone).trim() : null)
+    if ('passenger_email' in body) set('passenger_email', body.passenger_email ? String(body.passenger_email).trim() : null)
+
+    if ('pickup' in body) {
+      const pickup = String(body.pickup || '').trim()
+      if (!pickup) return res.status(400).json({ message: 'Pickup cannot be empty' })
+      set('pickup', pickup)
+    }
+    if ('dropoff' in body) set('dropoff', String(body.dropoff || '').trim() || null)
+    if ('date' in body) {
+      if (!body.date) return res.status(400).json({ message: 'Date cannot be empty' })
+      set('date', body.date)
+    }
+    if ('time' in body) {
+      if (!body.time) return res.status(400).json({ message: 'Time cannot be empty' })
+      set('time', body.time)
+    }
+    if ('trip_type' in body) {
+      if (!['one_way', 'return', 'hourly'].includes(body.trip_type)) {
+        return res.status(400).json({ message: 'Invalid trip type' })
+      }
+      set('trip_type', body.trip_type)
+    }
+    if ('service_type' in body) {
+      set('service_type', body.service_type === 'Airport Transfer' ? 'Airport Transfer' : 'Chauffeur Service')
+    }
+    if ('hours' in body) {
+      set('hours', body.hours !== '' && body.hours != null ? Math.max(0, Number(body.hours)) : null)
+    }
+    if ('flight_number' in body) set('flight_number', body.flight_number ? String(body.flight_number).trim() : null)
+    if ('stop_addresses' in body) {
+      const stopAddresses = Array.isArray(body.stop_addresses)
+        ? body.stop_addresses.map((a) => String(a || '').trim()).filter(Boolean)
+        : []
+      set('stop_addresses', stopAddresses.length ? JSON.stringify(stopAddresses) : null)
+      set('stops', stopAddresses.length)
+    }
+    if ('passengers' in body) set('passengers', Math.min(20, Math.max(1, Number(body.passengers) || 1)))
+    if ('suitcases' in body) set('suitcases', Math.min(20, Math.max(0, Number(body.suitcases) || 0)))
+    if ('child_seats' in body) set('child_seats', Math.min(CHILD_SEAT_MAX, Math.max(0, Number(body.child_seats) || 0)))
+    if ('notes' in body) set('notes', String(body.notes || '').trim().slice(0, 250) || null)
+
+    if ('vehicle_id' in body) {
+      const { rows: vehicleRows } = await query('SELECT id FROM vehicles WHERE id = ? AND active = true', [body.vehicle_id])
+      if (!vehicleRows.length) return res.status(400).json({ message: 'Invalid vehicle selected' })
+      set('vehicle_id', body.vehicle_id)
+    }
+
+    // Unlike every other route in this file, an admin editing an existing
+    // booking IS trusted to override the price directly — this is the same
+    // deliberate exception used by POST /provider, just applied after the
+    // fact (e.g. a phone-negotiated rate change, or fixing a typo).
+    if ('total_price' in body) {
+      const price = Number(body.total_price)
+      if (!Number.isFinite(price) || price <= 0) {
+        return res.status(400).json({ message: 'A valid total price is required' })
+      }
+      set('total_price', Math.round(price * 100) / 100)
+    }
+
+    if (!sets.length) return res.status(400).json({ message: 'No fields to update' })
+
+    params.push(req.params.id)
+    await query(`UPDATE bookings SET ${sets.join(', ')} WHERE id = ?`, params)
+
+    const { rows } = await query(
+      `SELECT b.*, v.name AS vehicle_name, u.name AS customer_name, u.email AS customer_email
+       FROM bookings b
+       LEFT JOIN vehicles v ON v.id = b.vehicle_id
+       LEFT JOIN users u ON u.id = b.customer_id
+       WHERE b.id = ?`,
+      [req.params.id],
+    )
+    res.json(rows[0])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to update booking' })
+  }
+})
+
 // PATCH /api/bookings/:id/assign-driver — admin/second_admin
 router.patch(
   '/:id/assign-driver',
