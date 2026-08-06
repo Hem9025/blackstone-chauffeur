@@ -60,11 +60,14 @@ export const IMAGES = {
     audiQ7: [
       '/images/fleet/interior/audi-q7/1-dashboard.jpg',
       '/images/fleet/interior/audi-q7/2-rear-seats.jpg',
+      '/images/fleet/interior/audi-q7/3-exterior.jpg',
+      '/images/fleet/interior/audi-q7/4-luggage-space.jpg',
     ],
     mercedesSClass: [
       '/images/fleet/interior/mercedes-s-class/1-dashboard.jpg',
       '/images/fleet/interior/mercedes-s-class/2-rear-cabin.jpg',
       '/images/fleet/interior/mercedes-s-class/3-rear-screens.jpg',
+      '/images/fleet/interior/mercedes-s-class/4-ambient-lighting.jpg',
     ],
     mercedesEClass: [
       '/images/fleet/interior/mercedes-e-class/1-dashboard.jpg',
@@ -76,16 +79,19 @@ export const IMAGES = {
       '/images/fleet/interior/skoda-superb/1-boot.jpg',
       '/images/fleet/interior/skoda-superb/2-rear-seat.jpg',
       '/images/fleet/interior/skoda-superb/3-dashboard.jpg',
+      '/images/fleet/interior/skoda-superb/4-exterior.jpg',
     ],
     toyotaCamry: [
       '/images/fleet/interior/toyota-camry/1-boot.jpg',
       '/images/fleet/interior/toyota-camry/2-dashboard.jpg',
       '/images/fleet/interior/toyota-camry/3-rear-seat.jpg',
+      '/images/fleet/interior/toyota-camry/4-exterior.jpg',
     ],
     toyotaAlphard: [
       '/images/fleet/interior/toyota-alphard/1-dashboard.jpg',
       '/images/fleet/interior/toyota-alphard/2-captain-seats.jpg',
       '/images/fleet/interior/toyota-alphard/3-boot.jpg',
+      '/images/fleet/interior/toyota-alphard/4-exterior.jpg',
     ],
     bmwI7: [
       '/images/fleet/interior/bmw-i7/1-dashboard.jpg',
@@ -102,32 +108,44 @@ export const IMAGES = {
     mercedesGLS: [
       '/images/fleet/interior/mercedes-gls/1-rear-seat.jpg',
       '/images/fleet/interior/mercedes-gls/2-cabin-wide.jpg',
+      '/images/fleet/interior/mercedes-gls/3-front-design.jpg',
+      '/images/fleet/interior/mercedes-gls/4-on-the-road.jpg',
     ],
     mercedesVito: [
       '/images/fleet/interior/mercedes-vito-eqv/1-captain-seats.jpg',
       '/images/fleet/interior/mercedes-vito-eqv/2-cabin-wide.jpg',
+      '/images/fleet/interior/mercedes-vito-eqv/3-luggage-space.jpg',
+      '/images/fleet/interior/mercedes-vito-eqv/4-exterior.jpg',
     ],
     mercedesSprinter: [
       '/images/fleet/interior/mercedes-sprinter-519/1-cab.jpg',
       '/images/fleet/interior/mercedes-sprinter-519/2-passenger-seats.jpg',
+      '/images/fleet/interior/mercedes-sprinter-519/3-executive-seating.jpg',
+      '/images/fleet/interior/mercedes-sprinter-519/4-exterior.jpg',
     ],
     rangeRover: [
       '/images/fleet/interior/range-rover/1-rear-seats.jpg',
       '/images/fleet/interior/range-rover/2-rear-bench.jpg',
+      '/images/fleet/interior/range-rover/3-exterior-profile.jpg',
+      '/images/fleet/interior/range-rover/4-on-the-road.jpg',
     ],
     teslaModelY: [
       '/images/fleet/interior/tesla-model-y/1-dashboard.jpg',
       '/images/fleet/interior/tesla-model-y/2-rear-seat.jpg',
+      '/images/fleet/interior/tesla-model-y/3-panoramic-roof.jpg',
+      '/images/fleet/interior/tesla-model-y/4-exterior.jpg',
     ],
     havalH6: [
       '/images/fleet/interior/haval-h6/1-boot.jpg',
       '/images/fleet/interior/haval-h6/2-dashboard.jpg',
       '/images/fleet/interior/haval-h6/3-rear-seat.jpg',
+      '/images/fleet/interior/haval-h6/4-exterior.jpg',
     ],
     bydAtto3: [
       '/images/fleet/interior/byd-atto-3/1-dashboard.jpg',
       '/images/fleet/interior/byd-atto-3/2-rear-seat.jpg',
       '/images/fleet/interior/byd-atto-3/3-boot.jpg',
+      '/images/fleet/interior/byd-atto-3/4-exterior.jpg',
     ],
   },
 
