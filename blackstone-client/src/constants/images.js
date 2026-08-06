@@ -28,7 +28,7 @@ export const IMAGES = {
     bmwI7: '/images/fleet/hero/bmw-i7.jpg',
     mercedesVito: '/images/fleet/hero/mercedes-vito-eqv.jpg',
     rangeRover: '/images/fleet/hero/range-rover.jpg',
-    mercedesSClass: unsplash('photo-1629019879059-2a0345f93aea', 1400),
+    mercedesSClass: unsplash('photo-1619221496652-7ee3d7406203', 1400),
     mercedesEClass: unsplash('photo-1625690096555-a0a4d190901c', 1400),
     toyotaAlphard: '/images/fleet/hero/toyota-alphard.jpg',
     audiQ7: unsplash('photo-1651751234256-86187ebf7302', 1400),
@@ -37,7 +37,7 @@ export const IMAGES = {
     // Premium economy fleet
     teslaModelY: '/images/fleet/hero/tesla-model-y.jpg',
     vwID4: '/images/fleet/hero/volkswagen-id4.jpg',
-    skodaSuperb: unsplash('photo-1560282013-9f0f8ae50635', 1400),
+    skodaSuperb: unsplash('photo-1560282013-aa23a6e5e1a6', 1400),
     havalH6: '/images/fleet/hero/haval-h6.jpg',
     toyotaRAV4: unsplash('photo-1632137924251-fcea5ff46035', 1400),
     bydAtto3: '/images/fleet/hero/byd-atto-3.jpg',
