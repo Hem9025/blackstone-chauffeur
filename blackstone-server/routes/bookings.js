@@ -225,10 +225,18 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
 // database — it's purely a convenience for pre-filling the New Booking
 // form, which the admin/provider still reviews and edits before anything
 // is created.
-router.post('/parse-whatsapp', authCheck, requireRole('admin', 'provider'), (req, res) => {
+router.post('/parse-whatsapp', authCheck, requireRole('admin', 'provider'), async (req, res) => {
   const { text } = req.body || {}
-  const parsed = parseWhatsappBooking(text)
-  res.json(parsed)
+  try {
+    const { rows: vehicles } = await query('SELECT id, name FROM vehicles WHERE active = true')
+    const parsed = parseWhatsappBooking(text, vehicles)
+    res.json(parsed)
+  } catch (err) {
+    console.error(err)
+    // Vehicle-matching is a bonus, not essential — fall back to parsing
+    // without it rather than failing the whole request.
+    res.json(parseWhatsappBooking(text))
+  }
 })
 
 // POST /api/bookings/provider — provider or admin creates a booking on

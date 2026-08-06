@@ -182,6 +182,99 @@ function findFlightNumber(text) {
   return m ? m[1].replace(/\s+/, '').toUpperCase() : null
 }
 
+// "4 passengers" / "4 pax" / "party of 4" / "for 5 people" — deliberately
+// label/keyword-anchored (not a bare "for 4") since a bare number is too
+// easy to confuse with hours, a time, or an address.
+function findPassengerCount(text) {
+  let m = text.match(/(\d+)\s*(?:passengers?|pax|people|persons?|adults?|guests?)\b/i)
+  if (m) return Number(m[1])
+  m = text.match(/\bparty\s+of\s+(\d+)\b/i)
+  if (m) return Number(m[1])
+  return null
+}
+
+// "3 bags" / "2 suitcases" / "2 pieces of luggage"
+function findLuggageCount(text) {
+  let m = text.match(/(\d+)\s*(?:bags?|suitcases?|luggage)\b/i)
+  if (m) return Number(m[1])
+  m = text.match(/(\d+)\s*(?:pieces?)\s+of\s+luggage\b/i)
+  if (m) return Number(m[1])
+  return null
+}
+
+// Only fires on an explicit label ("Ref:", "Booking number -", "PNR ...")
+// since guessing a bare code out of free text is too unreliable — but once
+// one of those labels is present, accepts ":"/"-"/"#" or no separator at
+// all before the code, and requires the captured token contain a digit so
+// it can't accidentally swallow an ordinary word like "from" or "for".
+function findReferenceNumber(text) {
+  const re = /\b(?:reference\s*(?:no\.?|number)?|ref\s*(?:no\.?|number|#)?|booking\s*(?:ref(?:erence)?|no\.?|number)|confirmation\s*(?:no\.?|number)?|pnr|order\s*(?:no\.?|number))\s*[:#\-]?\s*([A-Za-z0-9][A-Za-z0-9\-/]{1,19})\b/i
+  const m = text.match(re)
+  if (!m) return null
+  const token = m[1]
+  if (!/\d/.test(token)) return null
+  return token.toUpperCase()
+}
+
+// Only fires on an explicit label, same reasoning as findReferenceNumber —
+// unlike findLabelled (used for pickup/dropoff), this reads to the end of
+// the line rather than stopping at a comma, since a note is often a list
+// ("child seat, extra bags, meet at arrivals").
+function findNotes(text) {
+  const labels = [
+    'notes?', 'special requests?', 'remarks?', 'additional (?:info|information|notes?)',
+    'service notes?', 'instructions?', 'comments?',
+  ]
+  for (const label of labels) {
+    const re = new RegExp(`\\b${label}\\s*[:\\-]\\s*([^\\n]+)`, 'i')
+    const m = text.match(re)
+    if (m) return m[1].trim().slice(0, 250)
+  }
+  return null
+}
+
+function normalizeCompact(s) {
+  return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
+// Tries to match a specific vehicle from the live fleet against the pasted
+// text — first by its full name mentioned verbatim (e.g. "Business Van"),
+// then by any single word that belongs to exactly one active vehicle's name
+// (e.g. "SUV" when only one vehicle has "SUV" in its name). A word shared by
+// several vehicles ("sedan", "van", "economy"...) is deliberately never used
+// on its own, since it can't be attributed to one specific vehicle.
+function guessVehicle(text, vehicles) {
+  if (!Array.isArray(vehicles) || !vehicles.length) return null
+  const compactText = normalizeCompact(text)
+
+  for (const v of vehicles) {
+    const compactName = normalizeCompact(v.name)
+    if (compactName.length >= 4 && compactText.includes(compactName)) {
+      return { id: v.id, name: v.name }
+    }
+  }
+
+  const wordOwners = new Map()
+  for (const v of vehicles) {
+    const words = new Set(String(v.name).toLowerCase().match(/[a-z0-9]+/g) || [])
+    for (const w of words) {
+      if (w.length < 2) continue
+      if (!wordOwners.has(w)) wordOwners.set(w, new Set())
+      wordOwners.get(w).add(v.id)
+    }
+  }
+  const textWords = new Set(text.toLowerCase().match(/[a-z0-9]+/g) || [])
+  for (const [word, owners] of wordOwners) {
+    if (owners.size === 1 && textWords.has(word)) {
+      const id = [...owners][0]
+      const v = vehicles.find((x) => x.id === id)
+      if (v) return { id: v.id, name: v.name }
+    }
+  }
+
+  return null
+}
+
 function guessName(text) {
   const labelled = findLabelled(text, ['name', 'passenger', 'client', 'customer'])
   if (labelled) return labelled
@@ -198,7 +291,11 @@ function guessName(text) {
   return null
 }
 
-export function parseWhatsappBooking(rawText) {
+// `vehicles` is optional — the list of currently active vehicles (from
+// GET /api/vehicles), used only to try to match a mentioned car/vehicle
+// type to a specific one. Parsing still works fine without it; it just
+// skips the vehicle guess.
+export function parseWhatsappBooking(rawText, vehicles = []) {
   const text = String(rawText || '').trim()
   const warnings = []
 
@@ -207,7 +304,8 @@ export function parseWhatsappBooking(rawText) {
       passenger_name: null, passenger_phone: null, passenger_email: null,
       pickup: null, dropoff: null, date: null, time: null,
       trip_type: 'one_way', service_type: 'Chauffeur Service', hours: null,
-      flight_number: null,
+      flight_number: null, passengers: null, suitcases: null,
+      reference_number: null, notes: null, vehicle_id: null, vehicle_name: null,
       warnings: ['Paste some text to parse.'],
     }
   }
@@ -238,6 +336,11 @@ export function parseWhatsappBooking(rawText) {
   const passenger_email = findEmail(text)
   const hours = tripType === 'hourly' ? findHours(text) : null
   const flight_number = serviceType === 'Airport Transfer' ? findFlightNumber(text) : null
+  const passengers = findPassengerCount(text)
+  const suitcases = findLuggageCount(text)
+  const reference_number = findReferenceNumber(text)
+  const notes = findNotes(text)
+  const vehicleMatch = guessVehicle(text, vehicles)
 
   if (!passenger_name) warnings.push('Could not detect the passenger’s name — please fill it in.')
   if (!passenger_phone) warnings.push('Could not detect a phone number.')
@@ -248,6 +351,7 @@ export function parseWhatsappBooking(rawText) {
   if (tripType === 'hourly' && !hours) warnings.push('Could not detect the number of hours.')
   if (/\bwedding\b/i.test(text)) warnings.push('Mentions "wedding" — Wedding Service is no longer a separate service type; check notes/add-ons.')
   if (/point.to.point/i.test(text)) warnings.push('Mentions "point-to-point" — that is no longer a separate service type; check trip type.')
+  if (vehicleMatch) warnings.push(`Guessed vehicle: ${vehicleMatch.name} — please confirm it's right.`)
 
   return {
     passenger_name,
@@ -261,6 +365,12 @@ export function parseWhatsappBooking(rawText) {
     service_type: serviceType,
     hours,
     flight_number,
+    passengers,
+    suitcases,
+    reference_number,
+    notes,
+    vehicle_id: vehicleMatch?.id || null,
+    vehicle_name: vehicleMatch?.name || null,
     warnings,
   }
 }

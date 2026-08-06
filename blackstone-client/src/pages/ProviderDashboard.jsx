@@ -218,6 +218,17 @@ function NewBookingTab({ mapsLoaded }) {
       if (result.time) setTime(result.time)
       if (result.hours) setHours(String(result.hours))
       if (result.flight_number) setFlightNumber(result.flight_number)
+      if (result.passengers) setPassengers(Math.min(MAX_PASSENGERS, Math.max(1, result.passengers)))
+      if (result.suitcases != null) setLuggage(Math.min(MAX_LUGGAGE, Math.max(0, result.suitcases)))
+      if (result.vehicle_id) setVehicleId(String(result.vehicle_id))
+      // Reference number has no dedicated field on the booking — fold it
+      // into Notes (clearly labelled) alongside any detected note text so
+      // it isn't lost, and stays visible/editable before the booking is
+      // created.
+      const noteParts = []
+      if (result.reference_number) noteParts.push(`Reference: ${result.reference_number}`)
+      if (result.notes) noteParts.push(result.notes)
+      if (noteParts.length) setNotes(noteParts.join('\n').slice(0, 250))
       setParseWarnings(result.warnings || [])
       setParsed(true)
     } catch (err) {
