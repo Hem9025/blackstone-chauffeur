@@ -37,7 +37,7 @@ export const IMAGES = {
     // Premium economy fleet
     teslaModelY: '/images/fleet/hero/tesla-model-y.jpg',
     vwID4: '/images/fleet/hero/volkswagen-id4.jpg',
-    skodaSuperb: unsplash('photo-1560282013-aa23a6e5e1a6', 1400),
+    skodaSuperb: unsplash('photo-1594760345702-39c0ea0b3799', 1400),
     havalH6: '/images/fleet/hero/haval-h6.jpg',
     toyotaRAV4: unsplash('photo-1632137924251-fcea5ff46035', 1400),
     bydAtto3: '/images/fleet/hero/byd-atto-3.jpg',
