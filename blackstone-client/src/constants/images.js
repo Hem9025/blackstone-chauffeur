@@ -39,7 +39,7 @@ export const IMAGES = {
     vwID4: '/images/fleet/hero/volkswagen-id4.jpg',
     skodaSuperb: unsplash('photo-1560282013-9f0f8ae50635', 1400),
     havalH6: '/images/fleet/hero/haval-h6.jpg',
-    hondaCRV: unsplash('photo-1681697390363-1142eb46b76d', 1400),
+    toyotaRAV4: unsplash('photo-1632137924251-fcea5ff46035', 1400),
     bydAtto3: '/images/fleet/hero/byd-atto-3.jpg',
     toyotaCamry: unsplash('photo-1621007947382-bb3c3994e3fb', 1400),
     havalJolion: unsplash('photo-1615887110697-0819ec23465f', 1400),
