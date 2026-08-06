@@ -242,12 +242,24 @@ router.post('/provider', authCheck, requireRole('provider', 'admin'), async (req
     vehicle_id, passenger_name, passenger_phone, passenger_email,
     pickup, dropoff, date, time, extras, distance_km, duration_min,
     trip_type, service_type, hours, flight_number, stops, stop_addresses, child_seats, notes,
-    passengers, suitcases,
+    passengers, suitcases, total_price: requestedTotalPrice,
   } = req.body || {}
 
   if (!passenger_name || !pickup || !date || !time || !vehicle_id) {
     return res.status(400).json({ message: 'passenger_name, vehicle_id, pickup, date, and time are required' })
   }
+
+  // Provider/admin bookings are manually priced — the vehicle picker here is
+  // just a quick-reference label (what the client will actually ride in),
+  // it no longer drives the fare. The person creating the booking types the
+  // final price themselves (e.g. a phone-negotiated rate), so total_price is
+  // required and validated here rather than computed via calculateFare like
+  // the customer-facing POST / route above.
+  const manualTotalPrice = Number(requestedTotalPrice)
+  if (!Number.isFinite(manualTotalPrice) || manualTotalPrice <= 0) {
+    return res.status(400).json({ message: 'A valid total price is required' })
+  }
+  const resolvedTotalPrice = Math.round(manualTotalPrice * 100) / 100
 
   // Unlike the customer-facing POST / route, provider/admin bookings skip
   // the MIN_ADVANCE_DAYS check entirely — dispatch trusts staff to book
@@ -279,20 +291,19 @@ router.post('/provider', authCheck, requireRole('provider', 'admin'), async (req
   const resolvedHours = isHourly ? Number(hours) : null
 
   try {
+    // Vehicle is now just a quick-reference label on provider/admin bookings
+    // (it no longer drives pricing), but the row is still required at the DB
+    // level (vehicle_id is NOT NULL), so it still needs to resolve to a real,
+    // active vehicle.
     const { rows: vehicleRows } = await query('SELECT * FROM vehicles WHERE id = ? AND active = true', [vehicle_id])
     if (!vehicleRows.length) return res.status(400).json({ message: 'Invalid vehicle selected' })
     const vehicle = vehicleRows[0]
 
-    // Clamped to this vehicle's actual capacity — never trust a
-    // client-supplied count beyond what the vehicle can actually carry.
-    const resolvedPassengers = Math.min(
-      Math.max(1, Number(passengers) || 1),
-      Number(vehicle.passengers) || 1,
-    )
-    const resolvedSuitcases = Math.min(
-      Math.max(0, Number(suitcases) || 0),
-      Number(vehicle.suitcases) || 0,
-    )
+    // No longer clamped to the selected vehicle's capacity, since the
+    // vehicle is reference-only here — just a sane upper bound so a stray
+    // client value can't produce a nonsensical booking row.
+    const resolvedPassengers = Math.min(Math.max(1, Number(passengers) || 1), 20)
+    const resolvedSuitcases = Math.min(Math.max(0, Number(suitcases) || 0), 20)
 
     const requestedNames = (extras || []).map((e) => e?.name).filter(Boolean)
     let matchedAddOns = []
@@ -300,18 +311,8 @@ router.post('/provider', authCheck, requireRole('provider', 'admin'), async (req
       const { rows } = await query('SELECT name, price FROM add_ons WHERE name IN (?)', [requestedNames])
       matchedAddOns = rows
     }
-    const flatAddOnsTotal = matchedAddOns.reduce((sum, a) => sum + Number(a.price), 0)
-    const qtyAddOnsTotal = await quantityAddOnsTotal(resolvedChildSeats, resolvedStops)
-    const addOnsTotal = flatAddOnsTotal + qtyAddOnsTotal
 
-    const total_price = calculateFare({
-      vehicle,
-      distanceKm: resolvedDistanceKm,
-      durationMin: resolvedDurationMin,
-      passengers: resolvedPassengers,
-      suitcases: resolvedSuitcases,
-      addOnsTotal,
-    })
+    const total_price = resolvedTotalPrice
 
     const inserted = await query(
       `INSERT INTO bookings

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useJsApiLoader } from '@react-google-maps/api'
-import { Check, Download, FileText, Users, Briefcase, Plus, X, Info, Wand2, AlertTriangle } from 'lucide-react'
+import { Download, FileText, Plus, X, Info, Wand2, AlertTriangle } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
 import PlacesAutocompleteInput from '../components/PlacesAutocompleteInput'
@@ -114,6 +114,12 @@ function NewBookingTab({ mapsLoaded }) {
   const [route, setRoute] = useState(null)
   const [vehicleId, setVehicleId] = useState('')
   const [selectedAddOns, setSelectedAddOns] = useState([])
+  // The price is entered/edited by the provider on every booking — it's no
+  // longer purely auto-calculated. `total` below still estimates a starting
+  // point once enough trip details are filled in, but `priceTouched` stops
+  // that estimate from overwriting a value the provider has already typed.
+  const [manualPrice, setManualPrice] = useState('')
+  const [priceTouched, setPriceTouched] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(null)
@@ -130,15 +136,11 @@ function NewBookingTab({ mapsLoaded }) {
 
   const selectedVehicle = vehicleList.find((v) => String(v.id) === String(vehicleId))
 
-  // Capped to whichever vehicle is selected — with none selected there's no
-  // capacity to check against, so cap at the bare minimum until one is chosen.
-  const maxPassengers = selectedVehicle ? Number(selectedVehicle.passengers) || 1 : 1
-  const maxLuggage = selectedVehicle ? Number(selectedVehicle.suitcases) || 0 : 0
-
-  useEffect(() => {
-    setPassengers((p) => Math.min(p, maxPassengers))
-    setLuggage((l) => Math.min(l, maxLuggage))
-  }, [maxPassengers, maxLuggage])
+  // Vehicle is picked from a plain dropdown here — it's a quick-reference
+  // label for what the client will ride in, not something that drives
+  // pricing or passenger/luggage limits (see the manual price field below).
+  const MAX_PASSENGERS = 20
+  const MAX_LUGGAGE = 20
 
   const flatAddOnsTotal = selectedAddOns.reduce((sum, id) => {
     const addOn = ADD_ONS.find((a) => a.id === id)
@@ -165,6 +167,18 @@ function NewBookingTab({ mapsLoaded }) {
         : 0,
     [selectedVehicle, effectiveDistanceKm, effectiveDurationMin, addOnsTotal],
   )
+
+  // Suggests a starting price once there's enough to estimate from, but only
+  // until the provider actually edits the field themselves — after that,
+  // their number is the source of truth for this booking.
+  useEffect(() => {
+    if (!priceTouched && total > 0) setManualPrice(String(total))
+  }, [total, priceTouched])
+
+  function handleManualPriceChange(value) {
+    setPriceTouched(true)
+    setManualPrice(value)
+  }
 
   function toggleAddOn(id) {
     setSelectedAddOns((prev) => (prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]))
@@ -213,6 +227,9 @@ function NewBookingTab({ mapsLoaded }) {
     }
   }
 
+  const priceValue = Number(manualPrice)
+  const priceValid = manualPrice !== '' && Number.isFinite(priceValue) && priceValue > 0
+
   const canSubmit =
     passengerName &&
     pickup.address &&
@@ -220,11 +237,8 @@ function NewBookingTab({ mapsLoaded }) {
     (!needsHours || hours) &&
     date &&
     time &&
-    // A matched vehicle object, not just a non-empty id — otherwise a
-    // stale/invalid vehicleId could pass this check while no vehicle tile
-    // is actually highlighted, letting a booking through with no vehicle
-    // (and no vehicle cost) attached.
-    selectedVehicle
+    vehicleId &&
+    priceValid
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -255,6 +269,7 @@ function NewBookingTab({ mapsLoaded }) {
         extras,
         distance_km: effectiveDistanceKm,
         duration_min: effectiveDurationMin,
+        total_price: priceValue,
       })
       setSuccess(booking)
       // Reset form for the next booking.
@@ -280,6 +295,8 @@ function NewBookingTab({ mapsLoaded }) {
       setVehicleId('')
       setSelectedAddOns([])
       setRoute(null)
+      setManualPrice('')
+      setPriceTouched(false)
     } catch (err) {
       setError(err.message || 'Failed to create booking')
     } finally {
@@ -523,34 +540,21 @@ function NewBookingTab({ mapsLoaded }) {
           </div>
 
           <div className="border border-black/10 bg-white p-6 md:p-8">
-            <h2 className="font-heading text-xl text-black">Select Vehicle</h2>
-            {vehicleList.length === 0 && <p className="mt-4 text-sm text-black/50">Loading vehicles…</p>}
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {vehicleList.map((v) => (
-                <button
-                  key={v.id}
-                  type="button"
-                  onClick={() => setVehicleId(String(v.id))}
-                  className={`relative border bg-white text-left transition-colors ${
-                    String(v.id) === vehicleId ? 'border-brand-gold' : 'border-black/10'
-                  }`}
-                >
-                  {String(v.id) === vehicleId && (
-                    <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand-gold text-brand-black">
-                      <Check size={14} />
-                    </span>
-                  )}
-                  <img src={v.image_url} alt={v.name} className="aspect-[4/3] w-full object-cover" />
-                  <div className="p-4">
-                    <p className="font-heading text-base text-black">{v.name}</p>
-                    <div className="mt-2 flex items-center gap-4 text-xs text-black/60">
-                      <span className="flex items-center gap-1"><Users size={13} /> {v.passengers}</span>
-                      <span className="flex items-center gap-1"><Briefcase size={13} /> {v.suitcases}</span>
-                      <span className="ml-auto text-black/80">From {formatCurrency(tierPriceForDistance(v.distance_tiers, 16))}</span>
-                    </div>
-                  </div>
-                </button>
-              ))}
+            <h2 className="font-heading text-xl text-black">Vehicle</h2>
+            <p className="mt-1 text-sm text-black/50">Quick reference only — it doesn't affect the price, just records what the client rides in.</p>
+            <div className="mt-4">
+              <select
+                value={vehicleId}
+                onChange={(e) => setVehicleId(e.target.value)}
+                className="w-full border border-black/15 px-4 py-3 text-sm"
+              >
+                <option value="">
+                  {vehicleList.length === 0 ? 'Loading vehicles…' : 'Select a vehicle'}
+                </option>
+                {vehicleList.map((v) => (
+                  <option key={v.id} value={v.id}>{v.name}</option>
+                ))}
+              </select>
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -561,16 +565,13 @@ function NewBookingTab({ mapsLoaded }) {
                   <span className="text-sm">{passengers}</span>
                   <button
                     type="button"
-                    onClick={() => setPassengers((p) => Math.min(maxPassengers, p + 1))}
-                    disabled={passengers >= maxPassengers}
+                    onClick={() => setPassengers((p) => Math.min(MAX_PASSENGERS, p + 1))}
+                    disabled={passengers >= MAX_PASSENGERS}
                     className="px-2 text-lg text-black/50 disabled:opacity-30"
                   >
                     +
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-black/40">
-                  {selectedVehicle ? `Up to ${maxPassengers} for this vehicle` : 'Select a vehicle to raise the limit'}
-                </p>
               </div>
 
               <div>
@@ -582,16 +583,13 @@ function NewBookingTab({ mapsLoaded }) {
                   <span className="text-sm">{luggage}</span>
                   <button
                     type="button"
-                    onClick={() => setLuggage((l) => Math.min(maxLuggage, l + 1))}
-                    disabled={luggage >= maxLuggage}
+                    onClick={() => setLuggage((l) => Math.min(MAX_LUGGAGE, l + 1))}
+                    disabled={luggage >= MAX_LUGGAGE}
                     className="px-2 text-lg text-black/50 disabled:opacity-30"
                   >
                     +
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-black/40">
-                  {selectedVehicle ? `Up to ${maxLuggage} for this vehicle` : 'Select a vehicle to raise the limit'}
-                </p>
               </div>
 
               <div>
@@ -650,10 +648,11 @@ function NewBookingTab({ mapsLoaded }) {
             </div>
           )}
 
-          {selectedVehicle && (needsDropoff ? route : needsHours ? hours : true) && (
-            <div className="border border-black/10 bg-white p-5">
-              <p className="mb-3 font-heading text-base text-black">Price Estimate</p>
-              <dl className="flex flex-col gap-2 text-sm">
+          <div className="border border-black/10 bg-white p-5">
+            <p className="mb-3 font-heading text-base text-black">Price</p>
+
+            {selectedVehicle && (needsDropoff ? route : needsHours ? hours : true) && (
+              <dl className="mb-3 flex flex-col gap-2 border-b border-black/10 pb-3 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-black/60">{needsDropoff ? 'Base Fare' : 'Hourly Rate'}</dt>
                   <dd className="text-black">{formatCurrency(needsDropoff ? baseFare : total - addOnsTotal)}</dd>
@@ -670,13 +669,30 @@ function NewBookingTab({ mapsLoaded }) {
                 {stopCount > 0 && (
                   <div className="flex justify-between"><dt className="text-black/60">Additional Stops ({stopCount})</dt><dd className="text-black">{formatCurrency(stopCount * STOP_PRICE)}</dd></div>
                 )}
+                <div className="flex justify-between text-xs text-black/40">
+                  <dt>Suggested total</dt>
+                  <dd>{formatCurrency(total)}</dd>
+                </div>
               </dl>
-              <div className="mt-3 flex items-center justify-between border-t border-black/10 pt-3">
-                <span className="font-heading text-black">Total</span>
-                <span className="font-heading text-xl text-brand-gold">{formatCurrency(total)}</span>
-              </div>
+            )}
+
+            <label className="mb-2 block text-sm text-black/60">Total Price (edit as needed)</label>
+            <div className="flex items-center border border-black/15 px-4 py-2">
+              <span className="mr-1 text-black/40">$</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={manualPrice}
+                onChange={(e) => handleManualPriceChange(e.target.value)}
+                placeholder="0.00"
+                className="w-full text-lg text-brand-gold outline-none"
+              />
             </div>
-          )}
+            <p className="mt-1 text-xs text-black/40">
+              This is the price the client will be invoiced — edit it for negotiated or custom fares.
+            </p>
+          </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
 
