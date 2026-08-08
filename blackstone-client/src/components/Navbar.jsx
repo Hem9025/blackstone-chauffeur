@@ -61,7 +61,10 @@ export default function Navbar() {
       {/* Single nav row — no separate utility bar, kept short */}
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 md:px-8">
         <Link to="/" className="flex shrink-0 items-center gap-2">
-          <img src="/images/brand/logo.png" alt="BlackStone Chauffeur" className="h-16 w-auto md:h-20" />
+          {/* Scales down more on small phones — previously fixed at h-16 for
+              everything under md (768px), which looked oversized on narrow
+              screens. Desktop (md/lg) sizing is unchanged. */}
+          <img src="/images/brand/logo.png" alt="BlackStone Chauffeur" className="h-10 w-auto sm:h-12 md:h-16 lg:h-20" />
         </Link>
 
         <nav className="hidden items-center gap-5 lg:flex">
@@ -153,7 +156,13 @@ export default function Navbar() {
       </div>
 
       {open && (
-        <nav className="flex flex-col gap-4 border-t border-brand-black-soft bg-brand-black px-4 py-4 lg:hidden">
+        // The header sits `fixed`/`sticky` at the top with nothing else
+        // managing its height, so on short phone screens this dropdown (all
+        // links + fleet sub-links + auth links + the Book Now button) could
+        // run past the bottom of the viewport with no way to reach it —
+        // max-height + its own scroll keeps every link reachable regardless
+        // of screen height.
+        <nav className="flex max-h-[calc(100vh-4rem)] flex-col gap-4 overflow-y-auto border-t border-brand-black-soft bg-brand-black px-4 py-4 lg:hidden">
           {links.map((link) => (
             <NavLink
               key={link.to}
