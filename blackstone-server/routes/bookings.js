@@ -9,6 +9,7 @@ import { bookingAssignedTemplate } from '../emails/templates/bookingAssigned.js'
 import { rideReceiptTemplate } from '../emails/templates/rideReceipt.js'
 import { newBookingAdminTemplate } from '../emails/templates/newBookingAdmin.js'
 import { bookingCancelledTemplate } from '../emails/templates/bookingCancelled.js'
+import { bookingUpdatedTemplate } from '../emails/templates/bookingUpdated.js'
 import { calculateFare, resolveExtraWaitCharge } from '../utils/pricing.js'
 import { streamInvoice } from '../utils/invoice.js'
 import { streamBookingsReport } from '../utils/bookingsReport.js'
@@ -377,6 +378,25 @@ router.post('/provider', authCheck, requireRole('provider', 'admin'), async (req
       }).catch((err) => console.error('Failed to send new-booking-admin email', err))
     }
 
+    // The passenger themselves has no account here (customer_id on this
+    // booking is the provider/agent's own account) — this is the only
+    // confirmation they'd otherwise ever get, so it always sends regardless
+    // of who created the booking.
+    if (passenger_email) {
+      sendMail({
+        to: passenger_email,
+        subject: 'Booking confirmed — BlackStone Chauffeur',
+        html: bookingConfirmationTemplate({
+          customerName: passenger_name,
+          pickup,
+          dropoff: resolvedDropoff,
+          date,
+          time,
+          totalPrice: total_price,
+        }),
+      }).catch((err) => console.error('Failed to send booking-confirmation email (provider booking)', err))
+    }
+
     res.status(201).json({ booking: rows[0], total_price })
   } catch (err) {
     console.error(err)
@@ -642,10 +662,60 @@ router.patch('/:id/cancel', authCheck, async (req, res) => {
 // duplicates, or mistakes — not a normal part of the booking lifecycle.
 router.delete('/:id', authCheck, requireRole('admin', 'second_admin'), async (req, res) => {
   try {
-    const { rows: existingRows } = await query('SELECT id FROM bookings WHERE id = ?', [req.params.id])
+    const { rows: existingRows } = await query(
+      `SELECT b.*, v.name AS vehicle_name,
+              cu.name AS customer_name, cu.email AS customer_email,
+              du.name AS driver_name, du.email AS driver_email
+       FROM bookings b
+       LEFT JOIN vehicles v ON v.id = b.vehicle_id
+       LEFT JOIN users cu ON cu.id = b.customer_id
+       LEFT JOIN users du ON du.id = b.driver_id
+       WHERE b.id = ?`,
+      [req.params.id],
+    )
     if (!existingRows.length) return res.status(404).json({ message: 'Booking not found' })
+    const booking = existingRows[0]
 
     await query('DELETE FROM bookings WHERE id = ?', [req.params.id])
+
+    // Deleting removes the booking outright (unlike /cancel), but the
+    // customer still needs to know their ride is off — reuses the same
+    // cancellation email/wording, worded as an admin action since that's
+    // what deletion always is.
+    const emailDetails = {
+      vehicleName: booking.vehicle_name || 'Unassigned',
+      pickup: booking.pickup,
+      dropoff: booking.dropoff,
+      date: booking.date,
+      time: booking.time,
+    }
+    const recipientEmail = booking.passenger_email || booking.customer_email
+    const recipientName = booking.passenger_name || booking.customer_name
+
+    if (recipientEmail) {
+      sendMail({
+        to: recipientEmail,
+        subject: 'Booking cancelled — BlackStone Chauffeur',
+        html: bookingCancelledTemplate({
+          recipientName,
+          greetingContext: 'Your booking has been cancelled by BlackStone Chauffeur. Get in touch if this is unexpected.',
+          ...emailDetails,
+        }),
+      }).catch((err) => console.error('Failed to send cancellation email to customer (deleted booking)', err))
+    }
+
+    if (booking.driver_email) {
+      sendMail({
+        to: booking.driver_email,
+        subject: 'Ride cancelled — BlackStone Chauffeur',
+        html: bookingCancelledTemplate({
+          recipientName: booking.driver_name,
+          greetingContext: 'A ride assigned to you has been cancelled — no action needed.',
+          ...emailDetails,
+        }),
+      }).catch((err) => console.error('Failed to send cancellation email to driver (deleted booking)', err))
+    }
+
     res.json({ message: 'Booking deleted' })
   } catch (err) {
     console.error(err)
@@ -753,7 +823,29 @@ router.patch('/:id', authCheck, requireRole('admin', 'second_admin'), async (req
        WHERE b.id = ?`,
       [req.params.id],
     )
-    res.json(rows[0])
+    const booking = rows[0]
+
+    // Notify whoever's actually riding — the booking's own contact email if
+    // one was given (this is what the passenger typed on the booking form,
+    // which matters for provider bookings where the account owner is the
+    // travel agent, not the passenger), falling back to the account holder.
+    const recipientEmail = booking.passenger_email || booking.customer_email
+    if (recipientEmail) {
+      sendMail({
+        to: recipientEmail,
+        subject: 'Your booking has been updated — BlackStone Chauffeur',
+        html: bookingUpdatedTemplate({
+          customerName: booking.passenger_name || booking.customer_name,
+          pickup: booking.pickup,
+          dropoff: booking.dropoff,
+          date: booking.date,
+          time: booking.time,
+          totalPrice: booking.total_price,
+        }),
+      }).catch((err) => console.error('Failed to send booking-updated email', err))
+    }
+
+    res.json(booking)
   } catch (err) {
     console.error(err)
     res.status(500).json({ message: 'Failed to update booking' })

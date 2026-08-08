@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { query } from '../db/index.js'
 import { sendMail } from '../emails/mailer.js'
 import { enquiryAdminTemplate } from '../emails/templates/enquiryAdmin.js'
+import { enquiryConfirmationTemplate } from '../emails/templates/enquiryConfirmation.js'
 
 const router = Router()
 
@@ -32,6 +33,14 @@ router.post('/', async (req, res) => {
         html: enquiryAdminTemplate({ name: resolvedName, email, phone, message, type }),
       }).catch((err) => console.error('Failed to send enquiry-admin email', err))
     }
+
+    // Confirms receipt to whoever submitted it — matches the "we'll get back
+    // to you within 24 hours" promise already shown on-screen after submitting.
+    sendMail({
+      to: email,
+      subject: "We've received your enquiry — BlackStone Chauffeur",
+      html: enquiryConfirmationTemplate({ name: resolvedName, message }),
+    }).catch((err) => console.error('Failed to send enquiry-confirmation email', err))
 
     res.status(201).json(rows[0])
   } catch (err) {
