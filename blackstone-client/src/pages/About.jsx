@@ -136,16 +136,24 @@ export default function About() {
           <div className="mt-10 flex flex-wrap justify-center gap-x-8 gap-y-8 sm:flex-nowrap sm:justify-between sm:overflow-x-auto sm:pb-2">
             {CITIES.map((city) => (
               <div key={city.name} className="flex shrink-0 flex-col items-center gap-3">
-                <div className="h-24 w-24 overflow-hidden rounded-full ring-2 ring-brand-gold/40 ring-offset-2 ring-offset-black/[0.02] md:h-28 md:w-28">
-                  {/* object-position biased toward the upper-middle rather
-                      than dead centre — several of these photos (e.g. Sky
-                      Tower) have their subject higher in frame, and a plain
-                      centre crop was cutting the top off inside the circle. */}
-                  <img
-                    src={city.image}
-                    alt={city.name}
-                    className="h-full w-full object-cover object-[50%_25%]"
-                  />
+                {/* Gold ring is a real border (inside the box, border-box
+                    sizing) instead of a ring-offset box-shadow — the
+                    shadow-based ring was getting clipped at the top/side by
+                    the row's overflow-x-auto on wider screens, since a
+                    box-shadow can render outside its element's own bounds
+                    but a border never does. */}
+                <div className="h-24 w-24 shrink-0 rounded-full border-2 border-brand-gold/40 p-1 md:h-28 md:w-28">
+                  <div className="h-full w-full overflow-hidden rounded-full">
+                    {/* object-position biased toward the upper-middle rather
+                        than dead centre — several of these photos (e.g. Sky
+                        Tower) have their subject higher in frame, and a plain
+                        centre crop was cutting the top off inside the circle. */}
+                    <img
+                      src={city.image}
+                      alt={city.name}
+                      className="h-full w-full object-cover object-[50%_25%]"
+                    />
+                  </div>
                 </div>
                 <p className="text-sm font-medium text-black">{city.name}</p>
               </div>
