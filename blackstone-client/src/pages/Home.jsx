@@ -146,9 +146,8 @@ export default function Home() {
             </div>
           </Reveal>
           {/* Clean "product shot" card style — cutout car icons on a plain
-              white backdrop, filling the tile edge-to-edge (no padding or
-              tinted frame around the image, and the container is matched to
-              the icon's own aspect ratio so there's no letterboxing gap). */}
+              white backdrop, with an even 20px breathing-room gap on every
+              side of the image inside the tile. */}
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {HOME_FLEET_CATEGORIES.map((c, i) => (
               <Reveal key={c.label} delay={i * 100}>
@@ -156,7 +155,7 @@ export default function Home() {
                   to={c.href}
                   className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.06] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
-                  <div className="aspect-[768/357] overflow-hidden bg-white">
+                  <div className="aspect-[768/357] overflow-hidden bg-white p-5">
                     <img
                       src={c.image}
                       alt={c.label}
