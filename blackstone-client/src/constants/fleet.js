@@ -469,11 +469,12 @@ export function getCategoryByUrlSlug(urlSlug) {
 }
 
 // The 6 category tiles shown on the homepage fleet section (3 columns x 2
-// rows) — "Business" is the client-facing name for the internal 'luxury'
-// category, "Economy" for 'economy'. Sprinter is a 7th, quote-only category
-// that intentionally isn't shown here (only on the booking form) since it's
-// not an instant-book vehicle. Each tile links to the matching fleet page
-// pre-filtered to that body type via ?type=.
+// rows) — "Luxury" is the client-facing name for the internal 'luxury'
+// category, "Comfort" for 'economy' (matches the labelling already used on
+// the two standalone fleet pages — FLEET_CATEGORIES above). Sprinter is a
+// 7th, quote-only category that intentionally isn't shown here (only on the
+// booking form) since it's not an instant-book vehicle. Each tile links to
+// the matching fleet page pre-filtered to that body type via ?type=.
 //
 // These tiles use dedicated cutout-style icon images (IMAGES.homeFleetIcons)
 // rather than a real vehicle's hero photo, so all 6 tiles share one
@@ -481,10 +482,10 @@ export function getCategoryByUrlSlug(urlSlug) {
 // category — the tile still links through to the full filtered fleet list,
 // it isn't tied to a single vehicle.
 export const HOME_FLEET_CATEGORIES = [
-  { label: 'Economy Sedan', bodyType: 'sedan', category: 'economy', image: IMAGES.homeFleetIcons.economySedan },
-  { label: 'Economy SUV', bodyType: 'suv', category: 'economy', image: IMAGES.homeFleetIcons.economySuv },
-  { label: 'Economy Van', bodyType: 'van', category: 'economy', image: IMAGES.homeFleetIcons.economyVan },
-  { label: 'Business Sedan', bodyType: 'sedan', category: 'luxury', image: IMAGES.homeFleetIcons.businessSedan },
-  { label: 'Business SUV', bodyType: 'suv', category: 'luxury', image: IMAGES.homeFleetIcons.businessSuv },
-  { label: 'Business Van', bodyType: 'van', category: 'luxury', image: IMAGES.homeFleetIcons.businessVan },
+  { label: 'Comfort Sedan', bodyType: 'sedan', category: 'economy', image: IMAGES.homeFleetIcons.economySedan },
+  { label: 'Comfort SUV', bodyType: 'suv', category: 'economy', image: IMAGES.homeFleetIcons.economySuv },
+  { label: 'Comfort Van', bodyType: 'van', category: 'economy', image: IMAGES.homeFleetIcons.economyVan },
+  { label: 'Luxury Sedan', bodyType: 'sedan', category: 'luxury', image: IMAGES.homeFleetIcons.businessSedan },
+  { label: 'Luxury SUV', bodyType: 'suv', category: 'luxury', image: IMAGES.homeFleetIcons.businessSuv },
+  { label: 'Luxury Van', bodyType: 'van', category: 'luxury', image: IMAGES.homeFleetIcons.businessVan },
 ].map((c) => ({ ...c, href: `${categoryPath(c.category)}?type=${c.bodyType}` }))
