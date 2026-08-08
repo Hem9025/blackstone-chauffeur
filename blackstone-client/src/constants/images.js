@@ -47,6 +47,18 @@ export const IMAGES = {
     toyotaPrius: unsplash('photo-1551952237-954a0e68786c', 1400),
   },
 
+  // Homepage "Our Fleet" tiles only — clean cutout/studio-style car icons on
+  // a transparent background (client-supplied), one per body-type tile.
+  // Not used anywhere else (fleet detail pages keep their real photo heroes).
+  homeFleetIcons: {
+    economySedan: '/images/fleet/icons/economy-sedan.png',
+    economySuv: '/images/fleet/icons/economy-suv.png',
+    economyVan: '/images/fleet/icons/economy-van.png',
+    businessSedan: '/images/fleet/icons/business-sedan.png',
+    businessSuv: '/images/fleet/icons/business-suv.png',
+    businessVan: '/images/fleet/icons/business-van.png',
+  },
+
   // Real client-supplied interior photography for specific fleet vehicles
   // (everything else still uses the shared placeholder `fleetGallery` below
   // until real photos are supplied for them too). Hero/exterior images for

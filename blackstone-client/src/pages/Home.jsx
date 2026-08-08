@@ -145,10 +145,10 @@ export default function Home() {
               </Button>
             </div>
           </Reveal>
-          {/* Clean "product shot" card style — car sits centred on a soft
-              neutral backdrop (object-contain) rather than a full-bleed
-              lifestyle photo with a dark gradient overlay, closer to a
-              typical fleet-marketplace presentation. */}
+          {/* Clean "product shot" card style — cutout car icons on a plain
+              white backdrop, filling the tile edge-to-edge (no padding or
+              tinted frame around the image, and the container is matched to
+              the icon's own aspect ratio so there's no letterboxing gap). */}
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {HOME_FLEET_CATEGORIES.map((c, i) => (
               <Reveal key={c.label} delay={i * 100}>
@@ -156,7 +156,7 @@ export default function Home() {
                   to={c.href}
                   className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.06] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
-                  <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-black/[0.03] to-black/[0.08] p-6">
+                  <div className="aspect-[768/357] overflow-hidden bg-white">
                     <img
                       src={c.image}
                       alt={c.label}
