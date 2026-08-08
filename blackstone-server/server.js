@@ -15,7 +15,32 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 5050
 
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }))
+// Accepts CLIENT_URL from the environment plus every known real domain
+// variant (www vs non-www, http vs https) and localhost for dev — a single
+// fixed origin was silently rejecting requests from whichever variant
+// wasn't the exact configured one, which is the most likely cause of the
+// intermittent "failed to fetch" errors reported on the live site (a
+// request from a mismatched origin fails at the browser level with no
+// useful error, so it looks random from the user's side).
+const ALLOWED_ORIGINS = [
+  process.env.CLIENT_URL,
+  'https://blackstonechauffeur.co.nz',
+  'https://www.blackstonechauffeur.co.nz',
+  'http://blackstonechauffeur.co.nz',
+  'http://www.blackstonechauffeur.co.nz',
+  'http://localhost:5173',
+].filter(Boolean)
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      // No Origin header (curl, health checks, server-to-server) — allow.
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true)
+      console.warn(`[cors] Rejected request from unrecognised origin: ${origin}`)
+      callback(new Error('Not allowed by CORS'))
+    },
+  }),
+)
 
 // Stripe webhook needs the raw body — must be mounted BEFORE express.json()
 app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }), stripeWebhookRoutes)

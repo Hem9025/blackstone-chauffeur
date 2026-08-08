@@ -273,6 +273,25 @@ export const FLEET = [
       'From wedding parties and corporate teams to group airport transfers and multi-day tours, the Sprinter 519 keeps everyone together in one vehicle, chauffeured by a single professional driver, with luggage space to match.',
     ],
   },
+  {
+    slug: 'mercedes-sprinter-316',
+    category: 'luxury',
+    bodyType: 'sprinter',
+    // Same group-quote handling as the Sprinter 519 above — a smaller
+    // 12-seater option for groups that don't need the full 16-seater.
+    quoteOnly: true,
+    title: 'Mercedes-Benz Sprinter 316',
+    tagline: 'Group Shuttle',
+    passengers: 12,
+    luggage: 8,
+    shortDesc: 'A more compact Sprinter for mid-sized groups, without compromising on chauffeured comfort.',
+    heroImage: IMAGES.fleet.mercedesSprinter316,
+    gallery: galleryA('Sprinter 316'),
+    description: [
+      'The Mercedes-Benz Sprinter 316 gives mid-sized groups the same chauffeured, executive-standard service as our larger Sprinter 519, in a more compact 12-seat configuration. Comfortable upholstered seating and generous headroom make it a natural fit for groups that don\'t need the full 16-seater.',
+      'Ideal for smaller wedding parties, corporate teams, and group airport transfers where everyone still travels together in one vehicle with a single professional driver.',
+    ],
+  },
 
   // ---------------- Premium Economy Fleet ----------------
   {

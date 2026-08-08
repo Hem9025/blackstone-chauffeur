@@ -113,12 +113,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats band */}
+      {/* Stats band — white, not dark, so it doesn't sit black-on-black
+          directly under the dark hero section above it. */}
       <Reveal variant="fade">
         <StatsBand
           heading="A New Standard of Luxury Travel and Comfort"
           description="BlackStone Chauffeur has proudly served clients across New Zealand for over 3 years, delivering unmatched luxury transportation with professionalism and care."
           stats={homeStats}
+          dark={false}
         />
       </Reveal>
 
@@ -143,22 +145,27 @@ export default function Home() {
               </Button>
             </div>
           </Reveal>
+          {/* Clean "product shot" card style — car sits centred on a soft
+              neutral backdrop (object-contain) rather than a full-bleed
+              lifestyle photo with a dark gradient overlay, closer to a
+              typical fleet-marketplace presentation. */}
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {HOME_FLEET_CATEGORIES.map((c, i) => (
               <Reveal key={c.label} delay={i * 100}>
                 <Link
                   to={c.href}
-                  className="group relative flex aspect-[4/3] items-end overflow-hidden rounded-2xl"
+                  className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.06] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
-                  <img
-                    src={c.image}
-                    alt={c.label}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <div className="relative flex w-full items-center justify-between p-5">
-                    <h3 className="font-heading text-lg text-white">{c.label}</h3>
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white transition-colors group-hover:bg-brand-gold group-hover:text-brand-black">
+                  <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-black/[0.03] to-black/[0.08] p-6">
+                    <img
+                      src={c.image}
+                      alt={c.label}
+                      className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between border-t border-black/5 p-5">
+                    <h3 className="font-heading text-lg text-black">{c.label}</h3>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black/5 text-black transition-colors group-hover:bg-brand-gold group-hover:text-brand-black">
                       <ArrowRight size={15} />
                     </span>
                   </div>
@@ -204,8 +211,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Services */}
-      <section className="bg-white py-16">
+      {/* Services — light tint background (not plain white) so it reads as
+          its own section rather than blending into the white Wedding Hire
+          strip directly below it. */}
+      <section className="bg-black/[0.02] py-16">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <Reveal>
             <div className="flex items-end justify-between">
@@ -280,7 +289,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <Reveal>
             <div className="flex flex-wrap items-end justify-between gap-2">
-              <h2 className="font-heading text-3xl text-black">What Riders Say</h2>
+              <h2 className="font-heading text-3xl text-black">What Our Clients Say</h2>
               {googleReviews && (
                 <a
                   href={googleReviews.placeUrl || 'https://www.google.com/maps'}

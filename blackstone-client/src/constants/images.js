@@ -33,6 +33,7 @@ export const IMAGES = {
     toyotaAlphard: '/images/fleet/hero/toyota-alphard.jpg',
     audiQ7: unsplash('photo-1651751234256-86187ebf7302', 1400),
     mercedesSprinter: '/images/fleet/hero/mercedes-sprinter-519.jpg',
+    mercedesSprinter316: unsplash('photo-1775053392841-7fa6dabdb760', 1400),
 
     // Premium economy fleet
     teslaModelY: '/images/fleet/hero/tesla-model-y.jpg',

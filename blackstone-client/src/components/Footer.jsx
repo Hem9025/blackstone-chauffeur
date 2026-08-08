@@ -33,6 +33,12 @@ const social = [
   { icon: XMark, href: '#', label: 'X (Twitter)' },
 ]
 
+// Mirrors the city list on the About page's "Where We Operate" section —
+// update both together if the operating area changes.
+const CITIES_WE_SERVE = [
+  'Auckland', 'Hamilton', 'Rotorua', 'Christchurch', 'Wellington', 'Napier', 'Taupō', 'Queenstown',
+]
+
 export default function Footer() {
   return (
     <footer className="relative overflow-hidden bg-brand-black text-brand-white/70">
@@ -106,7 +112,16 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-white/10 pt-6 text-xs">
+          <p className="text-xs uppercase tracking-widest text-brand-white/40">Cities We Serve:</p>
+          {CITIES_WE_SERVE.map((city, i) => (
+            <span key={city} className="text-brand-white/70">
+              {city}{i < CITIES_WE_SERVE.length - 1 ? ' ·' : ''}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-6 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} BlackStone Chauffeur. All rights reserved.</p>
           <p className="text-brand-white/40">Built with care for a five-star ride.</p>
         </div>

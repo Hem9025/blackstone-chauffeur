@@ -54,8 +54,10 @@ export default function Services() {
           <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {services.map((s) => (
               <div key={s.title} className="flex flex-col overflow-hidden rounded-3xl border border-black/10">
-                <div className="h-44 overflow-hidden">
-                  <img src={s.image} alt={s.title} className="h-full w-full object-cover" />
+                {/* Taller box with object-contain (not object-cover) so the
+                    whole photo shows rather than a tight, cropped strip. */}
+                <div className="h-60 overflow-hidden bg-black/5">
+                  <img src={s.image} alt={s.title} className="h-full w-full object-contain p-2" />
                 </div>
                 <div className="flex flex-1 flex-col p-6">
                   <h3 className="font-heading text-lg text-black">{s.title}</h3>

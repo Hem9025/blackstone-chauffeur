@@ -84,8 +84,10 @@ export default function About() {
         dark={false}
       />
 
-      {/* Core Values — text left, image right */}
-      <section className="bg-white py-16">
+      {/* Core Values — text left, image right. Light tint (not white) so
+          "What Drives Us" reads as visually distinct from the white "Who We
+          Are" band directly above it. */}
+      <section className="bg-black/[0.02] py-16">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <div className="grid grid-cols-1 gap-12 md:grid-cols-2 md:items-center">
             <div>
@@ -112,8 +114,8 @@ export default function About() {
 
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl md:aspect-[3/4]">
               <img
-                src={IMAGES.fleet.mercedesGLS}
-                alt="BlackStone Chauffeur fleet"
+                src={IMAGES.gallery[3]}
+                alt="BlackStone Chauffeur team greeting guests"
                 className="h-full w-full object-cover"
               />
               <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/10" />
@@ -134,8 +136,16 @@ export default function About() {
           <div className="mt-10 flex flex-wrap justify-center gap-x-8 gap-y-8 sm:flex-nowrap sm:justify-between sm:overflow-x-auto sm:pb-2">
             {CITIES.map((city) => (
               <div key={city.name} className="flex shrink-0 flex-col items-center gap-3">
-                <div className="h-20 w-20 overflow-hidden rounded-full ring-2 ring-brand-gold/40 ring-offset-2 ring-offset-black/[0.02] md:h-24 md:w-24">
-                  <img src={city.image} alt={city.name} className="h-full w-full object-cover" />
+                <div className="h-24 w-24 overflow-hidden rounded-full ring-2 ring-brand-gold/40 ring-offset-2 ring-offset-black/[0.02] md:h-28 md:w-28">
+                  {/* object-position biased toward the upper-middle rather
+                      than dead centre — several of these photos (e.g. Sky
+                      Tower) have their subject higher in frame, and a plain
+                      centre crop was cutting the top off inside the circle. */}
+                  <img
+                    src={city.image}
+                    alt={city.name}
+                    className="h-full w-full object-cover object-[50%_25%]"
+                  />
                 </div>
                 <p className="text-sm font-medium text-black">{city.name}</p>
               </div>

@@ -40,6 +40,31 @@ export function resolveExtraWaitCharge(minutesInput) {
   return { minutes, price }
 }
 
+// Traffic Adjustment — mirrors blackstone-client/src/utils/pricing.js
+// exactly (this server copy is the authoritative one actually charged).
+// Google's estimated trip duration for the same distance can vary run to
+// run (time of day, traffic), but flat distance-tier pricing doesn't
+// reflect that at all, so two trips of the same km can quote identically
+// even when one is genuinely going to take much longer. Rather than pricing
+// every minute (which would make fares unpredictable), this only kicks in
+// once actual duration runs meaningfully longer than a plain "normal
+// traffic" expectation for that distance, and caps out at a modest amount.
+const ASSUMED_AVG_KMH = 40 // Reasonable mixed urban/highway NZ average
+const TRAFFIC_SURCHARGE_THRESHOLD = 1.25 // Only kicks in >25% over "normal"
+const TRAFFIC_SURCHARGE_PER_MIN = 0.75
+const TRAFFIC_SURCHARGE_MAX = 15
+
+export function trafficSurcharge(distanceKm, durationMin) {
+  const km = Number(distanceKm) || 0
+  const min = Number(durationMin) || 0
+  if (!km || !min) return 0
+  const expectedMin = (km / ASSUMED_AVG_KMH) * 60
+  const thresholdMin = expectedMin * TRAFFIC_SURCHARGE_THRESHOLD
+  if (min <= thresholdMin) return 0
+  const excessMin = min - thresholdMin
+  return Math.min(TRAFFIC_SURCHARGE_MAX, Math.round(excessMin * TRAFFIC_SURCHARGE_PER_MIN * 100) / 100)
+}
+
 /**
  * Computes the full fare for a booking.
  * vehicle: row from the vehicles table (distance_tiers/features as JS values,
@@ -53,14 +78,14 @@ export function calculateFare({ vehicle, distanceKm, durationMin = 0, passengers
   // guard a missing distanceKm defaults to 0km, which matches the first
   // (cheapest but non-zero) tier and silently overcharges those bookings
   // for a "trip" that never happened.
-  const base = distanceKm !== undefined && distanceKm !== null
-    ? tierPriceForDistance(vehicle.distance_tiers, distanceKm)
-    : 0
+  const hasDistance = distanceKm !== undefined && distanceKm !== null
+  const base = hasDistance ? tierPriceForDistance(vehicle.distance_tiers, distanceKm) : 0
   const startingPrice = Number(vehicle.starting_price) || 0
   const perMinute = (Number(vehicle.price_per_minute) || 0) * (Number(durationMin) || 0)
   const perOccupant = (Number(vehicle.price_per_occupant) || 0) * (Number(passengers ?? vehicle.passengers) || 0)
   const perSuitcase = (Number(vehicle.price_per_suitcase) || 0) * (Number(suitcases ?? vehicle.suitcases) || 0)
+  const surcharge = hasDistance ? trafficSurcharge(distanceKm, durationMin) : 0
 
-  const total = base + startingPrice + perMinute + perOccupant + perSuitcase + (Number(addOnsTotal) || 0)
+  const total = base + startingPrice + perMinute + perOccupant + perSuitcase + surcharge + (Number(addOnsTotal) || 0)
   return Math.round(total * 100) / 100
 }

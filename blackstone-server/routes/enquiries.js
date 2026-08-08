@@ -6,25 +6,30 @@ import { enquiryAdminTemplate } from '../emails/templates/enquiryAdmin.js'
 const router = Router()
 
 // POST /api/enquiries — public
+// `name` is optional — the homepage "Get in Touch" quick-contact widget
+// (type: 'quick-contact') only collects an email address plus trip details
+// folded into `message`, so this falls back to a placeholder name rather
+// than forcing that widget to add a Name field just to satisfy this route.
 router.post('/', async (req, res) => {
   const { name, email, phone, message, type } = req.body || {}
 
-  if (!name || !email || !message) {
-    return res.status(400).json({ message: 'name, email, and message are required' })
+  if (!email || !message) {
+    return res.status(400).json({ message: 'email and message are required' })
   }
+  const resolvedName = name && String(name).trim() ? String(name).trim() : 'Website Visitor'
 
   try {
     const inserted = await query(
       `INSERT INTO enquiries (name, email, phone, message, type) VALUES (?, ?, ?, ?, ?)`,
-      [name, email, phone, message, type],
+      [resolvedName, email, phone, message, type],
     )
     const { rows } = await query('SELECT * FROM enquiries WHERE id = ?', [inserted.insertId])
 
     if (process.env.ADMIN_EMAIL) {
       sendMail({
         to: process.env.ADMIN_EMAIL,
-        subject: `New enquiry from ${name}`,
-        html: enquiryAdminTemplate({ name, email, phone, message, type }),
+        subject: `New enquiry from ${resolvedName}`,
+        html: enquiryAdminTemplate({ name: resolvedName, email, phone, message, type }),
       }).catch((err) => console.error('Failed to send enquiry-admin email', err))
     }
 

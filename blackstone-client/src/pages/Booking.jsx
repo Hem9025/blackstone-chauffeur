@@ -13,9 +13,12 @@ import PlacesAutocompleteInput from '../components/PlacesAutocompleteInput'
 import RouteMap from '../components/RouteMap'
 import { vehicles as vehiclesApi, bookings as bookingsApi } from '../utils/api'
 import { formatCurrency } from '../utils/helpers'
-import { calculateFare, tierPriceForDistance } from '../utils/pricing'
+import { calculateFare, tierPriceForDistance, trafficSurcharge } from '../utils/pricing'
 import { useAuth } from '../context/AuthContext'
-import { minBookingDate, isDateFarEnoughAhead, MIN_ADVANCE_DAYS } from '../utils/bookingRules'
+import {
+  minBookingDate, isDateFarEnoughAhead, MIN_ADVANCE_DAYS,
+  isWithinServiceRadius, SERVICE_RADIUS_KM,
+} from '../utils/bookingRules'
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
 const GOOGLE_MAPS_LIBRARIES = ['places']
@@ -34,14 +37,15 @@ const CHILD_SEAT_MAX = 2
 const STOP_PRICE = 20
 const STOPS_MAX = 5
 
-// Extra Wait Time slider — 5 to 60 minutes, priced proportionally up to the
-// same $20 the old flat toggle charged at the 60-minute (1 hour) mark.
-// Server-side price is recalculated from the same formula — see
-// routes/bookings.js — never trusted from the client directly.
-const EXTRA_WAIT_MIN_MINUTES = 5
+// Extra Wait Time slider — steps of 15 minutes (15/30/45/60), priced
+// proportionally up to the same $20 the old flat toggle charged at the
+// 60-minute (1 hour) mark — which lands exactly on $5/$10/$15/$20 at each
+// 15-minute step. Server-side price is recalculated from the same formula —
+// see routes/bookings.js — never trusted from the client directly.
+const EXTRA_WAIT_MIN_MINUTES = 15
 const EXTRA_WAIT_MAX_MINUTES = 60
 const EXTRA_WAIT_MAX_PRICE = 20
-const EXTRA_WAIT_STEP = 5
+const EXTRA_WAIT_STEP = 15
 
 function extraWaitPrice(minutes) {
   if (!minutes) return 0
@@ -272,11 +276,17 @@ function BookingContent({ mapsLoaded }) {
     setStops((prev) => prev.map((s, i) => (i === index ? place : s)))
   }
 
+  // Only gates on the pickup point (not the destination) — that's what
+  // determines how far a chauffeur has to travel to reach the client, which
+  // is the actual constraint on instant, fixed-price online booking.
+  const pickupOutOfRange = pickup.lat != null && !isWithinServiceRadius(pickup.lat, pickup.lng)
+
   function goToStep1Valid() {
     if (!pickup.address || !date || !time || !isDateFarEnoughAhead(date)) return false
     if (needsDropoff && !dropoff.address) return false
     if (needsHours && !hours) return false
     if (isAirport && !flightNumber.trim()) return false
+    if (pickupOutOfRange) return false
     return true
   }
 
@@ -429,7 +439,7 @@ function BookingContent({ mapsLoaded }) {
                       {isAirport && <Check size={13} className="text-brand-black" />}
                     </span>
                     <Plane size={16} className={isAirport ? 'text-brand-gold' : 'text-black/40'} />
-                    This is an airport pickup or drop-off
+                    This is an airport pickup
                   </button>
                 </div>
 
@@ -446,6 +456,17 @@ function BookingContent({ mapsLoaded }) {
                     className="w-full border border-black/15 px-4 py-3 pr-10 text-sm"
                   />
                 </div>
+
+                {pickupOutOfRange && (
+                  <div className="sm:col-span-2 flex items-start gap-2 border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+                    <Info size={16} className="mt-0.5 shrink-0" />
+                    <p>
+                      This pickup is outside our standard {SERVICE_RADIUS_KM}km online-booking service area.
+                      Please <a href="/contact" className="underline">send us an enquiry</a> instead and we'll
+                      arrange a custom quote.
+                    </p>
+                  </div>
+                )}
 
                 {needsDropoff && (
                   <div>
@@ -718,7 +739,7 @@ function BookingContent({ mapsLoaded }) {
                   </div>
                   <p className="mt-1 text-xs text-black/50">
                     Need your chauffeur to wait longer than the included free time? Slide to add extra
-                    minutes (5 to 60) — priced automatically as you go.
+                    minutes in steps of 15 (up to 60) — priced automatically as you go.
                   </p>
                   <div className="mt-3 flex items-center gap-3">
                     <input
@@ -924,6 +945,14 @@ function BookingContent({ mapsLoaded }) {
                 )}
                 {extraWaitMinutes > 0 && (
                   <div className="flex justify-between"><dt className="text-black/60">Extra Wait Time ({extraWaitMinutes} min)</dt><dd className="text-black">{formatCurrency(extraWaitCost)}</dd></div>
+                )}
+                {needsDropoff && route && trafficSurcharge(route.distanceKm, route.durationMin) > 0 && (
+                  <div className="flex justify-between">
+                    <dt className="flex items-center gap-1 text-black/60">
+                      Traffic Adjustment <Info size={12} className="text-black/30" />
+                    </dt>
+                    <dd className="text-black">{formatCurrency(trafficSurcharge(route.distanceKm, route.durationMin))}</dd>
+                  </div>
                 )}
               </dl>
               <div className="mt-3 flex items-center justify-between border-t border-black/10 pt-3">
