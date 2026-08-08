@@ -74,12 +74,8 @@ export default function Home() {
         jsonLd={localBusinessJsonLd}
       />
 
-      {/* Hero — full viewport on first glance, nav floats transparent on top.
-          min-h (not a fixed h-screen) so that on narrow phones, where the
-          stacked heading + paragraph + quick-contact form can end up taller
-          than one screen, the section grows to fit everything instead of
-          clipping/overlapping the fixed navbar above it. */}
-      <section className="relative min-h-screen w-full overflow-hidden bg-brand-black text-white">
+      {/* Hero — full viewport on first glance, nav floats transparent on top */}
+      <section className="relative h-screen w-full overflow-hidden bg-brand-black text-white">
         <img
           src={IMAGES.hero}
           alt="BlackStone Chauffeur luxury vehicle"

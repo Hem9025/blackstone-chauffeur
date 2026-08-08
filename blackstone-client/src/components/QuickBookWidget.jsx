@@ -66,7 +66,7 @@ export default function QuickBookWidget() {
         <button
           type="submit"
           disabled={status === 'submitting'}
-          className="flex items-center justify-center gap-2 bg-brand-gold px-6 py-3.5 font-medium tracking-wide text-brand-black transition-colors hover:bg-brand-champagne disabled:cursor-not-allowed disabled:opacity-60 sm:px-8 sm:py-4"
+          className="flex items-center justify-center gap-2 bg-brand-gold px-8 py-4 font-medium tracking-wide text-brand-black transition-colors hover:bg-brand-champagne disabled:cursor-not-allowed disabled:opacity-60"
         >
           {status === 'submitting' ? 'Sending…' : 'Get in Touch'} <ArrowRight size={16} />
         </button>
@@ -78,7 +78,7 @@ export default function QuickBookWidget() {
 
 function Field({ icon: Icon, ...props }) {
   return (
-    <div className="flex flex-1 items-center gap-2 px-4 py-3 sm:px-5 sm:py-4">
+    <div className="flex flex-1 items-center gap-2 px-5 py-4">
       <Icon size={16} className="shrink-0 text-brand-black/40" />
       <input
         {...props}
