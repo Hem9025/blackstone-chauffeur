@@ -16,8 +16,19 @@
   --font-hero: 'Playfair Display', 'Cormorant Garamond', 'Times New Roman', serif;
 }
 
+html {
+  /* Safety net: if any element anywhere on a page ever ends up wider than
+     the viewport (a long unbroken string, a slightly-too-wide component,
+     etc.), this stops it from creating page-wide horizontal scroll that
+     drags fixed/sticky elements like the header off to one side. */
+  overflow-x: hidden;
+  width: 100%;
+}
+
 body {
   margin: 0;
+  overflow-x: hidden;
+  width: 100%;
   background: var(--color-brand-white);
   color: var(--color-brand-black);
   font-family: var(--font-sans);

@@ -61,7 +61,10 @@ export default function Navbar() {
       {/* Single nav row — no separate utility bar, kept short */}
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 md:px-8">
         <Link to="/" className="flex shrink-0 items-center gap-2">
-          <img src="/images/brand/logo.png" alt="BlackStone Chauffeur" className="h-16 w-auto md:h-20" />
+          {/* Smaller on phones — h-16 for everything under md was oversized
+              on narrow screens (confirmed on an actual device screenshot).
+              Desktop (md/lg) sizing is unchanged. */}
+          <img src="/images/brand/logo.png" alt="BlackStone Chauffeur" className="h-12 w-auto md:h-16 lg:h-20" />
         </Link>
 
         <nav className="hidden items-center gap-5 lg:flex">
@@ -143,8 +146,10 @@ export default function Navbar() {
           </Button>
         </nav>
 
+        {/* shrink-0 guarantees this never gets squeezed out of view by the
+            logo on a narrow screen, no matter how wide the logo renders. */}
         <button
-          className="text-brand-white lg:hidden"
+          className="shrink-0 text-brand-white lg:hidden"
           onClick={() => setOpen((o) => !o)}
           aria-label="Toggle menu"
         >

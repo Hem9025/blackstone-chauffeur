@@ -79,9 +79,17 @@ export default function Home() {
         <img
           src={IMAGES.hero}
           alt="BlackStone Chauffeur luxury vehicle"
-          className="absolute inset-0 h-full w-full object-cover opacity-65"
+          className="absolute inset-0 h-full w-full object-cover object-[50%_30%] opacity-65"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+        {/* On tall/narrow (mobile) screens, object-cover has to match the
+            image to the box's full height with no vertical crop room, so
+            the very top of the source photo (background clutter — shop
+            signage, etc. — behind the car) ends up fully visible with only
+            a light tint from the gradient above. This adds a second, top-
+            anchored fade so that top strip is meaningfully darkened too,
+            regardless of what's actually in the source photo. */}
+        <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-black/70 to-transparent" />
 
         <div className="relative z-10 flex h-full flex-col justify-end">
           {/* Text block anchored to the bottom-left corner rather than
