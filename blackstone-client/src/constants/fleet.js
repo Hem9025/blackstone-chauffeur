@@ -306,25 +306,6 @@ export const FLEET = [
 
   // ---------------- Premium Economy Fleet ----------------
   {
-    slug: 'toyota-hiace',
-    category: 'economy',
-    bodyType: 'van',
-    // Same group-quote handling as the Sprinters — 10 seats is outside the
-    // normal per-km instant-booking tiers.
-    quoteOnly: true,
-    title: 'Toyota Hiace',
-    tagline: 'Group Shuttle',
-    passengers: 10,
-    luggage: 5,
-    shortDesc: 'A dependable 10-seat shuttle for group transfers, at a Comfort-fleet price point.',
-    heroImage: IMAGES.fleet.toyotaHiace,
-    gallery: toyotaHiaceGallery,
-    description: [
-      'The Toyota Hiace is a practical, dependable choice for larger groups who want everyone travelling together without stepping up to a full executive Sprinter. Comfortable seating for up to ten passengers and a generous luggage area make it well suited to group airport transfers and day trips.',
-      'A reliable option for sports teams, tour groups, and larger families who need one vehicle, one driver, and no compromise on getting everyone there together.',
-    ],
-  },
-  {
     slug: 'tesla-model-y',
     category: 'economy',
     bodyType: 'suv',
@@ -451,6 +432,27 @@ export const FLEET = [
     description: [
       'The Haval Jolion is a compact SUV with a comfortable cabin and easy manoeuvrability, making it a practical option for shorter city transfers and everyday bookings.',
       'A convenient choice for solo travellers and small groups who want SUV comfort on quick point-to-point trips.',
+    ],
+  },
+  {
+    // Kept last in the fleet listing — a shuttle/group option positioned
+    // after the standard Comfort cars and SUVs above.
+    slug: 'toyota-hiace',
+    category: 'economy',
+    bodyType: 'van',
+    // Same group-quote handling as the Sprinters — 10 seats is outside the
+    // normal per-km instant-booking tiers.
+    quoteOnly: true,
+    title: 'Toyota Hiace',
+    tagline: 'Group Shuttle',
+    passengers: 10,
+    luggage: 5,
+    shortDesc: 'A dependable 10-seat shuttle for group transfers, at a Comfort-fleet price point.',
+    heroImage: IMAGES.fleet.toyotaHiace,
+    gallery: toyotaHiaceGallery,
+    description: [
+      'The Toyota Hiace is a practical, dependable choice for larger groups who want everyone travelling together without stepping up to a full executive Sprinter. Comfortable seating for up to ten passengers and a generous luggage area make it well suited to group airport transfers and day trips.',
+      'A reliable option for sports teams, tour groups, and larger families who need one vehicle, one driver, and no compromise on getting everyone there together.',
     ],
   },
 ]

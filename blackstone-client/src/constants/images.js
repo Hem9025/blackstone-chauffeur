@@ -34,9 +34,12 @@ export const IMAGES = {
     audiQ7: unsplash('photo-1651751234256-86187ebf7302', 1400),
     mercedesSprinter: '/images/fleet/hero/mercedes-sprinter-519.jpg',
     mercedesSprinter316: unsplash('photo-1775053392841-7fa6dabdb760', 1400),
-    // Real Toyota Hiace stock photo (Unsplash, tagged "toyota hiace") — swap
-    // for a real photo of the client's own vehicle once supplied.
-    toyotaHiace: unsplash('photo-1773391966523-cfb3c8524e7d', 1400),
+    // Real Toyota Hiace stock photo (Unsplash, tagged "toyota hiace") — the
+    // same shot Unsplash itself uses to represent the search term, for a
+    // clean on-the-road three-quarter view matching the rest of the fleet's
+    // hero style. Swap for a real photo of the client's own vehicle once
+    // supplied.
+    toyotaHiace: unsplash('photo-1678747172256-b37b7ac99cfc', 1400),
 
     // Premium economy fleet
     teslaModelY: '/images/fleet/hero/tesla-model-y.jpg',
@@ -169,7 +172,7 @@ export const IMAGES = {
       unsplash('photo-1648197295778-433b7bed847d', 1000),
       unsplash('photo-1603094746214-44fe6eb80160', 1000),
       unsplash('photo-1650807486050-a142ea418b19', 1000),
-      unsplash('photo-1678747172256-b37b7ac99cfc', 1000),
+      unsplash('photo-1521014710171-f44dfe788ece', 1000),
     ],
   },
 
