@@ -129,6 +129,91 @@ router.get('/vehicles', requirePermission('can_manage_vehicles'), async (req, re
   }
 })
 
+// GET /api/admin/overview — headline figures for the admin Dashboard page:
+// lifetime totals, a booking-status breakdown, the last 12 months of
+// booking volume/revenue (for the trend chart), and the top 5 vehicles by
+// bookings. Revenue anywhere here only ever counts completed bookings —
+// a pending/cancelled booking's total_price was never actually earned.
+router.get('/overview', requirePermission('can_view_stats'), async (req, res) => {
+  try {
+    const { rows: totalsRows } = await query(
+      `SELECT
+         COUNT(*) AS total_bookings,
+         SUM(CASE WHEN booking_status = 'completed' THEN 1 ELSE 0 END) AS completed_count,
+         SUM(CASE WHEN booking_status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled_count,
+         SUM(CASE WHEN booking_status IN ('pending','assigned','en_route','arrived') THEN 1 ELSE 0 END) AS upcoming_count,
+         COALESCE(SUM(CASE WHEN booking_status = 'completed' THEN total_price ELSE 0 END), 0) AS total_revenue
+       FROM bookings`,
+    )
+    const totals = totalsRows[0] || {}
+
+    const { rows: statusRows } = await query(
+      `SELECT booking_status, COUNT(*) AS count FROM bookings GROUP BY booking_status`,
+    )
+    const statusBreakdown = Object.fromEntries(statusRows.map((r) => [r.booking_status, Number(r.count)]))
+
+    // Last 12 calendar months including the current one, keyed by when the
+    // booking was actually made (created_at) — a clearer "how's business
+    // trending" signal than the ride date, which can be booked well ahead.
+    const { rows: monthlyRows } = await query(
+      `SELECT
+         DATE_FORMAT(created_at, '%Y-%m') AS month,
+         COUNT(*) AS bookings,
+         COALESCE(SUM(CASE WHEN booking_status = 'completed' THEN total_price ELSE 0 END), 0) AS revenue
+       FROM bookings
+       WHERE created_at >= DATE_SUB(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 11 MONTH)
+       GROUP BY month
+       ORDER BY month`,
+    )
+
+    // Fills in any month with zero bookings so the chart always has a full,
+    // evenly-spaced 12-month run rather than gaps where nothing happened.
+    const monthlyByKey = Object.fromEntries(monthlyRows.map((r) => [r.month, r]))
+    const monthlyTrend = []
+    const cursor = new Date()
+    cursor.setDate(1)
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(cursor.getFullYear(), cursor.getMonth() - i, 1)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      const row = monthlyByKey[key]
+      monthlyTrend.push({
+        month: key,
+        bookings: row ? Number(row.bookings) : 0,
+        revenue: row ? Number(row.revenue) : 0,
+      })
+    }
+
+    const { rows: topVehicles } = await query(
+      `SELECT v.name,
+              COUNT(b.id) AS bookings,
+              COALESCE(SUM(CASE WHEN b.booking_status = 'completed' THEN b.total_price ELSE 0 END), 0) AS revenue
+       FROM bookings b
+       JOIN vehicles v ON v.id = b.vehicle_id
+       GROUP BY v.id, v.name
+       ORDER BY bookings DESC
+       LIMIT 5`,
+    )
+
+    const completedCount = Number(totals.completed_count) || 0
+    const totalRevenue = Number(totals.total_revenue) || 0
+
+    res.json({
+      total_bookings: Number(totals.total_bookings) || 0,
+      completed_count: completedCount,
+      cancelled_count: Number(totals.cancelled_count) || 0,
+      upcoming_count: Number(totals.upcoming_count) || 0,
+      total_revenue: totalRevenue,
+      avg_booking_value: completedCount ? Math.round((totalRevenue / completedCount) * 100) / 100 : 0,
+      status_breakdown: statusBreakdown,
+      monthly_trend: monthlyTrend,
+      top_vehicles: topVehicles.map((v) => ({ name: v.name, bookings: Number(v.bookings), revenue: Number(v.revenue) })),
+    })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to load dashboard overview' })
+  }
+})
+
 // Share of a completed booking's total_price that goes to the driver who
 // fulfilled it — the rest is the admin's margin. No commission-rate
 // concept exists anywhere else in the app yet, so this is a single

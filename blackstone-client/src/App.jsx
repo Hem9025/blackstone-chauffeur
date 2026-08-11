@@ -31,6 +31,7 @@ import SecondAdminDashboard from './pages/SecondAdminDashboard'
 import AdminUsersPanel from './pages/AdminUsersPanel'
 import AdminVehiclesPanel from './pages/AdminVehiclesPanel'
 import AdminStatsPanel from './pages/AdminStatsPanel'
+import AdminDashboardPanel from './pages/AdminDashboardPanel'
 import AdminSettingsPanel from './pages/AdminSettingsPanel'
 import Profile from './pages/Profile'
 
@@ -99,11 +100,19 @@ function App() {
               so every page can jump to any other admin section instantly.
               Users/Vehicles/Stats are reachable by second_admin now too —
               whether they're actually allowed to use them is controlled by
-              the main admin (Admin > Settings) and checked inside each
+              the main admin (Admin > Second Admin Management) and checked inside each
               panel itself (and, for real enforcement, by the server on
               every request) rather than blocked at the route level. */}
           <Route element={<ProtectedRoute roles={['admin', 'second_admin']} />}>
             <Route element={<AdminLayout />}>
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <AdminPermissionGate flag="can_view_stats">
+                    <AdminDashboardPanel />
+                  </AdminPermissionGate>
+                }
+              />
               <Route
                 path="/admin"
                 element={

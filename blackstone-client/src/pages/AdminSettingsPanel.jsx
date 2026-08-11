@@ -59,10 +59,10 @@ export default function AdminSettingsPanel() {
 
   return (
     <div>
-      <PageMeta title="Settings" description="Second admin permissions — BlackStone Chauffeur admin." />
+      <PageMeta title="Second Admin Management" description="Second admin permissions — BlackStone Chauffeur admin." />
 
       <section className="max-w-2xl">
-        <h1 className="font-heading text-3xl text-brand-black">Settings</h1>
+        <h1 className="font-heading text-3xl text-brand-black">Second Admin Management</h1>
         <p className="mt-2 text-sm text-brand-black/50">
           Control what a Second Admin account can see and do. These toggles never affect your own
           access — admin always has full access to everything.
