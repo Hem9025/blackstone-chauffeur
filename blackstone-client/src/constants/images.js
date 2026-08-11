@@ -34,10 +34,9 @@ export const IMAGES = {
     audiQ7: unsplash('photo-1651751234256-86187ebf7302', 1400),
     mercedesSprinter: '/images/fleet/hero/mercedes-sprinter-519.jpg',
     mercedesSprinter316: unsplash('photo-1775053392841-7fa6dabdb760', 1400),
-    // Placeholder — same source photo as the generic `van1` shot used
-    // elsewhere (tours, demo data), not yet a real Hiace photo. Swap this
-    // out once a real photo of the vehicle is supplied.
-    toyotaHiace: unsplash('photo-1710343491609-0cbc6c14b92d', 1400),
+    // Real Toyota Hiace stock photo (Unsplash, tagged "toyota hiace") — swap
+    // for a real photo of the client's own vehicle once supplied.
+    toyotaHiace: unsplash('photo-1773391966523-cfb3c8524e7d', 1400),
 
     // Premium economy fleet
     teslaModelY: '/images/fleet/hero/tesla-model-y.jpg',
@@ -163,6 +162,14 @@ export const IMAGES = {
       '/images/fleet/interior/byd-atto-3/2-rear-seat.jpg',
       '/images/fleet/interior/byd-atto-3/3-boot.jpg',
       '/images/fleet/interior/byd-atto-3/4-exterior.jpg',
+    ],
+    // Real Toyota Hiace stock photos (Unsplash, tagged "toyota hiace") —
+    // swap for real photos of the client's own vehicle once supplied.
+    toyotaHiace: [
+      unsplash('photo-1648197295778-433b7bed847d', 1000),
+      unsplash('photo-1603094746214-44fe6eb80160', 1000),
+      unsplash('photo-1650807486050-a142ea418b19', 1000),
+      unsplash('photo-1678747172256-b37b7ac99cfc', 1000),
     ],
   },
 

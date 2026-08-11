@@ -117,6 +117,13 @@ const bydAtto3Gallery = [
   { src: IMAGES.fleetInterior.bydAtto3[3], title: 'Exterior', desc: 'A distinctive, all-electric SUV for a quiet, modern ride.' },
 ]
 
+const toyotaHiaceGallery = [
+  { src: IMAGES.fleetInterior.toyotaHiace[0], title: 'Dashboard', desc: 'A straightforward, driver-focused cockpit built for long, reliable shifts.' },
+  { src: IMAGES.fleetInterior.toyotaHiace[1], title: 'Cabin', desc: 'A practical, well-kept cabin with comfortable seating for the full group.' },
+  { src: IMAGES.fleetInterior.toyotaHiace[2], title: 'Luggage Space', desc: 'A wide rear opening with generous room for group luggage.' },
+  { src: IMAGES.fleetInterior.toyotaHiace[3], title: 'Exterior', desc: 'A dependable, road-ready shuttle built for group transfers.' },
+]
+
 const galleryB = (model) => [
   { src: IMAGES.fleetGallery.interior2, title: 'Cabin', desc: `Rear cabin appointments in the ${model}, built for executive-level comfort.` },
   { src: IMAGES.fleetGallery.dashboard2, title: 'Dashboard', desc: 'Driver console and controls, kept clean and distraction-free for a smooth ride.' },
@@ -311,7 +318,7 @@ export const FLEET = [
     luggage: 5,
     shortDesc: 'A dependable 10-seat shuttle for group transfers, at a Comfort-fleet price point.',
     heroImage: IMAGES.fleet.toyotaHiace,
-    gallery: galleryB('Toyota Hiace'),
+    gallery: toyotaHiaceGallery,
     description: [
       'The Toyota Hiace is a practical, dependable choice for larger groups who want everyone travelling together without stepping up to a full executive Sprinter. Comfortable seating for up to ten passengers and a generous luggage area make it well suited to group airport transfers and day trips.',
       'A reliable option for sports teams, tour groups, and larger families who need one vehicle, one driver, and no compromise on getting everyone there together.',
