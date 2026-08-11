@@ -4,7 +4,7 @@ import PageMeta from '../components/PageMeta'
 import BookingCalendar from '../components/BookingCalendar'
 import StatusBadge from '../components/StatusBadge'
 import { bookings as bookingsApi } from '../utils/api'
-import { formatDate } from '../utils/helpers'
+import { formatDate, formatCurrency } from '../utils/helpers'
 import { googleCalendarUrl } from '../utils/googleCalendar'
 
 const STATUS_FLOW = ['en_route', 'arrived', 'completed']
@@ -115,6 +115,14 @@ export default function DriverDashboard() {
                     <p className="text-sm text-brand-black/50">
                       {formatDate(ride.date)} at {String(ride.time).slice(0, 5)}
                     </p>
+                    {/* Never the customer's total_price — only ever what
+                        admin has set aside as this driver's own pay for
+                        this specific ride, and only when they've set one. */}
+                    {ride.driver_price != null && (
+                      <p className="mt-1 text-sm font-medium text-brand-gold">
+                        Your pay: {formatCurrency(ride.driver_price)}
+                      </p>
+                    )}
                   </div>
                   <RideActions ride={ride} />
                 </div>
@@ -138,8 +146,13 @@ export default function DriverDashboard() {
                     <p className="text-sm font-medium text-brand-black">
                       {String(ride.time).slice(0, 5)} — {ride.pickup} → {ride.dropoff}
                     </p>
-                    <div className="mt-1">
+                    <div className="mt-1 flex items-center gap-2">
                       <StatusBadge status={ride.booking_status} />
+                      {ride.driver_price != null && (
+                        <span className="text-xs font-medium text-brand-gold">
+                          Your pay: {formatCurrency(ride.driver_price)}
+                        </span>
+                      )}
                     </div>
                     <div className="mt-2">
                       <RideActions ride={ride} />

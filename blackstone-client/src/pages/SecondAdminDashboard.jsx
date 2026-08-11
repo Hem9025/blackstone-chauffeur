@@ -23,6 +23,7 @@ export default function SecondAdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [driverInputs, setDriverInputs] = useState({})
+  const [driverPriceInputs, setDriverPriceInputs] = useState({})
   const [assigningId, setAssigningId] = useState(null)
   const [cancellingId, setCancellingId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
@@ -77,7 +78,10 @@ export default function SecondAdminDashboard() {
     if (!driverId) return
     setAssigningId(id)
     try {
-      await bookingsApi.assignDriver(id, driverId)
+      // Price is optional — leave the field blank to assign a driver
+      // without setting/changing their pay for this ride.
+      const priceInput = driverPriceInputs[id]
+      await bookingsApi.assignDriver(id, driverId, priceInput === '' || priceInput == null ? undefined : priceInput)
       load()
     } catch (err) {
       setError(err.message || 'Failed to assign driver')
@@ -141,8 +145,9 @@ export default function SecondAdminDashboard() {
     // Falls back to whatever driver is already assigned, so the dropdown
     // reflects current state instead of always starting blank.
     const selected = driverInputs[b.id] ?? (b.driver_id ? String(b.driver_id) : '')
+    const priceValue = driverPriceInputs[b.id] ?? (b.driver_price != null ? String(b.driver_price) : '')
     return (
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <select
           value={selected}
           onChange={(e) => setDriverInputs((prev) => ({ ...prev, [b.id]: e.target.value }))}
@@ -153,6 +158,17 @@ export default function SecondAdminDashboard() {
             <option key={d.id} value={d.id}>{d.name}</option>
           ))}
         </select>
+        {/* Optional — what the driver gets paid for this ride, separate
+            from and never shown alongside the customer's total. */}
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="Driver price (optional)"
+          value={priceValue}
+          onChange={(e) => setDriverPriceInputs((prev) => ({ ...prev, [b.id]: e.target.value }))}
+          className="w-36 border border-brand-black/15 px-2 py-1 text-xs"
+        />
         <button
           disabled={assigningId === b.id || !selected}
           onClick={() => assignDriver(b.id)}

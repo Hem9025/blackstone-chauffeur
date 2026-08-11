@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { query } from '../db/index.js'
 import authCheck from '../middleware/authCheck.js'
-import { requireRole } from '../middleware/roleCheck.js'
+import { requirePermission } from '../middleware/requirePermission.js'
 
 const router = Router()
 
@@ -16,8 +16,8 @@ router.get('/', async (req, res) => {
   }
 })
 
-// POST /api/vehicles — admin only
-router.post('/', authCheck, requireRole('admin'), async (req, res) => {
+// POST /api/vehicles — admin, or second_admin with can_manage_vehicles
+router.post('/', authCheck, requirePermission('can_manage_vehicles'), async (req, res) => {
   const {
     name, type, description, capacity, price_per_km, image_url,
     passengers, suitcases, owned, starting_price,
@@ -47,8 +47,8 @@ router.post('/', authCheck, requireRole('admin'), async (req, res) => {
   }
 })
 
-// PATCH /api/vehicles/:id — admin only
-router.patch('/:id', authCheck, requireRole('admin'), async (req, res) => {
+// PATCH /api/vehicles/:id — admin, or second_admin with can_manage_vehicles
+router.patch('/:id', authCheck, requirePermission('can_manage_vehicles'), async (req, res) => {
   const { id } = req.params
   const fields = req.body || {}
   const keys = Object.keys(fields)
@@ -76,8 +76,8 @@ router.patch('/:id', authCheck, requireRole('admin'), async (req, res) => {
   }
 })
 
-// DELETE /api/vehicles/:id — admin only, soft delete
-router.delete('/:id', authCheck, requireRole('admin'), async (req, res) => {
+// DELETE /api/vehicles/:id — admin, or second_admin with can_manage_vehicles; soft delete
+router.delete('/:id', authCheck, requirePermission('can_manage_vehicles'), async (req, res) => {
   try {
     const { rows } = await query('SELECT id FROM vehicles WHERE id = ?', [req.params.id])
     if (!rows.length) return res.status(404).json({ message: 'Vehicle not found' })

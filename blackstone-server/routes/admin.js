@@ -2,13 +2,18 @@ import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import { query } from '../db/index.js'
 import authCheck from '../middleware/authCheck.js'
-import { requireRole } from '../middleware/roleCheck.js'
+import { requirePermission } from '../middleware/requirePermission.js'
 import { sendMail } from '../emails/mailer.js'
 import { driverApprovedTemplate } from '../emails/templates/driverApproved.js'
 
 const router = Router()
 
-router.use(authCheck, requireRole('admin'))
+// Every route here needs to be signed in — the specific admin-vs-
+// second_admin-with-permission check is applied per route/section below
+// (Users needs can_manage_users, Vehicles needs can_manage_vehicles, Stats
+// & provider payments need can_view_stats). 'admin' always passes every
+// requirePermission check regardless of the flags.
+router.use(authCheck)
 
 // Roles an admin can hand out through the "create account" form. Admin /
 // second_admin accounts still have to go through the role-change endpoint
@@ -16,7 +21,7 @@ router.use(authCheck, requireRole('admin'))
 const CREATABLE_ROLES = ['customer', 'driver', 'provider']
 
 // GET /api/admin/users
-router.get('/users', async (req, res) => {
+router.get('/users', requirePermission('can_manage_users'), async (req, res) => {
   try {
     const { rows } = await query(
       'SELECT id, name, email, phone, role, status, created_at FROM users ORDER BY created_at DESC',
@@ -31,7 +36,7 @@ router.get('/users', async (req, res) => {
 // POST /api/admin/users — admin creates an account directly (no self-signup
 // flow exists for providers, and this also lets admin fast-track a
 // driver/customer account without waiting on approval).
-router.post('/users', async (req, res) => {
+router.post('/users', requirePermission('can_manage_users'), async (req, res) => {
   const { name, email, password, phone, role } = req.body || {}
 
   if (!name || !email || !password || !role) {
@@ -68,7 +73,7 @@ router.post('/users', async (req, res) => {
 })
 
 // PATCH /api/admin/users/:id/approve
-router.patch('/users/:id/approve', async (req, res) => {
+router.patch('/users/:id/approve', requirePermission('can_manage_users'), async (req, res) => {
   try {
     await query(`UPDATE users SET status = 'active' WHERE id = ?`, [req.params.id])
     const { rows } = await query('SELECT * FROM users WHERE id = ?', [req.params.id])
@@ -92,8 +97,14 @@ router.patch('/users/:id/approve', async (req, res) => {
 })
 
 // PATCH /api/admin/users/:id/role
-router.patch('/users/:id/role', async (req, res) => {
+router.patch('/users/:id/role', requirePermission('can_manage_users'), async (req, res) => {
   const { role } = req.body || {}
+  // A second_admin granted can_manage_users could otherwise hand out (or
+  // grant themselves) admin/second_admin — that tier of role change stays
+  // exclusively an 'admin' action no matter what the permission flags say.
+  if (req.user.role === 'second_admin' && ['admin', 'second_admin'].includes(role)) {
+    return res.status(403).json({ message: 'Only admin can grant admin or second_admin access' })
+  }
   try {
     await query('UPDATE users SET role = ? WHERE id = ?', [role, req.params.id])
     const { rows } = await query('SELECT * FROM users WHERE id = ?', [req.params.id])
@@ -108,7 +119,7 @@ router.patch('/users/:id/role', async (req, res) => {
 // GET /api/admin/vehicles — every vehicle including inactive ones, so admin
 // can review/reactivate retired vehicles (the public /api/vehicles only
 // returns active = true).
-router.get('/vehicles', async (req, res) => {
+router.get('/vehicles', requirePermission('can_manage_vehicles'), async (req, res) => {
   try {
     const { rows } = await query('SELECT * FROM vehicles ORDER BY id')
     res.json(rows)
@@ -133,7 +144,7 @@ const DRIVER_COMMISSION_RATE = 0.75
 // matched via bookings.customer_id (the booking they placed on a client's
 // behalf) — see the driver_id/customer_id distinction used throughout
 // routes/bookings.js.
-router.get('/stats', async (req, res) => {
+router.get('/stats', requirePermission('can_view_stats'), async (req, res) => {
   const { role, user_id } = req.query || {}
   if (!['driver', 'provider'].includes(role)) {
     return res.status(400).json({ message: 'role must be "driver" or "provider"' })
@@ -199,7 +210,7 @@ router.get('/stats', async (req, res) => {
 // GET /api/admin/provider-payments/:providerId — every recorded monthly
 // settlement for one provider, most recent first. A month with no row here
 // simply hasn't been recorded yet — the client treats that as "unpaid".
-router.get('/provider-payments/:providerId', async (req, res) => {
+router.get('/provider-payments/:providerId', requirePermission('can_view_stats'), async (req, res) => {
   try {
     const { rows } = await query(
       'SELECT month, status, updated_at FROM provider_payments WHERE provider_id = ? ORDER BY month DESC',
@@ -216,7 +227,7 @@ router.get('/provider-payments/:providerId', async (req, res) => {
 // for a provider. Admin decides when a payment actually lands, so this can
 // mark any month (past, current, or future) paid or unpaid at any time —
 // there's no automatic monthly rollover to keep in sync with.
-router.patch('/provider-payments', async (req, res) => {
+router.patch('/provider-payments', requirePermission('can_view_stats'), async (req, res) => {
   const { provider_id, month, status } = req.body || {}
   if (!provider_id || !month || !['paid', 'unpaid'].includes(status)) {
     return res.status(400).json({ message: 'provider_id, month (YYYY-MM), and status (paid/unpaid) are required' })

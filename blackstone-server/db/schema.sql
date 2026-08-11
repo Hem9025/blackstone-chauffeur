@@ -83,6 +83,11 @@ CREATE TABLE IF NOT EXISTS bookings (
   notes VARCHAR(250),
   extras JSON,
   total_price DECIMAL(10, 2) NOT NULL,
+  -- What the assigned driver gets paid for this specific ride, set by admin
+  -- at their discretion — separate from and never derived from total_price
+  -- (what the customer is charged). NULL until admin sets one. Only ever
+  -- shown to the driver it's assigned to, never to the customer.
+  driver_price DECIMAL(10, 2),
   payment_status VARCHAR(20) NOT NULL DEFAULT 'pending'
     CHECK (payment_status IN ('pending', 'paid', 'failed', 'refunded')),
   booking_status VARCHAR(20) NOT NULL DEFAULT 'pending'
@@ -119,6 +124,25 @@ CREATE TABLE IF NOT EXISTS provider_payments (
   CONSTRAINT fk_provider_payments_provider FOREIGN KEY (provider_id) REFERENCES users(id),
   UNIQUE KEY uq_provider_payments_provider_month (provider_id, month)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Single-row settings table (always id = 1) controlling what second_admin
+-- accounts can access, toggled by the main admin from Admin > Settings.
+-- 'admin' role always has full access regardless of these flags — they only
+-- ever restrict 'second_admin'. can_manage_bookings defaults TRUE and the
+-- other three default FALSE, matching the app's previous hardcoded
+-- behaviour (second_admin could only see Bookings) so introducing this
+-- table doesn't silently grant anyone new access.
+CREATE TABLE IF NOT EXISTS admin_permissions (
+  id INT PRIMARY KEY DEFAULT 1,
+  can_manage_bookings BOOLEAN NOT NULL DEFAULT TRUE,
+  can_manage_vehicles BOOLEAN NOT NULL DEFAULT FALSE,
+  can_manage_users BOOLEAN NOT NULL DEFAULT FALSE,
+  can_view_stats BOOLEAN NOT NULL DEFAULT FALSE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO admin_permissions (id)
+SELECT * FROM (SELECT 1 AS id) AS tmp
+WHERE NOT EXISTS (SELECT 1 FROM admin_permissions WHERE id = 1);
 
 CREATE TABLE IF NOT EXISTS enquiries (
   id INT AUTO_INCREMENT PRIMARY KEY,

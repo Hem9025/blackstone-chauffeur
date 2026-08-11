@@ -1,18 +1,19 @@
 import { NavLink } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAdminPermissions } from '../hooks/useAdminPermissions'
 
-// Shared tab bar shown atop every /admin page. Bookings is available to
-// both admin and second_admin; Users and Vehicles management are
-// admin-only, matching the role guards on those routes in App.jsx.
+// Shared tab bar shown atop every /admin page. Which tabs a second_admin
+// sees is controlled by the main admin from Admin > Settings (see
+// useAdminPermissions) — 'admin' always sees everything. Settings itself is
+// admin-only; second_admin can never change what they themselves can see.
 export default function AdminTabs() {
-  const { user } = useAuth()
-  const isAdmin = user?.role === 'admin'
+  const { permissions, isAdmin } = useAdminPermissions()
 
   const tabs = [
-    { to: '/admin', label: 'Bookings', show: true },
-    { to: '/admin/users', label: 'Users', show: isAdmin },
-    { to: '/admin/vehicles', label: 'Vehicles', show: isAdmin },
-    { to: '/admin/stats', label: 'Drivers & Providers', show: isAdmin },
+    { to: '/admin', label: 'Bookings', show: permissions.can_manage_bookings },
+    { to: '/admin/users', label: 'Users', show: permissions.can_manage_users },
+    { to: '/admin/vehicles', label: 'Vehicles', show: permissions.can_manage_vehicles },
+    { to: '/admin/stats', label: 'Drivers & Providers', show: permissions.can_view_stats },
+    { to: '/admin/settings', label: 'Settings', show: isAdmin },
   ]
 
   return (

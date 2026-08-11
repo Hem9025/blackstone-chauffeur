@@ -7,6 +7,7 @@ import RouteMap from './RouteMap'
 import { vehicles as vehiclesApi, bookings as bookingsApi } from '../utils/api'
 import { formatCurrency } from '../utils/helpers'
 import { calculateFare, tierPriceForDistance } from '../utils/pricing'
+import { useAuth } from '../context/AuthContext'
 // Note: unlike the customer-facing Booking.jsx, admin-created bookings have
 // no minimum-advance-days restriction — staff can book last-minute or
 // same-day rides on a client's behalf. bookingRules.js is intentionally not
@@ -54,7 +55,17 @@ export default function AdminNewBookingTab({ onCreated }) {
 }
 
 function AdminNewBookingForm({ mapsLoaded, onCreated }) {
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin' || user?.role === 'second_admin'
+
   const [vehicleList, setVehicleList] = useState([])
+  // Admin/second_admin only — a provider hitting this same form always
+  // owns their own bookings, so these two never apply to them.
+  const [providerList, setProviderList] = useState([])
+  const [driverList, setDriverList] = useState([])
+  const [providerId, setProviderId] = useState('')
+  const [driverId, setDriverId] = useState('')
+  const [driverPrice, setDriverPrice] = useState('')
 
   const [whatsappText, setWhatsappText] = useState('')
   const [parsing, setParsing] = useState(false)
@@ -95,6 +106,12 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
   useEffect(() => {
     vehiclesApi.list().then(setVehicleList).catch(() => setVehicleList([]))
   }, [])
+
+  useEffect(() => {
+    if (!isAdmin) return
+    bookingsApi.providers().then(setProviderList).catch(() => setProviderList([]))
+    bookingsApi.drivers().then(setDriverList).catch(() => setDriverList([]))
+  }, [isAdmin])
 
   const needsDropoff = tripType !== 'hourly'
   const needsHours = tripType === 'hourly'
@@ -206,8 +223,11 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
     }
   }
 
-  const priceValue = Number(manualPrice)
-  const priceValid = manualPrice !== '' && Number.isFinite(priceValue) && priceValue > 0
+  // Price is optional — a booking can be created before the rate is
+  // settled and filled in later. If something was typed, it still has to
+  // be a valid non-negative number.
+  const priceValue = manualPrice === '' ? 0 : Number(manualPrice)
+  const priceValid = manualPrice === '' || (Number.isFinite(priceValue) && priceValue >= 0)
 
   const canSubmit =
     passengerName &&
@@ -249,6 +269,11 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
         distance_km: effectiveDistanceKm,
         duration_min: effectiveDurationMin,
         total_price: priceValue,
+        // All optional — omitted entirely for a plain provider account,
+        // which the server would ignore from them anyway.
+        provider_id: isAdmin && providerId ? providerId : undefined,
+        driver_id: isAdmin && driverId ? driverId : undefined,
+        driver_price: isAdmin && driverId && driverPrice !== '' ? driverPrice : undefined,
       })
       setSuccess(booking)
       onCreated?.()
@@ -277,6 +302,9 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
       setRoute(null)
       setManualPrice('')
       setPriceTouched(false)
+      setProviderId('')
+      setDriverId('')
+      setDriverPrice('')
     } catch (err) {
       setError(err.message || 'Failed to create booking')
     } finally {
@@ -608,6 +636,67 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
               </div>
             </div>
           </div>
+
+          {isAdmin && (
+            <div className="border border-black/10 bg-white p-6 md:p-8">
+              <h2 className="font-heading text-xl text-black">Attribution & Dispatch</h2>
+              <p className="mt-1 text-sm text-black/50">All optional — leave any of these blank and set them later.</p>
+
+              <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm text-black/60">Attribute to Provider</label>
+                  <select
+                    value={providerId}
+                    onChange={(e) => setProviderId(e.target.value)}
+                    className="w-full border border-black/15 px-4 py-3 text-sm"
+                  >
+                    <option value="">None — this is a direct admin booking</option>
+                    {providerList.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-black/40">
+                    Logs this booking as the chosen provider's own, instead of yours.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm text-black/60">Assign Driver</label>
+                  <select
+                    value={driverId}
+                    onChange={(e) => setDriverId(e.target.value)}
+                    className="w-full border border-black/15 px-4 py-3 text-sm"
+                  >
+                    <option value="">Not yet — assign later</option>
+                    {driverList.map((d) => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {driverId && (
+                  <div>
+                    <label className="mb-2 block text-sm text-black/60">Driver Price</label>
+                    <div className="flex items-center border border-black/15 px-4 py-2">
+                      <span className="mr-1 text-black/40">$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={driverPrice}
+                        onChange={(e) => setDriverPrice(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full text-sm outline-none"
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-black/40">
+                      What this driver gets paid for the ride — separate from the customer's total, and only ever shown to them.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -660,7 +749,7 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
               </dl>
             )}
 
-            <label className="mb-2 block text-sm text-black/60">Total Price (edit as needed)</label>
+            <label className="mb-2 block text-sm text-black/60">Total Price (optional)</label>
             <div className="flex items-center border border-black/15 px-4 py-2">
               <span className="mr-1 text-black/40">$</span>
               <input
@@ -674,7 +763,7 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
               />
             </div>
             <p className="mt-1 text-xs text-black/40">
-              This is the price the client will be invoiced — edit it for negotiated or custom fares.
+              This is the price the client will be invoiced — leave blank if the rate isn't settled yet, and edit it later from the booking's detail view.
             </p>
           </div>
 

@@ -1,28 +1,36 @@
 import { useEffect, useState } from 'react'
 import { Outlet, Link, NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, Car, BarChart3, Globe, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Users, Car, BarChart3, Settings, Globe, LogOut, Menu, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useAdminPermissions } from '../hooks/useAdminPermissions'
 
-// Every admin-area page (Bookings, Users, Vehicles, Drivers & Providers)
-// renders inside this shell via <Outlet/>. Centralising the nav here means
-// there's exactly one place to add a section, and every page automatically
-// gets: a persistent way back to any other section (no dead ends), a
-// same-page highlight of where you are, and one predictable content
-// container instead of four slightly different copies of the same markup.
+// Every admin-area page (Bookings, Users, Vehicles, Drivers & Providers,
+// Settings) renders inside this shell via <Outlet/>. Centralising the nav
+// here means there's exactly one place to add a section, and every page
+// automatically gets: a persistent way back to any other section (no dead
+// ends), a same-page highlight of where you are, and one predictable
+// content container instead of four slightly different copies of the same
+// markup. Which of these a second_admin actually sees is controlled by the
+// main admin from Admin > Settings (see useAdminPermissions) — 'admin'
+// always sees everything, and Settings itself is always admin-only.
 const NAV_ITEMS = [
-  { to: '/admin', label: 'Bookings', icon: LayoutDashboard, end: true, adminOnly: false },
-  { to: '/admin/users', label: 'Users', icon: Users, adminOnly: true },
-  { to: '/admin/vehicles', label: 'Vehicles', icon: Car, adminOnly: true },
-  { to: '/admin/stats', label: 'Drivers & Providers', icon: BarChart3, adminOnly: true },
+  { to: '/admin', label: 'Bookings', icon: LayoutDashboard, end: true, flag: 'can_manage_bookings' },
+  { to: '/admin/users', label: 'Users', icon: Users, flag: 'can_manage_users' },
+  { to: '/admin/vehicles', label: 'Vehicles', icon: Car, flag: 'can_manage_vehicles' },
+  { to: '/admin/stats', label: 'Drivers & Providers', icon: BarChart3, flag: 'can_view_stats' },
+  { to: '/admin/settings', label: 'Settings', icon: Settings, adminOnly: true },
 ]
 
 export default function AdminLayout() {
   const { user, logout } = useAuth()
   const { pathname } = useLocation()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const { permissions, isAdmin } = useAdminPermissions()
 
-  const isAdmin = user?.role === 'admin'
-  const items = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin)
+  const items = NAV_ITEMS.filter((item) => {
+    if (item.adminOnly) return isAdmin
+    return isAdmin || permissions[item.flag]
+  })
   const current = items.find((item) => (item.end ? pathname === item.to : pathname.startsWith(item.to)))
 
   // Close the mobile drawer on navigation so it never stays open behind a

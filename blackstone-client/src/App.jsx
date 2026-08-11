@@ -3,6 +3,7 @@ import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminLayout from './components/AdminLayout'
+import AdminPermissionGate from './components/AdminPermissionGate'
 
 import Home from './pages/Home'
 import About from './pages/About'
@@ -30,6 +31,7 @@ import SecondAdminDashboard from './pages/SecondAdminDashboard'
 import AdminUsersPanel from './pages/AdminUsersPanel'
 import AdminVehiclesPanel from './pages/AdminVehiclesPanel'
 import AdminStatsPanel from './pages/AdminStatsPanel'
+import AdminSettingsPanel from './pages/AdminSettingsPanel'
 import Profile from './pages/Profile'
 
 import NotFound from './pages/NotFound'
@@ -94,14 +96,48 @@ function App() {
           </Route>
 
           {/* Admin / Second Admin — shares one sidebar shell (AdminLayout)
-              so every page can jump to any other admin section instantly. */}
+              so every page can jump to any other admin section instantly.
+              Users/Vehicles/Stats are reachable by second_admin now too —
+              whether they're actually allowed to use them is controlled by
+              the main admin (Admin > Settings) and checked inside each
+              panel itself (and, for real enforcement, by the server on
+              every request) rather than blocked at the route level. */}
           <Route element={<ProtectedRoute roles={['admin', 'second_admin']} />}>
             <Route element={<AdminLayout />}>
-              <Route path="/admin" element={<SecondAdminDashboard />} />
+              <Route
+                path="/admin"
+                element={
+                  <AdminPermissionGate flag="can_manage_bookings">
+                    <SecondAdminDashboard />
+                  </AdminPermissionGate>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <AdminPermissionGate flag="can_manage_users">
+                    <AdminUsersPanel />
+                  </AdminPermissionGate>
+                }
+              />
+              <Route
+                path="/admin/vehicles"
+                element={
+                  <AdminPermissionGate flag="can_manage_vehicles">
+                    <AdminVehiclesPanel />
+                  </AdminPermissionGate>
+                }
+              />
+              <Route
+                path="/admin/stats"
+                element={
+                  <AdminPermissionGate flag="can_view_stats">
+                    <AdminStatsPanel />
+                  </AdminPermissionGate>
+                }
+              />
               <Route element={<ProtectedRoute roles={['admin']} />}>
-                <Route path="/admin/users" element={<AdminUsersPanel />} />
-                <Route path="/admin/vehicles" element={<AdminVehiclesPanel />} />
-                <Route path="/admin/stats" element={<AdminStatsPanel />} />
+                <Route path="/admin/settings" element={<AdminSettingsPanel />} />
               </Route>
             </Route>
           </Route>

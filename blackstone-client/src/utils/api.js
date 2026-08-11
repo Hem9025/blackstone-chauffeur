@@ -59,8 +59,9 @@ export const bookings = {
   my: (query = '') => api.get(`/bookings/my${query}`),
   all: (query = '') => api.get(`/bookings/all${query}`),
   updateDetails: (id, payload) => api.patch(`/bookings/${id}`, payload),
-  assignDriver: (id, driverId) => api.patch(`/bookings/${id}/assign-driver`, { driverId }),
+  assignDriver: (id, driverId, driverPrice) => api.patch(`/bookings/${id}/assign-driver`, { driverId, driverPrice }),
   drivers: () => api.get('/bookings/drivers'),
+  providers: () => api.get('/bookings/providers'),
   updateStatus: (id, status) => api.patch(`/bookings/${id}/status`, { status }),
   setPaymentStatus: (id, status) => api.patch(`/bookings/${id}/payment-status`, { status }),
   cancel: (id) => api.patch(`/bookings/${id}/cancel`),
@@ -111,6 +112,11 @@ export const admin = {
   stats: (role, userId) => api.get(`/admin/stats?role=${role}${userId ? `&user_id=${userId}` : ''}`),
   providerPayments: (providerId) => api.get(`/admin/provider-payments/${providerId}`),
   setProviderPayment: (payload) => api.patch('/admin/provider-payments', payload),
+}
+
+export const permissions = {
+  get: () => api.get('/permissions'),
+  update: (payload) => api.patch('/permissions', payload),
 }
 
 export { getToken }

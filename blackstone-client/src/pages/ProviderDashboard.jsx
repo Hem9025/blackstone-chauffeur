@@ -238,8 +238,10 @@ function NewBookingTab({ mapsLoaded }) {
     }
   }
 
-  const priceValue = Number(manualPrice)
-  const priceValid = manualPrice !== '' && Number.isFinite(priceValue) && priceValue > 0
+  // Price is optional — a booking can be created before the rate is
+  // settled and filled in later.
+  const priceValue = manualPrice === '' ? 0 : Number(manualPrice)
+  const priceValid = manualPrice === '' || (Number.isFinite(priceValue) && priceValue >= 0)
 
   const canSubmit =
     passengerName &&
@@ -687,7 +689,7 @@ function NewBookingTab({ mapsLoaded }) {
               </dl>
             )}
 
-            <label className="mb-2 block text-sm text-black/60">Total Price (edit as needed)</label>
+            <label className="mb-2 block text-sm text-black/60">Total Price (optional)</label>
             <div className="flex items-center border border-black/15 px-4 py-2">
               <span className="mr-1 text-black/40">$</span>
               <input

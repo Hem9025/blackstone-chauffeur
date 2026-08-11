@@ -7,6 +7,7 @@ import vehicleRoutes from './routes/vehicles.js'
 import bookingRoutes from './routes/bookings.js'
 import enquiryRoutes from './routes/enquiries.js'
 import adminRoutes from './routes/admin.js'
+import permissionsRoutes from './routes/permissions.js'
 import reviewRoutes from './routes/reviews.js'
 import stripeWebhookRoutes from './routes/stripeWebhook.js'
 
@@ -54,6 +55,7 @@ app.use('/api/vehicles', vehicleRoutes)
 app.use('/api/bookings', bookingRoutes)
 app.use('/api/enquiries', enquiryRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/permissions', permissionsRoutes)
 app.use('/api/reviews', reviewRoutes)
 
 app.use((req, res) => {

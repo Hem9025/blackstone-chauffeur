@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { query } from '../db/index.js'
 import authCheck from '../middleware/authCheck.js'
 import { requireRole } from '../middleware/roleCheck.js'
+import { requirePermission } from '../middleware/requirePermission.js'
 import { sendMail } from '../emails/mailer.js'
 import { bookingConfirmationTemplate } from '../emails/templates/bookingConfirmation.js'
 import { bookingAssignedTemplate } from '../emails/templates/bookingAssigned.js'
@@ -226,7 +227,7 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
 // database — it's purely a convenience for pre-filling the New Booking
 // form, which the admin/provider still reviews and edits before anything
 // is created.
-router.post('/parse-whatsapp', authCheck, requireRole('admin', 'provider'), async (req, res) => {
+router.post('/parse-whatsapp', authCheck, requirePermission('can_manage_bookings', { alsoAllow: ['provider'] }), async (req, res) => {
   const { text } = req.body || {}
   try {
     const { rows: vehicles } = await query('SELECT id, name FROM vehicles WHERE active = true')
@@ -246,13 +247,19 @@ router.post('/parse-whatsapp', authCheck, requireRole('admin', 'provider'), asyn
 // Stripe step: the fare is invoiced/settled outside the system (see GET
 // /:id/invoice), so payment_status starts and stays 'pending' until an
 // admin marks it paid.
-router.post('/provider', authCheck, requireRole('provider', 'admin'), async (req, res) => {
+router.post('/provider', authCheck, requirePermission('can_manage_bookings', { alsoAllow: ['provider'] }), async (req, res) => {
   const {
     vehicle_id, passenger_name, passenger_phone, passenger_email,
     pickup, dropoff, date, time, extras, distance_km, duration_min,
     trip_type, service_type, hours, flight_number, stops, stop_addresses, child_seats, notes,
     passengers, suitcases, total_price: requestedTotalPrice,
+    // Both optional, and both only ever honoured for admin/second_admin —
+    // a 'provider' user hits this same route for their own bookings, and
+    // must never be able to attribute a booking to a different provider
+    // account or set another driver's pay.
+    provider_id, driver_id, driver_price: requestedDriverPrice,
   } = req.body || {}
+  const isStaff = req.user.role === 'admin' || req.user.role === 'second_admin'
 
   if (!passenger_name || !pickup || !date || !time || !vehicle_id) {
     return res.status(400).json({ message: 'passenger_name, vehicle_id, pickup, date, and time are required' })
@@ -261,12 +268,15 @@ router.post('/provider', authCheck, requireRole('provider', 'admin'), async (req
   // Provider/admin bookings are manually priced — the vehicle picker here is
   // just a quick-reference label (what the client will actually ride in),
   // it no longer drives the fare. The person creating the booking types the
-  // final price themselves (e.g. a phone-negotiated rate), so total_price is
-  // required and validated here rather than computed via calculateFare like
-  // the customer-facing POST / route above.
-  const manualTotalPrice = Number(requestedTotalPrice)
-  if (!Number.isFinite(manualTotalPrice) || manualTotalPrice <= 0) {
-    return res.status(400).json({ message: 'A valid total price is required' })
+  // final price themselves (e.g. a phone-negotiated rate). Price is
+  // optional here (unlike the customer-facing POST / route, which always
+  // computes one via calculateFare) — a rate that isn't settled yet can be
+  // left blank and filled in later via PATCH /:id.
+  const manualTotalPrice = requestedTotalPrice === '' || requestedTotalPrice == null
+    ? 0
+    : Number(requestedTotalPrice)
+  if (!Number.isFinite(manualTotalPrice) || manualTotalPrice < 0) {
+    return res.status(400).json({ message: 'Total price must be a valid non-negative number' })
   }
   const resolvedTotalPrice = Math.round(manualTotalPrice * 100) / 100
 
@@ -308,6 +318,44 @@ router.post('/provider', authCheck, requireRole('provider', 'admin'), async (req
     if (!vehicleRows.length) return res.status(400).json({ message: 'Invalid vehicle selected' })
     const vehicle = vehicleRows[0]
 
+    // Attribute the booking to a chosen provider instead of the creator's
+    // own account — e.g. admin logging a booking that came in via a
+    // specific agency. Optional; only admin/second_admin can set it.
+    let resolvedCustomerId = req.user.id
+    if (isStaff && provider_id) {
+      const { rows: providerRows } = await query(
+        `SELECT id FROM users WHERE id = ? AND role = 'provider' AND status = 'active'`,
+        [provider_id],
+      )
+      if (!providerRows.length) return res.status(400).json({ message: 'Invalid provider selected' })
+      resolvedCustomerId = providerRows[0].id
+    }
+
+    // Optional driver assignment + a separate driver payout figure at
+    // creation time, as a shortcut for the usual /assign-driver flow.
+    // driver_price is never derived from total_price — it's whatever admin
+    // decides to pay the driver for this ride, and only ever shown to that
+    // driver, never the customer.
+    let resolvedDriverId = null
+    let resolvedDriverPrice = null
+    let assignedDriver = null
+    if (isStaff && driver_id) {
+      const { rows: driverRows } = await query(
+        `SELECT id, name, email FROM users WHERE id = ? AND role = 'driver' AND status = 'active'`,
+        [driver_id],
+      )
+      if (!driverRows.length) return res.status(400).json({ message: 'Invalid driver selected' })
+      assignedDriver = driverRows[0]
+      resolvedDriverId = assignedDriver.id
+      if (requestedDriverPrice !== '' && requestedDriverPrice != null) {
+        const price = Number(requestedDriverPrice)
+        if (!Number.isFinite(price) || price < 0) {
+          return res.status(400).json({ message: 'Driver price must be a valid non-negative number' })
+        }
+        resolvedDriverPrice = Math.round(price * 100) / 100
+      }
+    }
+
     // No longer clamped to the selected vehicle's capacity, since the
     // vehicle is reference-only here — just a sane upper bound so a stray
     // client value can't produce a nonsensical booking row.
@@ -325,13 +373,15 @@ router.post('/provider', authCheck, requireRole('provider', 'admin'), async (req
 
     const inserted = await query(
       `INSERT INTO bookings
-        (customer_id, vehicle_id, pickup, dropoff, date, time, passenger_name, passenger_phone, passenger_email,
+        (customer_id, vehicle_id, driver_id, driver_price, pickup, dropoff, date, time, passenger_name, passenger_phone, passenger_email,
          trip_type, service_type, hours, flight_number, stops, stop_addresses, child_seats, notes,
          extras, total_price, distance_km, duration_min, payment_status, booking_status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')`,
       [
-        req.user.id,
+        resolvedCustomerId,
         vehicle_id,
+        resolvedDriverId,
+        resolvedDriverPrice,
         pickup,
         resolvedDropoff,
         date,
@@ -395,6 +445,22 @@ router.post('/provider', authCheck, requireRole('provider', 'admin'), async (req
           totalPrice: total_price,
         }),
       }).catch((err) => console.error('Failed to send booking-confirmation email (provider booking)', err))
+    }
+
+    // Driver was assigned right at creation (rather than via the usual
+    // /assign-driver step) — same notification either way.
+    if (assignedDriver?.email) {
+      sendMail({
+        to: assignedDriver.email,
+        subject: 'New ride assigned — BlackStone Chauffeur',
+        html: bookingAssignedTemplate({
+          driverName: assignedDriver.name,
+          pickup,
+          dropoff: resolvedDropoff,
+          date,
+          time,
+        }),
+      }).catch((err) => console.error('Failed to send booking-assigned email (provider booking)', err))
     }
 
     res.status(201).json({ booking: rows[0], total_price })
@@ -515,7 +581,7 @@ router.get('/my', authCheck, requireRole('customer', 'provider'), async (req, re
 
 // GET /api/bookings/all — admin/second_admin, with optional filters.
 // Supports ?status=&payment_status=&date_from=&date_to=&sort=
-router.get('/all', authCheck, requireRole('admin', 'second_admin'), async (req, res) => {
+router.get('/all', authCheck, requirePermission('can_manage_bookings'), async (req, res) => {
   try {
     const { whereExtra, params, orderClause } = buildBookingFilters(req.query)
     const { rows } = await query(
@@ -554,7 +620,7 @@ router.get('/my/report', authCheck, requireRole('customer', 'provider'), async (
 })
 
 // GET /api/bookings/all/report — same rows as GET /all, as a downloadable PDF.
-router.get('/all/report', authCheck, requireRole('admin', 'second_admin'), async (req, res) => {
+router.get('/all/report', authCheck, requirePermission('can_manage_bookings'), async (req, res) => {
   try {
     const { whereExtra, params, orderClause } = buildBookingFilters(req.query)
     const { rows } = await query(
@@ -660,7 +726,7 @@ router.patch('/:id/cancel', authCheck, async (req, res) => {
 // booking record entirely (unlike /cancel, which just marks it cancelled
 // but keeps it in the list/reports). Meant for cleaning up test bookings,
 // duplicates, or mistakes — not a normal part of the booking lifecycle.
-router.delete('/:id', authCheck, requireRole('admin', 'second_admin'), async (req, res) => {
+router.delete('/:id', authCheck, requirePermission('can_manage_bookings'), async (req, res) => {
   try {
     const { rows: existingRows } = await query(
       `SELECT b.*, v.name AS vehicle_name,
@@ -732,7 +798,7 @@ router.delete('/:id', authCheck, requireRole('admin', 'second_admin'), async (re
 // (see /assign-driver), booking_status (see /cancel and the driver-only
 // /status route), payment_status (see /payment-status), or the Stripe
 // fields — those all have their own dedicated, more careful routes.
-router.patch('/:id', authCheck, requireRole('admin', 'second_admin'), async (req, res) => {
+router.patch('/:id', authCheck, requirePermission('can_manage_bookings'), async (req, res) => {
   try {
     const { rows: existingRows } = await query('SELECT id FROM bookings WHERE id = ?', [req.params.id])
     if (!existingRows.length) return res.status(404).json({ message: 'Booking not found' })
@@ -856,11 +922,25 @@ router.patch('/:id', authCheck, requireRole('admin', 'second_admin'), async (req
 router.patch(
   '/:id/assign-driver',
   authCheck,
-  requireRole('admin', 'second_admin'),
+  requirePermission('can_manage_bookings'),
   async (req, res) => {
-    const { driverId } = req.body || {}
+    const { driverId, driverPrice } = req.body || {}
+    // driverPrice is optional and, if present, has to be a valid
+    // non-negative number — separate from and never derived from
+    // total_price. Omit it entirely to leave whatever's already stored
+    // untouched (e.g. re-assigning a driver without changing their pay).
+    let priceUpdateClause = ''
+    const params = [driverId]
+    if (driverPrice !== undefined) {
+      const price = driverPrice === '' || driverPrice === null ? null : Number(driverPrice)
+      if (price !== null && (!Number.isFinite(price) || price < 0)) {
+        return res.status(400).json({ message: 'Driver price must be a valid non-negative number' })
+      }
+      priceUpdateClause = ', driver_price = ?'
+      params.push(price === null ? null : Math.round(price * 100) / 100)
+    }
     try {
-      await query('UPDATE bookings SET driver_id = ? WHERE id = ?', [driverId, req.params.id])
+      await query(`UPDATE bookings SET driver_id = ?${priceUpdateClause} WHERE id = ?`, [...params, req.params.id])
       const { rows } = await query(
         `SELECT b.*, u.name AS driver_name, u.email AS driver_email
          FROM bookings b
@@ -901,7 +981,7 @@ router.patch(
 // system, so payment_status starts and stays 'pending' until someone here
 // marks it paid), correcting a mistake, or recording a refund/failure.
 const PAYMENT_STATUS_OPTIONS = ['pending', 'paid', 'failed', 'refunded']
-router.patch('/:id/payment-status', authCheck, requireRole('admin', 'second_admin'), async (req, res) => {
+router.patch('/:id/payment-status', authCheck, requirePermission('can_manage_bookings'), async (req, res) => {
   const { status } = req.body || {}
   if (!PAYMENT_STATUS_OPTIONS.includes(status)) {
     return res.status(400).json({ message: `status must be one of: ${PAYMENT_STATUS_OPTIONS.join(', ')}` })
@@ -977,7 +1057,7 @@ router.get('/driver', authCheck, requireRole('driver'), async (req, res) => {
 // "Assign Driver" dropdown. Lives here (rather than /api/admin, which is
 // admin-only) so second_admin can use it too. Name is what the dropdown
 // shows; id is what actually gets sent to PATCH /:id/assign-driver.
-router.get('/drivers', authCheck, requireRole('admin', 'second_admin'), async (req, res) => {
+router.get('/drivers', authCheck, requirePermission('can_manage_bookings'), async (req, res) => {
   try {
     const { rows } = await query(
       `SELECT id, name FROM users WHERE role = 'driver' AND status = 'active' ORDER BY name`,
@@ -986,6 +1066,20 @@ router.get('/drivers', authCheck, requireRole('admin', 'second_admin'), async (r
   } catch (err) {
     console.error(err)
     res.status(500).json({ message: 'Failed to load drivers' })
+  }
+})
+
+// GET /api/bookings/providers — admin/second_admin, active provider
+// accounts for the New Booking form's "Attribute to provider" dropdown.
+router.get('/providers', authCheck, requirePermission('can_manage_bookings'), async (req, res) => {
+  try {
+    const { rows } = await query(
+      `SELECT id, name FROM users WHERE role = 'provider' AND status = 'active' ORDER BY name`,
+    )
+    res.json(rows)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to load providers' })
   }
 })
 
