@@ -146,6 +146,8 @@ export const FLEET = [
     slug: 'mercedes-gls',
     category: 'luxury',
     bodyType: 'suv',
+    // Luxury SUVs are quote-only rather than instant-bookable.
+    quoteOnly: true,
     title: 'Mercedes-Benz GLS',
     tagline: 'Luxury SUV',
     passengers: 3,
@@ -178,6 +180,8 @@ export const FLEET = [
     slug: 'range-rover',
     category: 'luxury',
     bodyType: 'suv',
+    // Luxury SUVs are quote-only rather than instant-bookable.
+    quoteOnly: true,
     title: 'Range Rover',
     tagline: 'Prestige SUV',
     passengers: 3,
@@ -282,8 +286,8 @@ export const FLEET = [
     quoteOnly: true,
     title: 'Mercedes-Benz Sprinter 316',
     tagline: 'Group Shuttle',
-    passengers: 12,
-    luggage: 8,
+    passengers: 11,
+    luggage: 7,
     shortDesc: 'A more compact Sprinter for mid-sized groups, without compromising on chauffeured comfort.',
     heroImage: IMAGES.fleet.mercedesSprinter316,
     gallery: galleryA('Sprinter 316'),
@@ -294,6 +298,25 @@ export const FLEET = [
   },
 
   // ---------------- Premium Economy Fleet ----------------
+  {
+    slug: 'toyota-hiace',
+    category: 'economy',
+    bodyType: 'van',
+    // Same group-quote handling as the Sprinters — 10 seats is outside the
+    // normal per-km instant-booking tiers.
+    quoteOnly: true,
+    title: 'Toyota Hiace',
+    tagline: 'Group Shuttle',
+    passengers: 10,
+    luggage: 5,
+    shortDesc: 'A dependable 10-seat shuttle for group transfers, at a Comfort-fleet price point.',
+    heroImage: IMAGES.fleet.toyotaHiace,
+    gallery: galleryB('Toyota Hiace'),
+    description: [
+      'The Toyota Hiace is a practical, dependable choice for larger groups who want everyone travelling together without stepping up to a full executive Sprinter. Comfortable seating for up to ten passengers and a generous luggage area make it well suited to group airport transfers and day trips.',
+      'A reliable option for sports teams, tour groups, and larger families who need one vehicle, one driver, and no compromise on getting everyone there together.',
+    ],
+  },
   {
     slug: 'tesla-model-y',
     category: 'economy',

@@ -34,6 +34,10 @@ export const IMAGES = {
     audiQ7: unsplash('photo-1651751234256-86187ebf7302', 1400),
     mercedesSprinter: '/images/fleet/hero/mercedes-sprinter-519.jpg',
     mercedesSprinter316: unsplash('photo-1775053392841-7fa6dabdb760', 1400),
+    // Placeholder — same source photo as the generic `van1` shot used
+    // elsewhere (tours, demo data), not yet a real Hiace photo. Swap this
+    // out once a real photo of the vehicle is supplied.
+    toyotaHiace: unsplash('photo-1710343491609-0cbc6c14b92d', 1400),
 
     // Premium economy fleet
     teslaModelY: '/images/fleet/hero/tesla-model-y.jpg',
