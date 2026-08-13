@@ -64,6 +64,7 @@ export const IMAGES = {
     economySuv: '/images/fleet/icons/comfort-suv.jpg',
     economyVan: '/images/fleet/icons/comfort-van.jpg',
     comfort12SeaterVan: '/images/fleet/icons/comfort-12-seater-van.jpg',
+    electric: '/images/fleet/icons/electric.jpg',
     businessSedan: '/images/fleet/icons/business-sedan.png',
     businessSuv: '/images/fleet/icons/business-suv.png',
     businessVan: '/images/fleet/icons/business-van.png',

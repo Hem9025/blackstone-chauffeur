@@ -535,12 +535,9 @@ export const HOME_FLEET_CATEGORIES = [
 // 5x2 grid above — electric cuts across body types (currently all in the
 // Comfort tier: Tesla Model Y, VW ID.4, BYD Atto 3 — see the `electric` flag
 // on each), so it doesn't fit one body-type tile the way the others do.
-// No dedicated cutout icon has been supplied for this one yet (see the
-// other homepage tiles in IMAGES.homeFleetIcons) — image is left null and
-// the tile renders an icon placeholder until one is added.
 export const HOME_ELECTRIC_TILE = {
   label: 'Electric Fleet',
   desc: 'All-electric options across the fleet — Tesla Model Y, Volkswagen ID.4 and BYD Atto 3.',
-  image: null,
+  image: IMAGES.homeFleetIcons.electric,
   href: `${categoryPath('economy')}?type=electric`,
 }
