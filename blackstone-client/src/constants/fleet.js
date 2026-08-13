@@ -309,6 +309,9 @@ export const FLEET = [
     slug: 'tesla-model-y',
     category: 'economy',
     bodyType: 'suv',
+    // Powers the homepage's "Electric" spotlight tile filter (?type=electric)
+    // — separate from bodyType, since electric cuts across sedan/SUV/van.
+    electric: true,
     title: 'Tesla Model Y',
     tagline: 'Electric Comfort',
     passengers: 4,
@@ -326,6 +329,7 @@ export const FLEET = [
     slug: 'volkswagen-id4',
     category: 'economy',
     bodyType: 'suv',
+    electric: true,
     title: 'Volkswagen ID.4',
     tagline: 'Electric Comfort',
     passengers: 4,
@@ -390,6 +394,7 @@ export const FLEET = [
     slug: 'byd-atto-3',
     category: 'economy',
     bodyType: 'suv',
+    electric: true,
     title: 'BYD Atto 3',
     tagline: 'Electric Comfort',
     passengers: 4,
@@ -525,3 +530,17 @@ export const HOME_FLEET_CATEGORIES = [
   { label: 'Sprinter 12 Seater', image: IMAGES.homeFleetIcons.sprinter316, href: '/fleet/mercedes-sprinter-316' },
   { label: 'Sprinter 17 Seater', image: IMAGES.homeFleetIcons.sprinter519, href: '/fleet/mercedes-sprinter-519' },
 ].map((c) => ({ ...c, href: c.href || `${categoryPath(c.category)}?type=${c.bodyType}` }))
+
+// A single, full-width "Electric" spotlight shown as its own row below the
+// 5x2 grid above — electric cuts across body types (currently all in the
+// Comfort tier: Tesla Model Y, VW ID.4, BYD Atto 3 — see the `electric` flag
+// on each), so it doesn't fit one body-type tile the way the others do.
+// No dedicated cutout icon has been supplied for this one yet (see the
+// other homepage tiles in IMAGES.homeFleetIcons) — image is left null and
+// the tile renders an icon placeholder until one is added.
+export const HOME_ELECTRIC_TILE = {
+  label: 'Electric Fleet',
+  desc: 'All-electric options across the fleet — Tesla Model Y, Volkswagen ID.4 and BYD Atto 3.',
+  image: null,
+  href: `${categoryPath('economy')}?type=electric`,
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ShieldCheck, BadgeDollarSign, Lock, Star, ArrowRight } from 'lucide-react'
+import { ShieldCheck, BadgeDollarSign, Lock, Star, ArrowRight, Zap } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
 import Reveal from '../components/Reveal'
@@ -10,7 +10,7 @@ import TestimonialCard from '../components/TestimonialCard'
 import StatsBand from '../components/StatsBand'
 import OccasionStrip from '../components/OccasionStrip'
 import { IMAGES } from '../constants/images'
-import { HOME_FLEET_CATEGORIES } from '../constants/fleet'
+import { HOME_FLEET_CATEGORIES, HOME_ELECTRIC_TILE } from '../constants/fleet'
 import { reviews as reviewsApi } from '../utils/api'
 
 const services = [
@@ -180,6 +180,39 @@ export default function Home() {
                 </Link>
               </Reveal>
             ))}
+          </div>
+          {/* Electric — its own single-row spotlight below the grid, since
+              it cuts across body types rather than being one more tile of
+              the same kind. No cutout icon supplied for this one yet, so it
+              shows an icon placeholder in the meantime. */}
+          <div className="mt-6 grid grid-cols-1">
+            <Reveal delay={HOME_FLEET_CATEGORIES.length * 100}>
+              <Link
+                to={HOME_ELECTRIC_TILE.href}
+                className="group flex items-center justify-between gap-5 overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/[0.06] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-8"
+              >
+                <div className="flex items-center gap-5">
+                  {HOME_ELECTRIC_TILE.image ? (
+                    <img
+                      src={HOME_ELECTRIC_TILE.image}
+                      alt={HOME_ELECTRIC_TILE.label}
+                      className="h-14 w-20 shrink-0 object-contain"
+                    />
+                  ) : (
+                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-gold/10 text-brand-gold">
+                      <Zap size={26} />
+                    </span>
+                  )}
+                  <div>
+                    <h3 className="font-heading text-lg text-black">{HOME_ELECTRIC_TILE.label}</h3>
+                    <p className="mt-1 text-sm text-black/50">{HOME_ELECTRIC_TILE.desc}</p>
+                  </div>
+                </div>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/5 text-black transition-colors group-hover:bg-brand-gold group-hover:text-brand-black">
+                  <ArrowRight size={15} />
+                </span>
+              </Link>
+            </Reveal>
           </div>
         </div>
       </section>

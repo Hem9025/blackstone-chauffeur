@@ -3,7 +3,7 @@ import PageMeta from '../components/PageMeta'
 import FleetCard from '../components/FleetCard'
 import { FLEET_CATEGORIES } from '../constants/fleet'
 
-const TYPE_LABELS = { sedan: 'Sedan', suv: 'SUV', van: 'Van', sprinter: 'Sprinter' }
+const TYPE_LABELS = { sedan: 'Sedan', suv: 'SUV', van: 'Van', sprinter: 'Sprinter', electric: 'Electric' }
 
 /**
  * Renders one of the two standalone fleet pages (Luxury or Comfort).
@@ -19,7 +19,11 @@ export default function FleetCategory({ category }) {
 
   const [searchParams, setSearchParams] = useSearchParams()
   const typeFilter = searchParams.get('type')
-  const filtered = typeFilter ? allVehicles.filter((v) => v.bodyType === typeFilter) : allVehicles
+  // 'electric' isn't a body type — it's a flag that cuts across sedan/SUV/
+  // van, so it's matched separately from the regular bodyType filter.
+  const filtered = typeFilter
+    ? allVehicles.filter((v) => (typeFilter === 'electric' ? v.electric : v.bodyType === typeFilter))
+    : allVehicles
   // An empty filtered result (e.g. a body type with zero vehicles right now)
   // falls back to showing the full category rather than a dead end.
   const vehicles = filtered.length ? filtered : allVehicles
