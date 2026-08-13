@@ -110,15 +110,15 @@ export default function AdminLayout() {
 
   return (
     <div className="flex flex-1 items-stretch bg-[#f7f6f3]">
-      {/* Desktop sidebar — sticky so it's always reachable, even against a
-          long scrolling table. top/height are set inline from the measured
-          navbar height (see navbarHeight above) so the sidebar always sits
-          fully below the navbar — nothing hidden behind it up top, nothing
-          pushed past the bottom of the screen — and overflow-y-auto only
-          kicks in to scroll internally on the rare case the nav list itself
-          is taller than the remaining space. */}
+      {/* Desktop sidebar — truly fixed, not sticky: it stays put in the
+          viewport the whole time, however long the page (e.g. a big
+          bookings table) gets, rather than scrolling away or only catching
+          up once you hit the bottom. top/height come from the measured
+          navbar height (see navbarHeight above) so it always sits exactly
+          below the navbar. overflow-y-auto is just a safety net for the
+          rare case the nav list itself grows taller than the screen. */}
       <aside
-        className="sticky hidden w-60 shrink-0 flex-col overflow-y-auto bg-brand-black lg:flex"
+        className="fixed left-0 z-40 hidden w-60 shrink-0 flex-col overflow-y-auto bg-brand-black lg:flex"
         style={{ top: navbarHeight, height: `calc(100vh - ${navbarHeight}px)` }}
       >
         <div className="px-5 py-6">
@@ -130,7 +130,9 @@ export default function AdminLayout() {
       </aside>
 
       {/* Mobile top bar + slide-over drawer */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* lg:ml-60 makes room for the now fixed (out-of-flow) sidebar above,
+          so content doesn't render underneath it. */}
+      <div className="flex min-w-0 flex-1 flex-col lg:ml-60">
         <div className="flex items-center justify-between border-b border-black/10 bg-white px-4 py-3 lg:hidden">
           <button onClick={() => setDrawerOpen(true)} aria-label="Open admin menu" className="text-brand-black">
             <Menu size={22} />
