@@ -54,15 +54,21 @@ export const IMAGES = {
   },
 
   // Homepage "Our Fleet" tiles only — clean cutout/studio-style car icons on
-  // a transparent background (client-supplied), one per body-type tile.
-  // Not used anywhere else (fleet detail pages keep their real photo heroes).
+  // a plain backdrop (client-supplied), one per body-type/vehicle tile. Not
+  // used anywhere else (fleet detail pages keep their real photo heroes).
+  // Comfort tiles use light/silver-white vehicle shots; Luxury (and the two
+  // Sprinter spotlight tiles, which are catalogued under 'luxury') use black
+  // vehicle shots — a deliberate light/dark split between the two tiers.
   homeFleetIcons: {
-    economySedan: '/images/fleet/icons/economy-sedan.png',
-    economySuv: '/images/fleet/icons/economy-suv.png',
-    economyVan: '/images/fleet/icons/economy-van.png',
+    economySedan: '/images/fleet/icons/comfort-sedan.jpg',
+    economySuv: '/images/fleet/icons/comfort-suv.jpg',
+    economyVan: '/images/fleet/icons/comfort-van.jpg',
+    comfort12SeaterVan: '/images/fleet/icons/comfort-12-seater-van.jpg',
     businessSedan: '/images/fleet/icons/business-sedan.png',
     businessSuv: '/images/fleet/icons/business-suv.png',
     businessVan: '/images/fleet/icons/business-van.png',
+    sprinter316: '/images/fleet/icons/sprinter-316.jpg',
+    sprinter519: '/images/fleet/icons/sprinter-519.jpg',
   },
 
   // Real client-supplied interior photography for specific fleet vehicles

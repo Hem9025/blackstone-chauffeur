@@ -500,24 +500,28 @@ export function getCategoryByUrlSlug(urlSlug) {
   return Object.values(FLEET_CATEGORIES).find((c) => c.urlSlug === urlSlug)
 }
 
-// The 6 category tiles shown on the homepage fleet section (3 columns x 2
+// The 9 category tiles shown on the homepage fleet section (5 columns x 2
 // rows) — "Luxury" is the client-facing name for the internal 'luxury'
 // category, "Comfort" for 'economy' (matches the labelling already used on
-// the two standalone fleet pages — FLEET_CATEGORIES above). Sprinter is a
-// 7th, quote-only category that intentionally isn't shown here (only on the
-// booking form) since it's not an instant-book vehicle. Each tile links to
-// the matching fleet page pre-filtered to that body type via ?type=.
+// the two standalone fleet pages — FLEET_CATEGORIES above). Most tiles link
+// to the matching fleet page pre-filtered to that body type via ?type=; the
+// three "spotlight" tiles (Comfort 12 Seater Van, and the two Sprinters —
+// which share bodyType 'sprinter' and so can't be told apart by a type
+// filter) link straight to that one vehicle's own detail page instead.
 //
 // These tiles use dedicated cutout-style icon images (IMAGES.homeFleetIcons)
-// rather than a real vehicle's hero photo, so all 6 tiles share one
+// rather than a real vehicle's hero photo, so every tile shares one
 // consistent "product shot" look regardless of which real cars are in that
-// category — the tile still links through to the full filtered fleet list,
-// it isn't tied to a single vehicle.
+// category — most tiles still link through to the full filtered fleet list,
+// they aren't tied to a single vehicle (except the 3 spotlight tiles above).
 export const HOME_FLEET_CATEGORIES = [
   { label: 'Comfort Sedan', bodyType: 'sedan', category: 'economy', image: IMAGES.homeFleetIcons.economySedan },
   { label: 'Comfort SUV', bodyType: 'suv', category: 'economy', image: IMAGES.homeFleetIcons.economySuv },
   { label: 'Comfort Van', bodyType: 'van', category: 'economy', image: IMAGES.homeFleetIcons.economyVan },
+  { label: 'Comfort 12 Seater Van', image: IMAGES.homeFleetIcons.comfort12SeaterVan, href: '/fleet/toyota-hiace' },
   { label: 'Luxury Sedan', bodyType: 'sedan', category: 'luxury', image: IMAGES.homeFleetIcons.businessSedan },
   { label: 'Luxury SUV', bodyType: 'suv', category: 'luxury', image: IMAGES.homeFleetIcons.businessSuv },
   { label: 'Luxury Van', bodyType: 'van', category: 'luxury', image: IMAGES.homeFleetIcons.businessVan },
-].map((c) => ({ ...c, href: `${categoryPath(c.category)}?type=${c.bodyType}` }))
+  { label: 'Sprinter 12 Seater', image: IMAGES.homeFleetIcons.sprinter316, href: '/fleet/mercedes-sprinter-316' },
+  { label: 'Sprinter 17 Seater', image: IMAGES.homeFleetIcons.sprinter519, href: '/fleet/mercedes-sprinter-519' },
+].map((c) => ({ ...c, href: c.href || `${categoryPath(c.category)}?type=${c.bodyType}` }))

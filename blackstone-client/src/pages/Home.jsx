@@ -141,8 +141,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Fleet preview — 6 category tiles (3x2), each clickable through to
-          the relevant fleet page pre-filtered to that body type. */}
+      {/* Fleet preview — 9 category tiles (5x2 on desktop), each clickable
+          through to the relevant fleet page pre-filtered to that body type,
+          or straight to a specific vehicle for the 3 "spotlight" tiles. */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <Reveal>
@@ -156,7 +157,7 @@ export default function Home() {
           {/* Clean "product shot" card style — cutout car icons on a plain
               white backdrop, with an even 20px breathing-room gap on every
               side of the image inside the tile. */}
-          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             {HOME_FLEET_CATEGORIES.map((c, i) => (
               <Reveal key={c.label} delay={i * 100}>
                 <Link
