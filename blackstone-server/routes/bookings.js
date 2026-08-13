@@ -7,6 +7,7 @@ import { requirePermission } from '../middleware/requirePermission.js'
 import { sendMail } from '../emails/mailer.js'
 import { bookingConfirmationTemplate } from '../emails/templates/bookingConfirmation.js'
 import { bookingAssignedTemplate } from '../emails/templates/bookingAssigned.js'
+import { driverReassignedTemplate } from '../emails/templates/driverReassigned.js'
 import { rideReceiptTemplate } from '../emails/templates/rideReceipt.js'
 import { newBookingAdminTemplate } from '../emails/templates/newBookingAdmin.js'
 import { bookingCancelledTemplate } from '../emails/templates/bookingCancelled.js'
@@ -940,6 +941,22 @@ router.patch(
       params.push(price === null ? null : Math.round(price * 100) / 100)
     }
     try {
+      // Captured before the UPDATE overwrites driver_id — this is the only
+      // way to know who's being taken off the ride. If it's a different
+      // person than the new driverId (including being unassigned outright),
+      // they get a gentle "no longer on your schedule" notice below rather
+      // than being left to notice the ride vanished from their dashboard.
+      const { rows: previousRows } = await query(
+        `SELECT b.driver_id AS previous_driver_id, b.pickup, b.dropoff, b.date, b.time,
+                u.name AS previous_driver_name, u.email AS previous_driver_email
+         FROM bookings b
+         LEFT JOIN users u ON u.id = b.driver_id
+         WHERE b.id = ?`,
+        [req.params.id],
+      )
+      if (!previousRows.length) return res.status(404).json({ message: 'Booking not found' })
+      const previous = previousRows[0]
+
       await query(`UPDATE bookings SET driver_id = ?${priceUpdateClause} WHERE id = ?`, [...params, req.params.id])
       const { rows } = await query(
         `SELECT b.*, u.name AS driver_name, u.email AS driver_email
@@ -963,6 +980,22 @@ router.patch(
             time: booking.time,
           }),
         }).catch((err) => console.error('Failed to send booking-assigned email', err))
+      }
+
+      const wasReassignedAway =
+        previous.previous_driver_id && previous.previous_driver_id !== booking.driver_id
+      if (wasReassignedAway && previous.previous_driver_email) {
+        sendMail({
+          to: previous.previous_driver_email,
+          subject: 'Schedule update — BlackStone Chauffeur',
+          html: driverReassignedTemplate({
+            driverName: previous.previous_driver_name,
+            pickup: previous.pickup,
+            dropoff: previous.dropoff,
+            date: previous.date,
+            time: previous.time,
+          }),
+        }).catch((err) => console.error('Failed to send driver-reassigned email', err))
       }
 
       res.json(rows[0])
