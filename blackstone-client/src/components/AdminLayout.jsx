@@ -28,6 +28,25 @@ export default function AdminLayout() {
   const { pathname } = useLocation()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { permissions, isAdmin } = useAdminPermissions()
+  // Measured from the real <header> instead of a guessed pixel value — the
+  // navbar's height changes across breakpoints (logo goes h-12/h-16/h-20),
+  // and a hardcoded offset here previously drifted out of sync with it,
+  // hiding the top of the sidebar (Dashboard/Bookings, even the header)
+  // behind the navbar, or leaving the bottom (Logout) below the fold.
+  // ResizeObserver keeps it correct across breakpoint changes and any
+  // future navbar height edits, with a sensible fallback before the first
+  // measurement lands.
+  const [navbarHeight, setNavbarHeight] = useState(96)
+
+  useEffect(() => {
+    const header = document.querySelector('header')
+    if (!header) return
+    const measure = () => setNavbarHeight(header.offsetHeight)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(header)
+    return () => observer.disconnect()
+  }, [])
 
   const items = NAV_ITEMS.filter((item) => {
     if (item.adminOnly) return isAdmin
@@ -92,13 +111,16 @@ export default function AdminLayout() {
   return (
     <div className="flex flex-1 items-stretch bg-[#f7f6f3]">
       {/* Desktop sidebar — sticky so it's always reachable, even against a
-          long scrolling table. Offset by the navbar's real rendered height
-          at the lg breakpoint (logo lg:h-20 = 80px + py-2.5 = 20px = 100px)
-          — top-16/4rem undershot this, which pinned the sidebar a bit too
-          high and pushed its bottom (Logout etc.) past the viewport with no
-          way to scroll to it. overflow-y-auto lets it scroll internally
-          whenever the nav list is taller than the space below the navbar. */}
-      <aside className="sticky top-[100px] hidden h-[calc(100vh-100px)] w-60 shrink-0 flex-col overflow-y-auto bg-brand-black lg:flex">
+          long scrolling table. top/height are set inline from the measured
+          navbar height (see navbarHeight above) so the sidebar always sits
+          fully below the navbar — nothing hidden behind it up top, nothing
+          pushed past the bottom of the screen — and overflow-y-auto only
+          kicks in to scroll internally on the rare case the nav list itself
+          is taller than the remaining space. */}
+      <aside
+        className="sticky hidden w-60 shrink-0 flex-col overflow-y-auto bg-brand-black lg:flex"
+        style={{ top: navbarHeight, height: `calc(100vh - ${navbarHeight}px)` }}
+      >
         <div className="px-5 py-6">
           <p className="text-xs uppercase tracking-widest text-brand-white/40">BlackStone</p>
           <p className="font-heading text-lg text-brand-white">Admin Panel</p>
