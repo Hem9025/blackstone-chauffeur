@@ -13,115 +13,134 @@ const galleryA = (model) => [
 // titles/descriptions match what's actually in each photo (see
 // IMAGES.fleetInterior). Hero images for these vehicles are untouched.
 const bmw7SeriesGallery = [
-  { src: IMAGES.fleetInterior.bmw7Series[0], title: 'Rear Cabin', desc: 'Executive rear seating in fine leather, built for long, relaxed journeys.' },
+  { src: IMAGES.fleetInterior.bmw7Series[0], title: 'Rear Cabin', desc: 'Executive rear seating in rich burgundy leather, finished with a soft cushion for long, relaxed journeys.' },
   { src: IMAGES.fleetInterior.bmw7Series[1], title: 'Front Cabin', desc: 'Driver console and controls, finished to the same premium standard throughout.' },
-  { src: IMAGES.fleetInterior.bmw7Series[2], title: 'Panoramic Roof', desc: 'Open, airy cabin lighting for a more relaxed journey.' },
-  { src: IMAGES.fleetInterior.bmw7Series[3], title: 'Dashboard', desc: 'A clean, driver-focused dashboard with the latest BMW infotainment.' },
+  { src: IMAGES.fleetInterior.bmw7Series[2], title: 'Panoramic Roof', desc: 'Open sunroof over the rear headrests, letting in light and air on the go.' },
+  { src: IMAGES.fleetInterior.bmw7Series[3], title: 'Dashboard', desc: 'A close-up of the centre console and BMW-badged wheel — a clean, driver-focused cockpit.' },
 ]
 
 const audiQ7Gallery = [
-  { src: IMAGES.fleetInterior.audiQ7[0], title: 'Dashboard', desc: 'Audi\'s virtual cockpit and dual-screen console, precise and driver-focused.' },
+  { src: IMAGES.fleetInterior.audiQ7[0], title: 'Dashboard', desc: 'Audi\'s virtual cockpit and reversing camera display, precise and driver-focused.' },
   { src: IMAGES.fleetInterior.audiQ7[1], title: 'Rear Seats', desc: 'Spacious rear seating under a full panoramic roof.' },
-  { src: IMAGES.fleetInterior.audiQ7[2], title: 'Exterior', desc: 'The Q7\'s bold, understated exterior — sized for a smooth, commanding ride.' },
-  { src: IMAGES.fleetInterior.audiQ7[3], title: 'Luggage Space', desc: 'Generous boot space, sized for airport runs and multi-stop days.' },
+  { src: IMAGES.fleetInterior.audiQ7[2], title: 'Exterior', desc: 'The Q7 parked outside a city building at dusk — bold and understated, sized for a smooth, commanding ride.' },
 ]
 
 const mercedesSClassGallery = [
-  { src: IMAGES.fleetInterior.mercedesSClass[0], title: 'Dashboard', desc: 'The latest Mercedes-Benz cockpit, with dual digital displays front and centre.' },
-  { src: IMAGES.fleetInterior.mercedesSClass[1], title: 'Rear Cabin', desc: 'Executive rear seating with ambient lighting for a first-class arrival.' },
-  { src: IMAGES.fleetInterior.mercedesSClass[2], title: 'Rear Entertainment', desc: 'Individual rear-seat displays and climate controls for every passenger.' },
-  { src: IMAGES.fleetInterior.mercedesSClass[3], title: 'Ambient Lighting', desc: 'Configurable ambient lighting sets the mood for an evening arrival.' },
+  { src: IMAGES.fleetInterior.mercedesSClass[0], title: 'Dashboard', desc: 'The latest Mercedes-Benz cockpit, with a large portrait touchscreen front and centre.' },
+  { src: IMAGES.fleetInterior.mercedesSClass[1], title: 'Rear Entertainment', desc: 'Dual rear-seat screens under red ambient lighting, for a first-class arrival.' },
+  { src: IMAGES.fleetInterior.mercedesSClass[2], title: 'Rear Cabin', desc: 'Two-tone brown and black leather rear seating with dual individual displays.' },
+  { src: IMAGES.fleetInterior.mercedesSClass[3], title: 'Exterior', desc: 'A studio profile of the S-Class in black — understated presence for any occasion.' },
 ]
 
 const mercedesEClassGallery = [
-  { src: IMAGES.fleetInterior.mercedesEClass[0], title: 'Dashboard', desc: 'A refined, driver-focused cockpit with the latest Mercedes-Benz displays.' },
-  { src: IMAGES.fleetInterior.mercedesEClass[1], title: 'Rear Cabin', desc: 'Comfortable rear seating finished in fine leather.' },
-  { src: IMAGES.fleetInterior.mercedesEClass[2], title: 'Front Cabin', desc: 'Supportive front seating and a driver-focused steering wheel.' },
-  { src: IMAGES.fleetInterior.mercedesEClass[3], title: 'Cockpit', desc: 'A wide view of the dashboard and instrument cluster.' },
+  { src: IMAGES.fleetInterior.mercedesEClass[0], title: 'Dashboard', desc: 'A refined, driver-focused cockpit overlooking a park setting.' },
+  { src: IMAGES.fleetInterior.mercedesEClass[1], title: 'Rear Seat', desc: 'Close-up of the AMG-badged rear seat, finished in fine leather.' },
+  { src: IMAGES.fleetInterior.mercedesEClass[2], title: 'Front Cabin', desc: 'Wide view of the dashboard and front seats.' },
+  { src: IMAGES.fleetInterior.mercedesEClass[3], title: 'Rear Cabin', desc: 'Both rear seats shown wide, comfortable seating finished in fine leather.' },
 ]
 
 const skodaSuperbGallery = [
-  { src: IMAGES.fleetInterior.skodaSuperb[0], title: 'Luggage Space', desc: 'Generous boot space, sized for airport runs and multi-stop days.' },
-  { src: IMAGES.fleetInterior.skodaSuperb[1], title: 'Rear Cabin', desc: 'Class-leading rear legroom in a genuinely comfortable cabin.' },
-  { src: IMAGES.fleetInterior.skodaSuperb[2], title: 'Dashboard', desc: 'A clean, well-equipped dashboard with an intuitive touchscreen.' },
+  { src: IMAGES.fleetInterior.skodaSuperb[0], title: 'Dashboard', desc: 'A clean, well-equipped cockpit with an intuitive touchscreen and diamond-stitched seats.' },
+  { src: IMAGES.fleetInterior.skodaSuperb[1], title: 'Rear Cabin', desc: 'Class-leading rear legroom beneath a full panoramic sunroof.' },
+  { src: IMAGES.fleetInterior.skodaSuperb[2], title: 'Luggage Space', desc: 'Generous boot space, sized for airport runs and multi-stop days.' },
   { src: IMAGES.fleetInterior.skodaSuperb[3], title: 'Exterior', desc: 'A sharp, understated exterior finished for smart, low-key transfers.' },
 ]
 
 const toyotaCamryGallery = [
-  { src: IMAGES.fleetInterior.toyotaCamry[0], title: 'Luggage Space', desc: 'A practical, generously sized boot for airport runs and day trips.' },
-  { src: IMAGES.fleetInterior.toyotaCamry[1], title: 'Dashboard', desc: 'A driver-focused cockpit with a clear, easy-to-use touchscreen.' },
-  { src: IMAGES.fleetInterior.toyotaCamry[2], title: 'Rear Cabin', desc: 'A comfortable, well-cushioned rear seat for four passengers.' },
+  { src: IMAGES.fleetInterior.toyotaCamry[0], title: 'Dashboard', desc: 'A driver-focused cockpit with the Toyota-badged wheel.' },
+  { src: IMAGES.fleetInterior.toyotaCamry[1], title: 'Rear Seat', desc: 'A comfortable, well-cushioned rear seat for passengers.' },
+  { src: IMAGES.fleetInterior.toyotaCamry[2], title: 'Luggage Space', desc: 'A practical, generously sized boot for airport runs and day trips.' },
   { src: IMAGES.fleetInterior.toyotaCamry[3], title: 'Exterior', desc: 'A sharp, reliable sedan finished for smart, everyday transfers.' },
 ]
 
 const toyotaAlphardGallery = [
-  { src: IMAGES.fleetInterior.toyotaAlphard[0], title: 'Dashboard', desc: 'A driver-focused cockpit with a large touchscreen and clean controls.' },
-  { src: IMAGES.fleetInterior.toyotaAlphard[1], title: 'Captain Seats', desc: 'Individually adjustable captain\'s chairs with ottoman leg rests for VIP comfort.' },
+  { src: IMAGES.fleetInterior.toyotaAlphard[0], title: 'Dashboard', desc: 'A driver-focused cockpit with a clear view of the Alphard badge through the windscreen.' },
+  { src: IMAGES.fleetInterior.toyotaAlphard[1], title: 'Captain Seats', desc: 'Individually adjustable rear captain\'s chairs beneath the panoramic sunroof, for VIP comfort.' },
   { src: IMAGES.fleetInterior.toyotaAlphard[2], title: 'Luggage Space', desc: 'A wide, flat boot with room for multiple large suitcases.' },
-  { src: IMAGES.fleetInterior.toyotaAlphard[3], title: 'Exterior', desc: 'A striking, VIP-grade exterior built for a memorable arrival.' },
+  { src: IMAGES.fleetInterior.toyotaAlphard[3], title: 'Exterior', desc: 'On assignment in the city, framed by glass office towers.' },
 ]
 
 const vwID4Gallery = [
-  { src: IMAGES.fleetInterior.vwID4[0], title: 'Dashboard', desc: 'A clean, tech-forward cockpit with a large central touchscreen.' },
-  { src: IMAGES.fleetInterior.vwID4[1], title: 'Front Seating', desc: 'Comfortable, well-cushioned front seats for everyday journeys.' },
-  { src: IMAGES.fleetInterior.vwID4[2], title: 'Rear Cabin', desc: 'A spacious, well-appointed rear seat for passengers.' },
+  { src: IMAGES.fleetInterior.vwID4[0], title: 'Dashboard', desc: 'A clean, tech-forward cockpit finished in brown leather trim.' },
+  { src: IMAGES.fleetInterior.vwID4[1], title: 'Front Seating', desc: 'Comfortable, two-tone brown and black leather front seats.' },
+  { src: IMAGES.fleetInterior.vwID4[2], title: 'Rear Cabin', desc: 'A spacious, well-appointed rear seat in matching two-tone leather.' },
   { src: IMAGES.fleetInterior.vwID4[3], title: 'Luggage Space', desc: 'A practical boot suited to airport runs and everyday trips.' },
 ]
 
 const mercedesGLSGallery = [
-  { src: IMAGES.fleetInterior.mercedesGLS[0], title: 'Rear Cabin', desc: 'Richly upholstered rear seating built for equal comfort across every row.' },
-  { src: IMAGES.fleetInterior.mercedesGLS[1], title: 'Cabin', desc: 'A wide view of the three-row cabin, finished in fine leather throughout.' },
-  { src: IMAGES.fleetInterior.mercedesGLS[2], title: 'Front Design', desc: 'The GLS\'s commanding front end, instantly recognisable on arrival.' },
-  { src: IMAGES.fleetInterior.mercedesGLS[3], title: 'On the Road', desc: 'A smooth, planted ride whatever the distance.' },
+  { src: IMAGES.fleetInterior.mercedesGLS[0], title: 'Dashboard', desc: 'A modern cockpit with the vehicle settings display and road scenery outside.' },
+  { src: IMAGES.fleetInterior.mercedesGLS[1], title: 'Rear Cabin', desc: 'Richly upholstered black leather rear seating for equal comfort across every row.' },
+  { src: IMAGES.fleetInterior.mercedesGLS[2], title: 'Luggage Space', desc: 'A wide, tow-ready boot with room for multiple large suitcases.' },
 ]
 
 const mercedesVitoGallery = [
-  { src: IMAGES.fleetInterior.mercedesVito[0], title: 'Captain Seats', desc: 'Configurable captain\'s chairs with ambient lighting for executive-level comfort.' },
-  { src: IMAGES.fleetInterior.mercedesVito[1], title: 'Cabin', desc: 'A wide view of the executive cabin, finished to a first-class standard.' },
-  { src: IMAGES.fleetInterior.mercedesVito[2], title: 'Luggage Space', desc: 'A wide, flat boot with room for multiple large suitcases and golf bags.' },
-  { src: IMAGES.fleetInterior.mercedesVito[3], title: 'Exterior', desc: 'A discreet, professional exterior suited to group and executive transfers.' },
+  { src: IMAGES.fleetInterior.mercedesVito[0], title: 'Captain Seats', desc: 'Second-row captain\'s chairs with the sliding door open to palm trees outside.' },
+  { src: IMAGES.fleetInterior.mercedesVito[1], title: 'Cabin', desc: 'A wide view of the rear bench seating, set out with a snack basket for guests.' },
+  { src: IMAGES.fleetInterior.mercedesVito[2], title: 'Dashboard', desc: 'The driver\'s cockpit and Mercedes infotainment system.' },
+  { src: IMAGES.fleetInterior.mercedesVito[3], title: 'Exterior', desc: 'Parked at an Auckland waterfront location with the tailgate open — a discreet, professional exterior for group and executive transfers.' },
 ]
 
 const mercedesSprinterGallery = [
-  { src: IMAGES.fleetInterior.mercedesSprinter[0], title: 'Driver Cab', desc: 'A clean, well-equipped driver cab with modern infotainment.' },
-  { src: IMAGES.fleetInterior.mercedesSprinter[1], title: 'Passenger Seating', desc: 'Executive-configured passenger seating with individual armrests.' },
-  { src: IMAGES.fleetInterior.mercedesSprinter[2], title: 'Executive Seating', desc: 'Reclining, individually adjustable seats for longer group journeys.' },
-  { src: IMAGES.fleetInterior.mercedesSprinter[3], title: 'Exterior', desc: 'A spacious, professional-grade van built for larger group transfers.' },
+  { src: IMAGES.fleetInterior.mercedesSprinter[0], title: 'Dashboard', desc: 'The driver cab touchscreen, with park scenery outside.' },
+  { src: IMAGES.fleetInterior.mercedesSprinter[1], title: 'Driver Cab', desc: 'A wide dashboard and driver\'s seat view, clean and well-equipped.' },
+  { src: IMAGES.fleetInterior.mercedesSprinter[2], title: 'Executive Seating', desc: 'Facing, reclining seats with fold-down armrests for longer group journeys.' },
+  { src: IMAGES.fleetInterior.mercedesSprinter[3], title: 'Exterior', desc: 'Parked beneath the awning of a grand hotel entrance — a spacious, professional-grade van built for larger group transfers.' },
+]
+
+const mercedesSprinter316Gallery = [
+  { src: IMAGES.fleetInterior.mercedesSprinter316[0], title: 'Driver Cab', desc: 'Front seat view with a glass office building reflected in the windows.' },
+  { src: IMAGES.fleetInterior.mercedesSprinter316[1], title: 'Dashboard', desc: 'A clean, well-equipped driver cab with modern infotainment.' },
+  { src: IMAGES.fleetInterior.mercedesSprinter316[2], title: 'Passenger Seating', desc: 'Rows of passenger seating, with clearly marked emergency exit for group transfers.' },
+  { src: IMAGES.fleetInterior.mercedesSprinter316[3], title: 'Luggage Space', desc: 'A dedicated rear cargo area, sized for group luggage.' },
 ]
 
 const rangeRoverGallery = [
-  { src: IMAGES.fleetInterior.rangeRover[0], title: 'Rear Seats', desc: 'Hand-finished rear seating with heating, cooling and ambient lighting.' },
-  { src: IMAGES.fleetInterior.rangeRover[1], title: 'Rear Bench', desc: 'Spacious rear seating beneath a full panoramic roof.' },
-  { src: IMAGES.fleetInterior.rangeRover[2], title: 'Exterior Profile', desc: 'The Range Rover\'s commanding silhouette, unmistakable on the road.' },
-  { src: IMAGES.fleetInterior.rangeRover[3], title: 'On the Road', desc: 'Confident, composed handling for city and highway alike.' },
+  { src: IMAGES.fleetInterior.rangeRover[0], title: 'Rear Seats', desc: 'Black leather rear seating with a red trim accent, city road visible outside.' },
+  { src: IMAGES.fleetInterior.rangeRover[1], title: 'Dashboard', desc: 'Cockpit view with rolling green hills outside and the Range Rover badge on the wheel.' },
+  { src: IMAGES.fleetInterior.rangeRover[2], title: 'Panoramic Roof', desc: 'Rear seating beneath a full panoramic glass roof.' },
+  { src: IMAGES.fleetInterior.rangeRover[3], title: 'Luggage Space', desc: 'Open boot with a retractable cargo cover, ready to load.' },
 ]
 
 const teslaModelYGallery = [
   { src: IMAGES.fleetInterior.teslaModelY[0], title: 'Dashboard', desc: 'A minimalist, tech-forward cabin with a central touchscreen.' },
-  { src: IMAGES.fleetInterior.teslaModelY[1], title: 'Rear Seating', desc: 'A spacious, well-cushioned rear seat for passengers.' },
-  { src: IMAGES.fleetInterior.teslaModelY[2], title: 'Panoramic Roof', desc: 'A full-length glass roof for a bright, airy cabin.' },
-  { src: IMAGES.fleetInterior.teslaModelY[3], title: 'Exterior', desc: 'A sleek, all-electric exterior for a quiet, modern ride.' },
+  { src: IMAGES.fleetInterior.teslaModelY[1], title: 'Front Cabin', desc: 'A wide view of the front seats and dashboard, framed by the city street outside.' },
+  { src: IMAGES.fleetInterior.teslaModelY[2], title: 'Rear Seats', desc: 'Rear seating beneath the glass roof, with the city skyline outside.' },
+  { src: IMAGES.fleetInterior.teslaModelY[3], title: 'Exterior', desc: 'Arriving at a hotel entrance, greeted by a waiting chauffeur — a sleek, all-electric ride.' },
 ]
 
 const havalH6Gallery = [
-  { src: IMAGES.fleetInterior.havalH6[0], title: 'Luggage Space', desc: 'A generous, flexible boot for airport runs and day trips.' },
-  { src: IMAGES.fleetInterior.havalH6[1], title: 'Dashboard', desc: 'A modern cockpit with a large touchscreen and clean controls.' },
-  { src: IMAGES.fleetInterior.havalH6[2], title: 'Rear Cabin', desc: 'A comfortable, well-cushioned rear seat for passengers.' },
-  { src: IMAGES.fleetInterior.havalH6[3], title: 'Exterior', desc: 'A modern, well-equipped SUV suited to everyday comfort transfers.' },
+  { src: IMAGES.fleetInterior.havalH6[0], title: 'Dashboard', desc: 'A modern cockpit with a large portrait touchscreen and Haval-badged wheel.' },
+  { src: IMAGES.fleetInterior.havalH6[1], title: 'Rear Seat', desc: 'A comfortable, well-cushioned rear seat for passengers.' },
+  { src: IMAGES.fleetInterior.havalH6[2], title: 'Luggage Space', desc: 'A generous, flexible boot for airport runs and day trips.' },
+  { src: IMAGES.fleetInterior.havalH6[3], title: 'Exterior', desc: 'Parked on a city street beside glass office buildings.' },
 ]
 
 const bydAtto3Gallery = [
-  { src: IMAGES.fleetInterior.bydAtto3[0], title: 'Dashboard', desc: 'A distinctive, tech-forward cockpit with a bold interior design.' },
-  { src: IMAGES.fleetInterior.bydAtto3[1], title: 'Rear Cabin', desc: 'A comfortable rear seat finished in a distinctive two-tone trim.' },
+  { src: IMAGES.fleetInterior.bydAtto3[0], title: 'Dashboard', desc: 'A distinctive, tech-forward cockpit with twin touchscreens and a BYD-badged wheel.' },
+  { src: IMAGES.fleetInterior.bydAtto3[1], title: 'Rear Cabin', desc: 'A comfortable rear seat finished in two-tone blue and white leather with red piping.' },
   { src: IMAGES.fleetInterior.bydAtto3[2], title: 'Luggage Space', desc: 'A practical boot suited to shorter city and airport transfers.' },
-  { src: IMAGES.fleetInterior.bydAtto3[3], title: 'Exterior', desc: 'A distinctive, all-electric SUV for a quiet, modern ride.' },
+  { src: IMAGES.fleetInterior.bydAtto3[3], title: 'Exterior', desc: 'Parked outside a hotel entrance — a distinctive, all-electric SUV for a quiet, modern ride.' },
 ]
 
 const toyotaHiaceGallery = [
-  { src: IMAGES.fleetInterior.toyotaHiace[0], title: 'Dashboard', desc: 'A straightforward, driver-focused cockpit built for long, reliable shifts.' },
-  { src: IMAGES.fleetInterior.toyotaHiace[1], title: 'Cabin', desc: 'A practical, well-kept cabin with comfortable seating for the full group.' },
-  { src: IMAGES.fleetInterior.toyotaHiace[2], title: 'Luggage Space', desc: 'A wide rear opening with generous room for group luggage.' },
+  { src: IMAGES.fleetInterior.toyotaHiace[0], title: 'Driver Cab', desc: 'A straightforward, driver-focused cockpit with rural scenery outside, built for long, reliable shifts.' },
+  { src: IMAGES.fleetInterior.toyotaHiace[1], title: 'Second-Row Seating', desc: 'Looking back through the cabin from the front — a practical, well-kept layout for the full group.' },
+  { src: IMAGES.fleetInterior.toyotaHiace[2], title: 'Passenger Seating', desc: 'Multiple rows of comfortable cloth seating for group travel.' },
   { src: IMAGES.fleetInterior.toyotaHiace[3], title: 'Exterior', desc: 'A dependable, road-ready shuttle built for group transfers.' },
+]
+
+const toyotaRAV4Gallery = [
+  { src: IMAGES.fleetInterior.toyotaRAV4[0], title: 'Dashboard', desc: 'A driver-focused cockpit with the Toyota-badged wheel.' },
+  { src: IMAGES.fleetInterior.toyotaRAV4[1], title: 'Rear Seat', desc: 'A comfortable rear seat with a fold-down armrest and cupholders.' },
+  { src: IMAGES.fleetInterior.toyotaRAV4[2], title: 'Luggage Space', desc: 'A boot with a retractable cargo cover, sized for airport runs and day trips.' },
+  { src: IMAGES.fleetInterior.toyotaRAV4[3], title: 'Exterior', desc: 'Parked on a grass verge with palm trees under an overcast sky.' },
+]
+
+const havalJolionGallery = [
+  { src: IMAGES.fleetInterior.havalJolion[0], title: 'Dashboard', desc: 'A modern cockpit with a large touchscreen and Haval-badged wheel.' },
+  { src: IMAGES.fleetInterior.havalJolion[1], title: 'Front Cabin', desc: 'A wide view of the front seats and dashboard.' },
+  { src: IMAGES.fleetInterior.havalJolion[2], title: 'Rear Seat', desc: 'A comfortable, well-cushioned rear seat for passengers.' },
+  { src: IMAGES.fleetInterior.havalJolion[3], title: 'Luggage Space', desc: 'An empty boot, ready to load.' },
 ]
 
 const galleryB = (model) => [
@@ -297,7 +316,7 @@ export const FLEET = [
     luggage: 7,
     shortDesc: 'A more compact Sprinter for mid-sized groups, without compromising on chauffeured comfort.',
     heroImage: IMAGES.fleet.mercedesSprinter316,
-    gallery: galleryA('Sprinter 316'),
+    gallery: mercedesSprinter316Gallery,
     description: [
       'The Mercedes-Benz Sprinter 316 gives mid-sized groups the same chauffeured, executive-standard service as our larger Sprinter 519, in a more compact 12-seat configuration. Comfortable upholstered seating and generous headroom make it a natural fit for groups that don\'t need the full 16-seater.',
       'Ideal for smaller wedding parties, corporate teams, and group airport transfers where everyone still travels together in one vehicle with a single professional driver.',
@@ -384,7 +403,7 @@ export const FLEET = [
     luggage: 3,
     shortDesc: 'A dependable, comfortable SUV with plenty of room for passengers and luggage.',
     heroImage: IMAGES.fleet.toyotaRAV4,
-    gallery: galleryA('Toyota RAV4'),
+    gallery: toyotaRAV4Gallery,
     description: [
       'The Toyota RAV4 is known for its dependable ride quality, comfortable seating, and generous boot space — a practical, no-fuss choice for passengers who want a smooth, spacious trip without extra frills.',
       'A solid choice for airport transfers, family travel, and everyday point-to-point bookings across the region.',
@@ -433,7 +452,7 @@ export const FLEET = [
     luggage: 3,
     shortDesc: 'A compact SUV offering a comfortable ride for shorter transfers.',
     heroImage: IMAGES.fleet.havalJolion,
-    gallery: galleryB('Haval Jolion'),
+    gallery: havalJolionGallery,
     description: [
       'The Haval Jolion is a compact SUV with a comfortable cabin and easy manoeuvrability, making it a practical option for shorter city transfers and everyday bookings.',
       'A convenient choice for solo travellers and small groups who want SUV comfort on quick point-to-point trips.',
