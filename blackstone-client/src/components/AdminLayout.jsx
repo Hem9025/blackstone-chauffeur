@@ -92,9 +92,13 @@ export default function AdminLayout() {
   return (
     <div className="flex flex-1 items-stretch bg-[#f7f6f3]">
       {/* Desktop sidebar — sticky so it's always reachable, even against a
-          long scrolling table. Offset by the navbar's height (top-16) so it
-          doesn't slide underneath it. */}
-      <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-60 shrink-0 flex-col overflow-y-auto bg-brand-black lg:flex">
+          long scrolling table. Offset by the navbar's real rendered height
+          at the lg breakpoint (logo lg:h-20 = 80px + py-2.5 = 20px = 100px)
+          — top-16/4rem undershot this, which pinned the sidebar a bit too
+          high and pushed its bottom (Logout etc.) past the viewport with no
+          way to scroll to it. overflow-y-auto lets it scroll internally
+          whenever the nav list is taller than the space below the navbar. */}
+      <aside className="sticky top-[100px] hidden h-[calc(100vh-100px)] w-60 shrink-0 flex-col overflow-y-auto bg-brand-black lg:flex">
         <div className="px-5 py-6">
           <p className="text-xs uppercase tracking-widest text-brand-white/40">BlackStone</p>
           <p className="font-heading text-lg text-brand-white">Admin Panel</p>
@@ -116,7 +120,7 @@ export default function AdminLayout() {
         {drawerOpen && (
           <div className="fixed inset-0 z-50 lg:hidden">
             <div className="absolute inset-0 bg-black/40" onClick={() => setDrawerOpen(false)} />
-            <aside className="relative flex h-full w-64 flex-col bg-brand-black">
+            <aside className="relative flex h-full w-64 flex-col overflow-y-auto bg-brand-black">
               <div className="flex items-center justify-between px-5 py-6">
                 <div>
                   <p className="text-xs uppercase tracking-widest text-brand-white/40">BlackStone</p>
