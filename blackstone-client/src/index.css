@@ -19,15 +19,22 @@
 html {
   /* Safety net: if any element anywhere on a page ever ends up wider than
      the viewport (a long unbroken string, a slightly-too-wide component,
-     etc.), this stops it from creating page-wide horizontal scroll that
-     drags fixed/sticky elements like the header off to one side. */
-  overflow-x: hidden;
+     etc.), this stops it from creating page-wide horizontal scroll.
+     `clip` rather than `hidden` — `hidden` on one axis makes the browser
+     compute the other axis to `auto`, silently turning html/body into
+     their own scroll containers, which breaks `position: sticky` (the
+     navbar) and left `position: fixed` elements (the admin sidebar)
+     anchored to a stale position once the navbar stopped sticking
+     properly. `clip` blocks overflow without creating that scroll
+     container, so sticky/fixed keep behaving relative to the real
+     viewport. */
+  overflow-x: clip;
   width: 100%;
 }
 
 body {
   margin: 0;
-  overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
   background: var(--color-brand-white);
   color: var(--color-brand-black);
