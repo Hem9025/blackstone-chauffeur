@@ -194,19 +194,67 @@ router.get('/overview', requirePermission('can_view_stats'), async (req, res) =>
        LIMIT 5`,
     )
 
+    // Today's bookings — keyed off the ride date, not created_at, since
+    // "today's bookings" means rides happening today, not ones booked today.
+    const { rows: todayRows } = await query(`SELECT COUNT(*) AS count FROM bookings WHERE date = CURDATE()`)
+
+    // People/fleet counts — mirrors the same 'driver'+'active' filter used
+    // everywhere else a driver list is built (e.g. GET /bookings/drivers),
+    // so this number always matches what shows up in the assign-driver
+    // dropdown rather than including drivers still pending approval.
+    const { rows: peopleRows } = await query(
+      `SELECT
+         (SELECT COUNT(*) FROM users WHERE role = 'driver' AND status = 'active') AS total_drivers,
+         (SELECT COUNT(*) FROM users WHERE role = 'customer') AS total_customers,
+         (SELECT COUNT(*) FROM vehicles WHERE active = TRUE) AS total_vehicles`,
+    )
+    const people = peopleRows[0] || {}
+
+    // "Invoices" aren't a separate table in this system — every booking is
+    // its own invoice (see the per-booking PDF invoice download), so paid
+    // vs unpaid is read straight off payment_status. 'failed' and
+    // 'refunded' both land in "unpaid" since neither represents revenue
+    // actually collected right now.
+    const { rows: invoiceRows } = await query(
+      `SELECT
+         COUNT(*) AS total_invoices,
+         SUM(CASE WHEN payment_status = 'paid' THEN 1 ELSE 0 END) AS paid_count,
+         COALESCE(SUM(CASE WHEN payment_status = 'paid' THEN total_price ELSE 0 END), 0) AS paid_amount,
+         SUM(CASE WHEN payment_status != 'paid' THEN 1 ELSE 0 END) AS unpaid_count,
+         COALESCE(SUM(CASE WHEN payment_status != 'paid' THEN total_price ELSE 0 END), 0) AS unpaid_amount
+       FROM bookings`,
+    )
+    const invoices = invoiceRows[0] || {}
+
     const completedCount = Number(totals.completed_count) || 0
     const totalRevenue = Number(totals.total_revenue) || 0
+    // Current month's revenue is just the last entry of monthlyTrend (it's
+    // already keyed by calendar month up to and including this one) —
+    // cheaper than a second query for the same number.
+    const revenueThisMonth = monthlyTrend[monthlyTrend.length - 1]?.revenue || 0
 
     res.json({
       total_bookings: Number(totals.total_bookings) || 0,
       completed_count: completedCount,
       cancelled_count: Number(totals.cancelled_count) || 0,
       upcoming_count: Number(totals.upcoming_count) || 0,
+      today_bookings_count: Number(todayRows[0]?.count) || 0,
       total_revenue: totalRevenue,
+      revenue_this_month: revenueThisMonth,
       avg_booking_value: completedCount ? Math.round((totalRevenue / completedCount) * 100) / 100 : 0,
       status_breakdown: statusBreakdown,
       monthly_trend: monthlyTrend,
       top_vehicles: topVehicles.map((v) => ({ name: v.name, bookings: Number(v.bookings), revenue: Number(v.revenue) })),
+      total_drivers: Number(people.total_drivers) || 0,
+      total_customers: Number(people.total_customers) || 0,
+      total_vehicles: Number(people.total_vehicles) || 0,
+      invoices: {
+        total: Number(invoices.total_invoices) || 0,
+        paid_count: Number(invoices.paid_count) || 0,
+        paid_amount: Number(invoices.paid_amount) || 0,
+        unpaid_count: Number(invoices.unpaid_count) || 0,
+        unpaid_amount: Number(invoices.unpaid_amount) || 0,
+      },
     })
   } catch (err) {
     console.error(err)

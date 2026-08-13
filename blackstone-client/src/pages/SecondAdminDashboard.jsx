@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Download, FileText, List, CalendarDays, CalendarPlus, PlusCircle, ChevronRight } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import BookingCalendar from '../components/BookingCalendar'
@@ -31,10 +32,16 @@ export default function SecondAdminDashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedBooking, setSelectedBooking] = useState(null)
 
-  const [status, setStatus] = useState('')
-  const [paymentStatus, setPaymentStatus] = useState('')
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
+  // Seeded from the URL on first render (e.g. /admin?status=pending, linked
+  // from the Dashboard's stat cards) so landing here already shows the
+  // filtered list instead of making the admin re-apply it by hand. Once
+  // loaded, filtering here still works purely off local state as before —
+  // this doesn't keep the URL in sync with later changes.
+  const [searchParams] = useSearchParams()
+  const [status, setStatus] = useState(searchParams.get('status') || '')
+  const [paymentStatus, setPaymentStatus] = useState(searchParams.get('payment_status') || '')
+  const [dateFrom, setDateFrom] = useState(searchParams.get('date_from') || '')
+  const [dateTo, setDateTo] = useState(searchParams.get('date_to') || '')
   const [sort, setSort] = useState('date_desc')
 
   function buildQuery() {
