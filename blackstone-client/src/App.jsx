@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import ScrollToTop from './components/ScrollToTop'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminLayout from './components/AdminLayout'
 import AdminPermissionGate from './components/AdminPermissionGate'
@@ -49,6 +50,7 @@ function App() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <ScrollToTop />
       <Navbar />
 
       <main className="flex-1">
