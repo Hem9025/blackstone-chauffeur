@@ -505,39 +505,33 @@ export function getCategoryByUrlSlug(urlSlug) {
   return Object.values(FLEET_CATEGORIES).find((c) => c.urlSlug === urlSlug)
 }
 
-// The 9 category tiles shown on the homepage fleet section (5 columns x 2
-// rows) — "Luxury" is the client-facing name for the internal 'luxury'
-// category, "Comfort" for 'economy' (matches the labelling already used on
-// the two standalone fleet pages — FLEET_CATEGORIES above). Most tiles link
-// to the matching fleet page pre-filtered to that body type via ?type=; the
-// three "spotlight" tiles (Comfort 12 Seater Van, and the two Sprinters —
-// which share bodyType 'sprinter' and so can't be told apart by a type
-// filter) link straight to that one vehicle's own detail page instead.
+// The 10 category tiles shown on the homepage fleet section (5 columns x 2
+// rows — row 1 is the Comfort tier, row 2 is the Luxury tier) — "Luxury" is
+// the client-facing name for the internal 'luxury' category, "Comfort" for
+// 'economy' (matches the labelling already used on the two standalone fleet
+// pages — FLEET_CATEGORIES above). Most tiles link to the matching fleet
+// page pre-filtered to that body type via ?type=; the "spotlight" tiles
+// (Comfort 12 Seater Van, Electric, and the two Sprinters — which share
+// bodyType 'sprinter' and so can't be told apart by a type filter) link
+// straight to a specific vehicle or a non-bodyType filter instead.
 //
 // These tiles use dedicated cutout-style icon images (IMAGES.homeFleetIcons)
 // rather than a real vehicle's hero photo, so every tile shares one
 // consistent "product shot" look regardless of which real cars are in that
 // category — most tiles still link through to the full filtered fleet list,
-// they aren't tied to a single vehicle (except the 3 spotlight tiles above).
+// they aren't tied to a single vehicle (except the spotlight tiles above).
 export const HOME_FLEET_CATEGORIES = [
   { label: 'Comfort Sedan', bodyType: 'sedan', category: 'economy', image: IMAGES.homeFleetIcons.economySedan },
   { label: 'Comfort SUV', bodyType: 'suv', category: 'economy', image: IMAGES.homeFleetIcons.economySuv },
   { label: 'Comfort Van', bodyType: 'van', category: 'economy', image: IMAGES.homeFleetIcons.economyVan },
   { label: 'Comfort 12 Seater Van', image: IMAGES.homeFleetIcons.comfort12SeaterVan, href: '/fleet/toyota-hiace' },
+  // Electric cuts across body types (Tesla Model Y, VW ID.4, BYD Atto 3 —
+  // see the `electric` flag on each), so it links via a dedicated filter
+  // rather than a bodyType, same pattern as the spotlight tiles.
+  { label: 'Electric Fleet', image: IMAGES.homeFleetIcons.electric, href: `${categoryPath('economy')}?type=electric` },
   { label: 'Luxury Sedan', bodyType: 'sedan', category: 'luxury', image: IMAGES.homeFleetIcons.businessSedan },
   { label: 'Luxury SUV', bodyType: 'suv', category: 'luxury', image: IMAGES.homeFleetIcons.businessSuv },
   { label: 'Luxury Van', bodyType: 'van', category: 'luxury', image: IMAGES.homeFleetIcons.businessVan },
   { label: 'Sprinter 12 Seater', image: IMAGES.homeFleetIcons.sprinter316, href: '/fleet/mercedes-sprinter-316' },
   { label: 'Sprinter 17 Seater', image: IMAGES.homeFleetIcons.sprinter519, href: '/fleet/mercedes-sprinter-519' },
 ].map((c) => ({ ...c, href: c.href || `${categoryPath(c.category)}?type=${c.bodyType}` }))
-
-// A single, full-width "Electric" spotlight shown as its own row below the
-// 5x2 grid above — electric cuts across body types (currently all in the
-// Comfort tier: Tesla Model Y, VW ID.4, BYD Atto 3 — see the `electric` flag
-// on each), so it doesn't fit one body-type tile the way the others do.
-export const HOME_ELECTRIC_TILE = {
-  label: 'Electric Fleet',
-  desc: 'All-electric options across the fleet — Tesla Model Y, Volkswagen ID.4 and BYD Atto 3.',
-  image: IMAGES.homeFleetIcons.electric,
-  href: `${categoryPath('economy')}?type=electric`,
-}
