@@ -686,7 +686,7 @@ router.get('/all/report', authCheck, requirePermission('can_manage_bookings'), a
 // a driver (the rides they fulfil), customer_id for a provider (the
 // bookings they've placed on a client's behalf) — the same distinction
 // buildBookingFilters uses everywhere else in this file.
-async function loadPersonBookingsForReport(role, id) {
+async function loadPersonBookingsForReport(role, id, { date_from, date_to } = {}) {
   if (!['driver', 'provider'].includes(role)) {
     return { error: 'role must be "driver" or "provider"' }
   }
@@ -695,13 +695,25 @@ async function loadPersonBookingsForReport(role, id) {
     return { error: `${role} not found` }
   }
   const joinColumn = role === 'driver' ? 'driver_id' : 'customer_id'
+  // Optional month/date-range narrowing — same date_from/date_to convention
+  // used by GET /all, so a chosen range means the same thing everywhere.
+  const params = [id]
+  let dateClause = ''
+  if (date_from) {
+    dateClause += ' AND b.date >= ?'
+    params.push(date_from)
+  }
+  if (date_to) {
+    dateClause += ' AND b.date <= ?'
+    params.push(date_to)
+  }
   const { rows } = await query(
     `SELECT b.*, v.name AS vehicle_name
      FROM bookings b
      LEFT JOIN vehicles v ON v.id = b.vehicle_id
-     WHERE b.${joinColumn} = ?
+     WHERE b.${joinColumn} = ?${dateClause}
      ORDER BY b.date DESC, b.time DESC`,
-    [id],
+    params,
   )
   return { person: personRows[0], rows }
 }
@@ -714,7 +726,7 @@ async function loadPersonBookingsForReport(role, id) {
 router.get('/person/:role/:id/report', authCheck, requirePermission('can_view_stats'), async (req, res) => {
   try {
     const { role, id } = req.params
-    const { person, rows, error } = await loadPersonBookingsForReport(role, id)
+    const { person, rows, error } = await loadPersonBookingsForReport(role, id, req.query)
     if (error) return res.status(404).json({ message: error })
     streamBookingsReport(res, rows, `${person.name} — ${role === 'driver' ? 'Rides Fulfilled' : 'Bookings Placed'}`)
   } catch (err) {
@@ -727,7 +739,7 @@ router.get('/person/:role/:id/report', authCheck, requirePermission('can_view_st
 router.get('/person/:role/:id/report-csv', authCheck, requirePermission('can_view_stats'), async (req, res) => {
   try {
     const { role, id } = req.params
-    const { person, rows, error } = await loadPersonBookingsForReport(role, id)
+    const { person, rows, error } = await loadPersonBookingsForReport(role, id, req.query)
     if (error) return res.status(404).json({ message: error })
     streamBookingsCsv(res, rows, `${person.name} — ${role === 'driver' ? 'Rides Fulfilled' : 'Bookings Placed'}`)
   } catch (err) {

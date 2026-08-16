@@ -132,6 +132,7 @@ export default function Navbar() {
                 <Link to="/profile" className="hover:text-brand-gold">
                   Profile
                 </Link>
+                <NotificationBell dark />
                 <button onClick={logout} className="hover:text-brand-gold">Logout</button>
               </>
             ) : (
@@ -149,11 +150,11 @@ export default function Navbar() {
 
         {/* shrink-0 guarantees this never gets squeezed out of view by the
             logo on a narrow screen, no matter how wide the logo renders.
-            The bell sits here (not inside the lg-only nav above) so it's
-            visible at every breakpoint, mobile included, without opening
-            the hamburger menu first. */}
+            On desktop the bell lives inside the account-links cluster above
+            (next to Logout); this copy is lg:hidden and only covers mobile,
+            where that cluster is tucked inside the collapsed menu. */}
         <div className="flex shrink-0 items-center gap-4">
-          {user && <NotificationBell dark />}
+          {user && <NotificationBell dark className="lg:hidden" />}
           <button
             className="text-brand-white lg:hidden"
             onClick={() => setOpen((o) => !o)}

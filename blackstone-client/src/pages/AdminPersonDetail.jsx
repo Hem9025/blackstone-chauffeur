@@ -15,6 +15,17 @@ function monthLabel(month) {
   return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('en-NZ', { month: 'long', year: 'numeric' })
 }
 
+// Turns a "2026-08" month value into its first/last calendar day, so picking
+// a month from the dropdown is just a shortcut for a from/to range — the
+// two custom date inputs stay the source of truth either way.
+function monthBounds(month) {
+  const [y, m] = month.split('-').map(Number)
+  const from = `${month}-01`
+  const lastDay = new Date(y, m, 0).getDate()
+  const to = `${month}-${String(lastDay).padStart(2, '0')}`
+  return { from, to }
+}
+
 // One driver's or one provider's own page — contact info, their aggregate
 // stats, their actual booking list, a provider-only monthly payment
 // tracker, and a PDF/CSV export of just their bookings. Replaces the old
@@ -31,6 +42,12 @@ export default function AdminPersonDetail({ role }) {
   const [bookingList, setBookingList] = useState([])
   const [loadingBookings, setLoadingBookings] = useState(true)
 
+  // Booking-list filter — a month shortcut plus two custom date inputs, so
+  // "for months or any other way" both work off the same from/to state.
+  const [listFilterMonth, setListFilterMonth] = useState('')
+  const [listFrom, setListFrom] = useState('')
+  const [listTo, setListTo] = useState('')
+
   const [paymentHistory, setPaymentHistory] = useState([])
   const [loadingPayments, setLoadingPayments] = useState(false)
   const [pickedMonth, setPickedMonth] = useState(currentMonth())
@@ -45,20 +62,51 @@ export default function AdminPersonDetail({ role }) {
       .catch((err) => setError(err.message || 'Failed to load'))
       .finally(() => setLoadingPerson(false))
 
-    setLoadingBookings(true)
-    const filterQuery = role === 'driver' ? `?driver_id=${id}&sort=date_desc` : `?provider_id=${id}&sort=date_desc`
-    bookingsApi
-      .all(filterQuery)
-      .then(setBookingList)
-      .catch(() => setBookingList([]))
-      .finally(() => setLoadingBookings(false))
-
     if (role === 'provider') {
       setPickedMonth(currentMonth())
       loadPayments()
     }
+    setListFilterMonth('')
+    setListFrom('')
+    setListTo('')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role, id])
+
+  useEffect(() => {
+    setLoadingBookings(true)
+    const params = new URLSearchParams()
+    params.set(role === 'driver' ? 'driver_id' : 'provider_id', id)
+    params.set('sort', 'date_desc')
+    if (listFrom) params.set('date_from', listFrom)
+    if (listTo) params.set('date_to', listTo)
+    bookingsApi
+      .all(`?${params.toString()}`)
+      .then(setBookingList)
+      .catch(() => setBookingList([]))
+      .finally(() => setLoadingBookings(false))
+  }, [role, id, listFrom, listTo])
+
+  function applyMonthFilter(month) {
+    setListFilterMonth(month)
+    if (!month) return
+    const { from, to } = monthBounds(month)
+    setListFrom(from)
+    setListTo(to)
+  }
+
+  function clearListFilter() {
+    setListFilterMonth('')
+    setListFrom('')
+    setListTo('')
+  }
+
+  const reportQuery = (() => {
+    const params = new URLSearchParams()
+    if (listFrom) params.set('date_from', listFrom)
+    if (listTo) params.set('date_to', listTo)
+    const qs = params.toString()
+    return qs ? `?${qs}` : ''
+  })()
 
   function loadPayments() {
     setLoadingPayments(true)
@@ -106,13 +154,13 @@ export default function AdminPersonDetail({ role }) {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => bookingsApi.downloadPersonReport(role, id, person.name)}
+                onClick={() => bookingsApi.downloadPersonReport(role, id, person.name, reportQuery)}
                 className="flex items-center gap-1.5 border border-brand-black/15 px-3 py-2 text-xs font-medium text-brand-black/70 hover:border-brand-gold hover:text-brand-black"
               >
                 <FileDown size={14} /> Download PDF
               </button>
               <button
-                onClick={() => bookingsApi.downloadPersonCsv(role, id, person.name)}
+                onClick={() => bookingsApi.downloadPersonCsv(role, id, person.name, reportQuery)}
                 className="flex items-center gap-1.5 border border-brand-black/15 px-3 py-2 text-xs font-medium text-brand-black/70 hover:border-brand-gold hover:text-brand-black"
               >
                 <FileSpreadsheet size={14} /> Download CSV
@@ -174,9 +222,47 @@ export default function AdminPersonDetail({ role }) {
           )}
 
           <div className="mt-8">
-            <p className="mb-3 font-heading text-base text-brand-black">
-              {role === 'driver' ? 'Rides Fulfilled' : 'Bookings Placed'}
-            </p>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <p className="font-heading text-base text-brand-black">
+                {role === 'driver' ? 'Rides Fulfilled' : 'Bookings Placed'}
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="month"
+                  value={listFilterMonth}
+                  onChange={(e) => applyMonthFilter(e.target.value)}
+                  className="border border-brand-black/15 px-2.5 py-1.5 text-xs"
+                />
+                <span className="text-xs text-brand-black/30">or</span>
+                <input
+                  type="date"
+                  value={listFrom}
+                  onChange={(e) => { setListFilterMonth(''); setListFrom(e.target.value) }}
+                  className="border border-brand-black/15 px-2.5 py-1.5 text-xs"
+                />
+                <span className="text-xs text-brand-black/30">to</span>
+                <input
+                  type="date"
+                  value={listTo}
+                  onChange={(e) => { setListFilterMonth(''); setListTo(e.target.value) }}
+                  className="border border-brand-black/15 px-2.5 py-1.5 text-xs"
+                />
+                {(listFilterMonth || listFrom || listTo) && (
+                  <button
+                    type="button"
+                    onClick={clearListFilter}
+                    className="text-xs text-brand-black/40 hover:text-brand-black"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+            {(listFrom || listTo) && (
+              <p className="mb-3 text-xs text-brand-black/40">
+                Showing {listFrom ? formatDate(listFrom) : 'the start'} to {listTo ? formatDate(listTo) : 'now'} — the PDF/CSV downloads above match this range.
+              </p>
+            )}
             {loadingBookings && <p className="text-sm text-brand-black/40">Loading…</p>}
             {!loadingBookings && !bookingList.length && (
               <p className="text-sm text-brand-black/40">No bookings yet.</p>

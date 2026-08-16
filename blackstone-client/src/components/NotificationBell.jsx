@@ -30,7 +30,7 @@ const ELIGIBLE_ROLES = ['admin', 'second_admin', 'driver', 'provider']
 // something happened on) is enough to see what's new. Dark-on-light or
 // light-on-dark via the `dark` prop, since it sits in the navbar which
 // itself switches between a dark bar and a transparent-over-hero one.
-export default function NotificationBell({ dark = false }) {
+export default function NotificationBell({ dark = false, className = '' }) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
@@ -85,7 +85,7 @@ export default function NotificationBell({ dark = false }) {
   }
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className={`relative ${className}`}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

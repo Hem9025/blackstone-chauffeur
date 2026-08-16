@@ -72,8 +72,8 @@ export const bookings = {
   downloadInvoice: (id) => downloadFile(`/bookings/${id}/invoice`, `invoice-${id}.pdf`),
   downloadMyReport: (query = '') => downloadFile(`/bookings/my/report${query}`, 'my-bookings.pdf'),
   downloadAllReport: (query = '') => downloadFile(`/bookings/all/report${query}`, 'all-bookings.pdf'),
-  downloadPersonReport: (role, id, name) => downloadFile(`/bookings/person/${role}/${id}/report`, `${slugify(name)}-${role}-report.pdf`),
-  downloadPersonCsv: (role, id, name) => downloadFile(`/bookings/person/${role}/${id}/report-csv`, `${slugify(name)}-${role}-report.csv`),
+  downloadPersonReport: (role, id, name, query = '') => downloadFile(`/bookings/person/${role}/${id}/report${query}`, `${slugify(name)}-${role}-report.pdf`),
+  downloadPersonCsv: (role, id, name, query = '') => downloadFile(`/bookings/person/${role}/${id}/report-csv${query}`, `${slugify(name)}-${role}-report.csv`),
 }
 
 function slugify(name) {
