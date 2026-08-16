@@ -154,13 +154,17 @@ export default function Navbar() {
 
         {/* shrink-0 guarantees this never gets squeezed out of view by the
             logo on a narrow screen, no matter how wide the logo renders.
-            On desktop the bell lives inside the account-links cluster above
-            (next to Logout); this copy is lg:hidden and only covers mobile,
-            where that cluster is tucked inside the collapsed menu. */}
-        <div className="flex shrink-0 items-center gap-4">
-          {user && <NotificationBell dark className="lg:hidden" />}
+            lg:hidden is on THIS wrapper, not just its children — with only
+            the children hidden, this div was still a real (if invisible)
+            flex item under justify-between, which still reserved a gap in
+            front of it, silently pushing Book Now away from the true right
+            edge at desktop widths. Hiding the wrapper itself removes it
+            from the flex layout entirely at lg, so justify-between only
+            ever sees logo + nav there. */}
+        <div className="flex shrink-0 items-center gap-4 lg:hidden">
+          {user && <NotificationBell dark />}
           <button
-            className="text-brand-white lg:hidden"
+            className="text-brand-white"
             onClick={() => setOpen((o) => !o)}
             aria-label="Toggle menu"
           >
