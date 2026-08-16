@@ -22,6 +22,8 @@ import TermsConditions from './pages/TermsConditions'
 
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import DriverApply from './pages/DriverApply'
 import Pending from './pages/Pending'
 
@@ -31,7 +33,9 @@ import ProviderDashboard from './pages/ProviderDashboard'
 import SecondAdminDashboard from './pages/SecondAdminDashboard'
 import AdminUsersPanel from './pages/AdminUsersPanel'
 import AdminVehiclesPanel from './pages/AdminVehiclesPanel'
-import AdminStatsPanel from './pages/AdminStatsPanel'
+import AdminDriversPanel from './pages/AdminDriversPanel'
+import AdminProvidersPanel from './pages/AdminProvidersPanel'
+import AdminPersonDetail from './pages/AdminPersonDetail'
 import AdminDashboardPanel from './pages/AdminDashboardPanel'
 import AdminSettingsPanel from './pages/AdminSettingsPanel'
 import Profile from './pages/Profile'
@@ -75,6 +79,8 @@ function App() {
           {/* Auth */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/apply" element={<DriverApply />} />
           <Route path="/pending" element={<Pending />} />
 
@@ -140,10 +146,34 @@ function App() {
                 }
               />
               <Route
-                path="/admin/stats"
+                path="/admin/drivers"
                 element={
                   <AdminPermissionGate flag="can_view_stats">
-                    <AdminStatsPanel />
+                    <AdminDriversPanel />
+                  </AdminPermissionGate>
+                }
+              />
+              <Route
+                path="/admin/drivers/:id"
+                element={
+                  <AdminPermissionGate flag="can_view_stats">
+                    <AdminPersonDetail role="driver" />
+                  </AdminPermissionGate>
+                }
+              />
+              <Route
+                path="/admin/providers"
+                element={
+                  <AdminPermissionGate flag="can_view_stats">
+                    <AdminProvidersPanel />
+                  </AdminPermissionGate>
+                }
+              />
+              <Route
+                path="/admin/providers/:id"
+                element={
+                  <AdminPermissionGate flag="can_view_stats">
+                    <AdminPersonDetail role="provider" />
                   </AdminPermissionGate>
                 }
               />

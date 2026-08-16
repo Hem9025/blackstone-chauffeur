@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Outlet, Link, NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, ClipboardList, Users, Car, BarChart3, ShieldCheck, Globe, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, Users, Car, UserCog, Building2, ShieldCheck, Globe, LogOut, Menu, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useAdminPermissions } from '../hooks/useAdminPermissions'
 
-// Every admin-area page (Dashboard, Bookings, Users, Vehicles, Drivers &
+// Every admin-area page (Dashboard, Bookings, Users, Vehicles, Drivers,
 // Providers, Second Admin Management) renders inside this shell via
 // <Outlet/>. Centralising the nav here means there's exactly one place to
 // add a section, and every page automatically gets: a persistent way back
@@ -14,12 +14,15 @@ import { useAdminPermissions } from '../hooks/useAdminPermissions'
 // actually sees is controlled by the main admin from Second Admin
 // Management (see useAdminPermissions) — 'admin' always sees everything,
 // and that page itself is always admin-only.
+// Drivers and Providers were previously one combined page with a toggle —
+// now two separate sections, each with its own per-person detail page.
 const NAV_ITEMS = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, flag: 'can_view_stats' },
   { to: '/admin', label: 'Bookings', icon: ClipboardList, end: true, flag: 'can_manage_bookings' },
   { to: '/admin/users', label: 'Users', icon: Users, flag: 'can_manage_users' },
   { to: '/admin/vehicles', label: 'Vehicles', icon: Car, flag: 'can_manage_vehicles' },
-  { to: '/admin/stats', label: 'Drivers & Providers', icon: BarChart3, flag: 'can_view_stats' },
+  { to: '/admin/drivers', label: 'Drivers', icon: UserCog, flag: 'can_view_stats' },
+  { to: '/admin/providers', label: 'Providers', icon: Building2, flag: 'can_view_stats' },
   { to: '/admin/settings', label: 'Second Admin Management', icon: ShieldCheck, adminOnly: true },
 ]
 

@@ -1,10 +1,12 @@
 import { Router } from 'express'
+import crypto from 'crypto'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { query } from '../db/index.js'
 import authCheck from '../middleware/authCheck.js'
 import { sendMail } from '../emails/mailer.js'
 import { driverPendingTemplate } from '../emails/templates/driverPending.js'
+import { passwordResetTemplate } from '../emails/templates/passwordReset.js'
 
 const router = Router()
 
@@ -157,6 +159,81 @@ router.patch('/password', authCheck, async (req, res) => {
   } catch (err) {
     console.error(err)
     res.status(500).json({ message: 'Failed to update password' })
+  }
+})
+
+// POST /api/auth/forgot-password — always responds with the same generic
+// message whether or not the email is registered, so this can't be used to
+// probe which emails have an account. If it *is* registered, fires off a
+// reset email with a one-hour-lived token (fire-and-forget, like every
+// other transactional email in this app — a slow/failed send shouldn't
+// hold up or fail the request).
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body || {}
+  if (!email) {
+    return res.status(400).json({ message: 'email is required' })
+  }
+
+  const genericMessage = { message: "If that email is registered, we've sent a password reset link." }
+
+  try {
+    const { rows } = await query('SELECT id, name, email FROM users WHERE email = ?', [email])
+    if (!rows.length) {
+      return res.json(genericMessage)
+    }
+    const user = rows[0]
+
+    const token = crypto.randomBytes(32).toString('hex')
+    const expires = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+
+    await query('UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?', [token, expires, user.id])
+
+    const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${token}`
+    sendMail({
+      to: user.email,
+      subject: 'Reset your password — BlackStone Chauffeur',
+      html: passwordResetTemplate({ name: user.name, resetUrl }),
+    }).catch((err) => console.error('Failed to send password-reset email', err))
+
+    res.json(genericMessage)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to process request' })
+  }
+})
+
+// POST /api/auth/reset-password — completes the reset started above. Token
+// is single-use (cleared as soon as it's redeemed) and time-limited
+// (checked against reset_token_expires in the same query, so an expired
+// token behaves identically to an invalid one).
+router.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body || {}
+  if (!token || !newPassword) {
+    return res.status(400).json({ message: 'token and newPassword are required' })
+  }
+  if (newPassword.length < 8) {
+    return res.status(400).json({ message: 'New password must be at least 8 characters' })
+  }
+
+  try {
+    const { rows } = await query(
+      'SELECT id FROM users WHERE reset_token = ? AND reset_token_expires > NOW()',
+      [token],
+    )
+    if (!rows.length) {
+      return res.status(400).json({ message: 'This reset link is invalid or has expired. Please request a new one.' })
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 10)
+    await query(
+      'UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?',
+      [newHash, rows[0].id],
+    )
+
+    res.json({ message: 'Password reset — you can now log in with your new password.' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to reset password' })
   }
 })
 

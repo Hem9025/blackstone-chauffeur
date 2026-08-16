@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
+import PasswordInput from '../components/PasswordInput'
 import { useAuth } from '../context/AuthContext'
 import { auth as authApi } from '../utils/api'
 
@@ -111,25 +112,22 @@ export default function Profile() {
         <div className="mt-8 border border-brand-black/10 p-6">
           <h2 className="font-heading text-lg text-brand-black">Change Password</h2>
           <form onSubmit={handlePasswordSubmit} className="mt-4 flex flex-col gap-4">
-            <input
+            <PasswordInput
               required
-              type="password"
               placeholder="Current password"
               value={pwForm.currentPassword}
               onChange={(e) => setPwForm((f) => ({ ...f, currentPassword: e.target.value }))}
               className="border border-brand-black/15 px-4 py-3"
             />
-            <input
+            <PasswordInput
               required
-              type="password"
               placeholder="New password (min. 8 characters)"
               value={pwForm.newPassword}
               onChange={(e) => setPwForm((f) => ({ ...f, newPassword: e.target.value }))}
               className="border border-brand-black/15 px-4 py-3"
             />
-            <input
+            <PasswordInput
               required
-              type="password"
               placeholder="Confirm new password"
               value={pwForm.confirmPassword}
               onChange={(e) => setPwForm((f) => ({ ...f, confirmPassword: e.target.value }))}

@@ -77,7 +77,7 @@ export default function AdminDashboardPanel() {
                 />
               ))}
               <StatCard label="Today's Bookings" value={data.today_bookings_count} to={`/admin?date_from=${today}&date_to=${today}`} />
-              <StatCard label="Total Drivers" value={data.total_drivers} to="/admin/stats" />
+              <StatCard label="Total Drivers" value={data.total_drivers} to="/admin/drivers" />
               <StatCard label="Fleet Vehicles" value={data.total_vehicles} to="/admin/vehicles" />
             </div>
 

@@ -13,7 +13,7 @@ import PlacesAutocompleteInput from '../components/PlacesAutocompleteInput'
 import RouteMap from '../components/RouteMap'
 import { vehicles as vehiclesApi, bookings as bookingsApi } from '../utils/api'
 import { formatCurrency } from '../utils/helpers'
-import { calculateFare, tierPriceForDistance, trafficSurcharge } from '../utils/pricing'
+import { calculateFare, tierPriceForDistance, trafficSurcharge, rideFareSubtotal, nightSurcharge, isNightBooking } from '../utils/pricing'
 import { useAuth } from '../context/AuthContext'
 import {
   minBookingDate, isDateFarEnoughAhead, MIN_ADVANCE_DAYS,
@@ -254,9 +254,29 @@ function BookingContent({ mapsLoaded }) {
             passengers,
             suitcases: luggage,
             addOnsTotal,
+            time,
           })
         : 0,
-    [selectedVehicle, effectiveDistanceKm, effectiveDurationMin, passengers, luggage, addOnsTotal],
+    [selectedVehicle, effectiveDistanceKm, effectiveDurationMin, passengers, luggage, addOnsTotal, time],
+  )
+
+  // Same subtotal calculateFare prices the night surcharge off — kept as its
+  // own line item in the breakdown below rather than folded silently in.
+  const nightSurchargeAmount = useMemo(
+    () =>
+      selectedVehicle
+        ? nightSurcharge(
+            time,
+            rideFareSubtotal({
+              vehicle: selectedVehicle,
+              distanceKm: effectiveDistanceKm,
+              durationMin: effectiveDurationMin,
+              passengers,
+              suitcases: luggage,
+            }),
+          )
+        : 0,
+    [selectedVehicle, effectiveDistanceKm, effectiveDurationMin, passengers, luggage, time],
   )
 
   function toggleAddOn(id) {
@@ -550,6 +570,11 @@ function BookingContent({ mapsLoaded }) {
                     />
                     <Clock size={16} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-black/30" />
                   </div>
+                  {isNightBooking(time) && (
+                    <p className="mt-1 text-xs text-black/40">
+                      A 15% night surcharge applies to pickups between midnight and 6am.
+                    </p>
+                  )}
                 </div>
 
               </div>
@@ -952,6 +977,14 @@ function BookingContent({ mapsLoaded }) {
                       Traffic Adjustment <Info size={12} className="text-black/30" />
                     </dt>
                     <dd className="text-black">{formatCurrency(trafficSurcharge(route.distanceKm, route.durationMin))}</dd>
+                  </div>
+                )}
+                {nightSurchargeAmount > 0 && (
+                  <div className="flex justify-between">
+                    <dt className="flex items-center gap-1 text-black/60">
+                      Night Surcharge (15%) <Info size={12} className="text-black/30" />
+                    </dt>
+                    <dd className="text-black">{formatCurrency(nightSurchargeAmount)}</dd>
                   </div>
                 )}
               </dl>

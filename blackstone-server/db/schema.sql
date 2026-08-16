@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS users (
     CHECK (role IN ('customer', 'driver', 'provider', 'second_admin', 'admin')),
   status VARCHAR(20) NOT NULL DEFAULT 'active'
     CHECK (status IN ('pending', 'active')),
+  reset_token VARCHAR(255),
+  reset_token_expires DATETIME,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

@@ -15,6 +15,7 @@ import { bookingUpdatedTemplate } from '../emails/templates/bookingUpdated.js'
 import { calculateFare, resolveExtraWaitCharge } from '../utils/pricing.js'
 import { streamInvoice } from '../utils/invoice.js'
 import { streamBookingsReport } from '../utils/bookingsReport.js'
+import { streamBookingsCsv } from '../utils/bookingsCsv.js'
 import { isDateFarEnoughAhead, MIN_ADVANCE_DAYS } from '../utils/bookingRules.js'
 import { parseWhatsappBooking } from '../utils/parseWhatsappBooking.js'
 
@@ -177,6 +178,7 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
       passengers: resolvedPassengers,
       suitcases: resolvedSuitcases,
       addOnsTotal,
+      time,
     })
 
     const paymentIntent = await stripe.paymentIntents.create({
@@ -637,6 +639,62 @@ router.get('/all/report', authCheck, requirePermission('can_manage_bookings'), a
   } catch (err) {
     console.error(err)
     res.status(500).json({ message: 'Failed to generate report' })
+  }
+})
+
+// Shared by the two /person/... routes below — resolves :role/:id to a real
+// driver or provider, then loads exactly the booking rows that person's
+// admin detail page (and its Download PDF/CSV buttons) show: driver_id for
+// a driver (the rides they fulfil), customer_id for a provider (the
+// bookings they've placed on a client's behalf) — the same distinction
+// buildBookingFilters uses everywhere else in this file.
+async function loadPersonBookingsForReport(role, id) {
+  if (!['driver', 'provider'].includes(role)) {
+    return { error: 'role must be "driver" or "provider"' }
+  }
+  const { rows: personRows } = await query('SELECT id, name FROM users WHERE id = ? AND role = ?', [id, role])
+  if (!personRows.length) {
+    return { error: `${role} not found` }
+  }
+  const joinColumn = role === 'driver' ? 'driver_id' : 'customer_id'
+  const { rows } = await query(
+    `SELECT b.*, v.name AS vehicle_name
+     FROM bookings b
+     LEFT JOIN vehicles v ON v.id = b.vehicle_id
+     WHERE b.${joinColumn} = ?
+     ORDER BY b.date DESC, b.time DESC`,
+    [id],
+  )
+  return { person: personRows[0], rows }
+}
+
+// GET /api/bookings/person/:role/:id/report — one driver/provider's full
+// ride history as a downloadable PDF. Gated by can_view_stats (not
+// can_manage_bookings, unlike /all/report) so it matches the permission
+// that actually gates the Drivers/Providers admin pages this is downloaded
+// from — a second_admin who can see those pages can also export from them.
+router.get('/person/:role/:id/report', authCheck, requirePermission('can_view_stats'), async (req, res) => {
+  try {
+    const { role, id } = req.params
+    const { person, rows, error } = await loadPersonBookingsForReport(role, id)
+    if (error) return res.status(404).json({ message: error })
+    streamBookingsReport(res, rows, `${person.name} — ${role === 'driver' ? 'Rides Fulfilled' : 'Bookings Placed'}`)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to generate report' })
+  }
+})
+
+// GET /api/bookings/person/:role/:id/report-csv — same rows, as CSV.
+router.get('/person/:role/:id/report-csv', authCheck, requirePermission('can_view_stats'), async (req, res) => {
+  try {
+    const { role, id } = req.params
+    const { person, rows, error } = await loadPersonBookingsForReport(role, id)
+    if (error) return res.status(404).json({ message: error })
+    streamBookingsCsv(res, rows, `${person.name} — ${role === 'driver' ? 'Rides Fulfilled' : 'Bookings Placed'}`)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to generate CSV' })
   }
 })
 

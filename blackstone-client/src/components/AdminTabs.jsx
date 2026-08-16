@@ -12,7 +12,8 @@ export default function AdminTabs() {
     { to: '/admin', label: 'Bookings', show: permissions.can_manage_bookings },
     { to: '/admin/users', label: 'Users', show: permissions.can_manage_users },
     { to: '/admin/vehicles', label: 'Vehicles', show: permissions.can_manage_vehicles },
-    { to: '/admin/stats', label: 'Drivers & Providers', show: permissions.can_view_stats },
+    { to: '/admin/drivers', label: 'Drivers', show: permissions.can_view_stats },
+    { to: '/admin/providers', label: 'Providers', show: permissions.can_view_stats },
     { to: '/admin/settings', label: 'Settings', show: isAdmin },
   ]
 

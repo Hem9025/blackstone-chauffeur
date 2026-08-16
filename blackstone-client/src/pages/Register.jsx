@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
+import PasswordInput from '../components/PasswordInput'
 import { useAuth } from '../context/AuthContext'
 
 export default function Register() {
@@ -58,9 +59,8 @@ export default function Register() {
             onChange={update('phone')}
             className="border border-brand-black/15 px-4 py-3"
           />
-          <input
+          <PasswordInput
             required
-            type="password"
             placeholder="Password"
             value={form.password}
             onChange={update('password')}

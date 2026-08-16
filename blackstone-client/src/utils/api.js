@@ -42,6 +42,8 @@ export const auth = {
   me: () => api.get('/auth/me'),
   updateProfile: (payload) => api.patch('/auth/me', payload),
   changePassword: (payload) => api.patch('/auth/password', payload),
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }, { auth: false }),
+  resetPassword: (payload) => api.post('/auth/reset-password', payload, { auth: false }),
 }
 
 export const vehicles = {
@@ -70,6 +72,16 @@ export const bookings = {
   downloadInvoice: (id) => downloadFile(`/bookings/${id}/invoice`, `invoice-${id}.pdf`),
   downloadMyReport: (query = '') => downloadFile(`/bookings/my/report${query}`, 'my-bookings.pdf'),
   downloadAllReport: (query = '') => downloadFile(`/bookings/all/report${query}`, 'all-bookings.pdf'),
+  downloadPersonReport: (role, id, name) => downloadFile(`/bookings/person/${role}/${id}/report`, `${slugify(name)}-${role}-report.pdf`),
+  downloadPersonCsv: (role, id, name) => downloadFile(`/bookings/person/${role}/${id}/report-csv`, `${slugify(name)}-${role}-report.csv`),
+}
+
+function slugify(name) {
+  const slug = String(name || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+  return slug || 'report'
 }
 
 // Fetches a protected binary (PDF) endpoint with the auth header attached —

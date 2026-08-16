@@ -17,6 +17,8 @@ const COLUMN_ADDITIONS = [
   { table: 'bookings', column: 'notes', definition: 'VARCHAR(250)' },
   { table: 'bookings', column: 'child_seats', definition: 'INT NOT NULL DEFAULT 0' },
   { table: 'bookings', column: 'driver_price', definition: 'DECIMAL(10, 2)' },
+  { table: 'users', column: 'reset_token', definition: 'VARCHAR(255)' },
+  { table: 'users', column: 'reset_token_expires', definition: 'DATETIME' },
 ]
 
 export async function runMigrations(rawQuery, databaseName) {
