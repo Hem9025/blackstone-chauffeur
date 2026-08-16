@@ -59,8 +59,12 @@ export default function Navbar() {
         isHeroRoute ? 'fixed' : 'sticky'
       } ${isTinted ? 'bg-black/20' : 'bg-brand-black'}`}
     >
-      {/* Single nav row — no separate utility bar, kept short */}
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 md:px-8">
+      {/* Single nav row — no separate utility bar, kept short. No max-w
+          cap: on wide screens a centered max-w-7xl box leaves hundreds of
+          px of empty space on both sides, which is what kept showing up
+          as a big gap after Book Now. Full width + fixed padding keeps
+          that gap to just the padding value, on every screen size. */}
+      <div className="flex items-center justify-between px-4 py-2.5 md:px-8 lg:px-10">
         <Link to="/" className="flex shrink-0 items-center gap-2">
           {/* Smaller on phones — h-16 for everything under md was oversized
               on narrow screens (confirmed on an actual device screenshot).
