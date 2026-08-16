@@ -90,6 +90,7 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
   const [luggage, setLuggage] = useState(0)
   const [childSeats, setChildSeats] = useState(0)
   const [notes, setNotes] = useState('')
+  const [reference, setReference] = useState('')
   const [route, setRoute] = useState(null)
   const [vehicleId, setVehicleId] = useState('')
   const [selectedAddOns, setSelectedAddOns] = useState([])
@@ -265,6 +266,7 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
         passengers,
         suitcases: luggage,
         notes,
+        reference: reference || undefined,
         extras,
         distance_km: effectiveDistanceKm,
         duration_min: effectiveDurationMin,
@@ -297,6 +299,7 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
       setLuggage(0)
       setChildSeats(0)
       setNotes('')
+      setReference('')
       setVehicleId('')
       setSelectedAddOns([])
       setRoute(null)
@@ -643,6 +646,16 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
               <p className="mt-1 text-sm text-black/50">All optional — leave any of these blank and set them later.</p>
 
               <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm text-black/60">Reference</label>
+                  <input
+                    value={reference}
+                    onChange={(e) => setReference(e.target.value)}
+                    placeholder="A booking or PO number, or any tag for your own records"
+                    className="w-full border border-black/15 px-4 py-3 text-sm"
+                  />
+                </div>
+
                 <div>
                   <label className="mb-2 block text-sm text-black/60">Attribute to Provider</label>
                   <select

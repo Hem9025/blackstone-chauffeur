@@ -111,6 +111,7 @@ function NewBookingTab({ mapsLoaded }) {
   const [luggage, setLuggage] = useState(0)
   const [childSeats, setChildSeats] = useState(0)
   const [notes, setNotes] = useState('')
+  const [reference, setReference] = useState('')
   const [route, setRoute] = useState(null)
   const [vehicleId, setVehicleId] = useState('')
   const [selectedAddOns, setSelectedAddOns] = useState([])
@@ -221,14 +222,8 @@ function NewBookingTab({ mapsLoaded }) {
       if (result.passengers) setPassengers(Math.min(MAX_PASSENGERS, Math.max(1, result.passengers)))
       if (result.suitcases != null) setLuggage(Math.min(MAX_LUGGAGE, Math.max(0, result.suitcases)))
       if (result.vehicle_id) setVehicleId(String(result.vehicle_id))
-      // Reference number has no dedicated field on the booking — fold it
-      // into Notes (clearly labelled) alongside any detected note text so
-      // it isn't lost, and stays visible/editable before the booking is
-      // created.
-      const noteParts = []
-      if (result.reference_number) noteParts.push(`Reference: ${result.reference_number}`)
-      if (result.notes) noteParts.push(result.notes)
-      if (noteParts.length) setNotes(noteParts.join('\n').slice(0, 250))
+      if (result.reference_number) setReference(result.reference_number)
+      if (result.notes) setNotes(result.notes)
       setParseWarnings(result.warnings || [])
       setParsed(true)
     } catch (err) {
@@ -279,6 +274,7 @@ function NewBookingTab({ mapsLoaded }) {
         passengers,
         suitcases: luggage,
         notes,
+        reference: reference || undefined,
         extras,
         distance_km: effectiveDistanceKm,
         duration_min: effectiveDurationMin,
@@ -305,6 +301,7 @@ function NewBookingTab({ mapsLoaded }) {
       setLuggage(0)
       setChildSeats(0)
       setNotes('')
+      setReference('')
       setVehicleId('')
       setSelectedAddOns([])
       setRoute(null)
@@ -614,6 +611,16 @@ function NewBookingTab({ mapsLoaded }) {
                 </div>
                 <p className="mt-1 text-xs text-black/40">Up to {CHILD_SEAT_MAX}, +{formatCurrency(CHILD_SEAT_PRICE)} each</p>
               </div>
+            </div>
+
+            <div className="mt-6">
+              <label className="mb-2 block text-sm text-black/60">Reference</label>
+              <input
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
+                placeholder="Your own booking or PO number, for your records"
+                className="w-full border border-black/15 px-4 py-3 text-sm"
+              />
             </div>
 
             <div className="mt-6">

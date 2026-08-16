@@ -17,6 +17,7 @@ import { streamInvoice } from '../utils/invoice.js'
 import { streamBookingsReport } from '../utils/bookingsReport.js'
 import { streamBookingsCsv } from '../utils/bookingsCsv.js'
 import { isDateFarEnoughAhead, MIN_ADVANCE_DAYS } from '../utils/bookingRules.js'
+import { notify, notifyAdmins } from '../utils/notify.js'
 import { parseWhatsappBooking } from '../utils/parseWhatsappBooking.js'
 
 const router = Router()
@@ -254,7 +255,7 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
   const {
     vehicle_id, passenger_name, passenger_phone, passenger_email,
     pickup, dropoff, date, time, extras, distance_km, duration_min,
-    trip_type, service_type, hours, flight_number, stops, stop_addresses, child_seats, notes,
+    trip_type, service_type, hours, flight_number, stops, stop_addresses, child_seats, notes, reference,
     passengers, suitcases, total_price: requestedTotalPrice,
     // Both optional, and both only ever honoured for admin/second_admin —
     // a 'provider' user hits this same route for their own bookings, and
@@ -306,6 +307,7 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
   const resolvedStops = resolvedStopAddresses.length || (needsDropoff ? Math.max(0, Number(stops) || 0) : 0)
   const resolvedFlightNumber = resolvedServiceType === 'Airport Transfer' ? (flight_number || null) : null
   const resolvedNotes = String(notes || '').trim().slice(0, 250) || null
+  const resolvedReference = String(reference || '').trim().slice(0, 100) || null
 
   const resolvedDropoff = needsDropoff ? dropoff : 'As directed (Hourly)'
   const resolvedDistanceKm = needsDropoff ? distance_km : null
@@ -377,9 +379,9 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
     const inserted = await query(
       `INSERT INTO bookings
         (customer_id, vehicle_id, driver_id, driver_price, pickup, dropoff, date, time, passenger_name, passenger_phone, passenger_email,
-         trip_type, service_type, hours, flight_number, stops, stop_addresses, child_seats, notes,
+         trip_type, service_type, hours, flight_number, stops, stop_addresses, child_seats, notes, reference,
          extras, total_price, distance_km, duration_min, payment_status, booking_status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')`,
       [
         resolvedCustomerId,
         vehicle_id,
@@ -400,6 +402,7 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
         resolvedStopAddresses.length ? JSON.stringify(resolvedStopAddresses) : null,
         resolvedChildSeats,
         resolvedNotes,
+        resolvedReference,
         JSON.stringify(matchedAddOns),
         total_price,
         resolvedDistanceKm || null,
@@ -429,6 +432,34 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
           totalPrice: total_price,
         }),
       }).catch((err) => console.error('Failed to send new-booking-admin email', err))
+    }
+
+    if (req.user.role !== 'admin') {
+      notifyAdmins({
+        type: 'booking_created',
+        title: 'New Booking',
+        message: `${passenger_name} — ${pickup} → ${resolvedDropoff}, ${date} (via provider)`,
+        link: '/admin',
+      })
+    }
+    // Staff attributed this to a different provider than whoever's
+    // creating it (e.g. admin logging a booking on a provider's behalf) —
+    // let that provider know it landed on their account.
+    if (resolvedCustomerId !== req.user.id) {
+      notify(resolvedCustomerId, {
+        type: 'booking_created',
+        title: 'New Booking Added to Your Account',
+        message: `${passenger_name} — ${pickup} → ${resolvedDropoff}, ${date}`,
+        link: '/provider',
+      })
+    }
+    if (resolvedDriverId) {
+      notify(resolvedDriverId, {
+        type: 'driver_assigned',
+        title: 'New Ride Assigned',
+        message: `${date} at ${String(time).slice(0, 5)} — ${pickup} → ${resolvedDropoff}`,
+        link: '/driver',
+      })
     }
 
     // The passenger themselves has no account here (customer_id on this
@@ -554,6 +585,13 @@ router.post('/confirm', authCheck, async (req, res) => {
       }).catch((err) => console.error('Failed to send new-booking-admin email', err))
     }
 
+    notifyAdmins({
+      type: 'booking_created',
+      title: 'New Booking',
+      message: `${booking.passenger_name || booking.customer_name} — ${booking.pickup} → ${booking.dropoff || 'Hourly'}, ${booking.date}`,
+      link: '/admin',
+    })
+
     res.json(rows[0])
   } catch (err) {
     console.error(err)
@@ -588,7 +626,7 @@ router.get('/all', authCheck, requirePermission('can_manage_bookings'), async (r
   try {
     const { whereExtra, params, orderClause } = buildBookingFilters(req.query)
     const { rows } = await query(
-      `SELECT b.*, v.name AS vehicle_name, u.name AS customer_name, u.email AS customer_email
+      `SELECT b.*, v.name AS vehicle_name, u.name AS customer_name, u.email AS customer_email, u.role AS customer_role
        FROM bookings b
        LEFT JOIN vehicles v ON v.id = b.vehicle_id
        LEFT JOIN users u ON u.id = b.customer_id
@@ -704,7 +742,7 @@ router.patch('/:id/cancel', authCheck, async (req, res) => {
   try {
     const { rows: existingRows } = await query(
       `SELECT b.*, v.name AS vehicle_name,
-              cu.name AS customer_name, cu.email AS customer_email,
+              cu.name AS customer_name, cu.email AS customer_email, cu.role AS customer_role,
               du.name AS driver_name, du.email AS driver_email
        FROM bookings b
        LEFT JOIN vehicles v ON v.id = b.vehicle_id
@@ -771,6 +809,15 @@ router.patch('/:id/cancel', authCheck, async (req, res) => {
           ...emailDetails,
         }),
       }).catch((err) => console.error('Failed to send cancellation email to admin', err))
+    }
+
+    const cancelSummary = `${booking.passenger_name || booking.customer_name} — ${booking.date}, ${booking.pickup} → ${booking.dropoff || 'Hourly'}`
+    notifyAdmins({ type: 'booking_cancelled', title: 'Booking Cancelled', message: cancelSummary, link: '/admin' }, isAdmin ? req.user.id : null)
+    if (booking.driver_id) {
+      notify(booking.driver_id, { type: 'booking_cancelled', title: 'Ride Cancelled', message: cancelSummary, link: '/driver' })
+    }
+    if (booking.customer_role === 'provider' && !isOwner) {
+      notify(booking.customer_id, { type: 'booking_cancelled', title: 'Your Booking Was Cancelled', message: cancelSummary, link: '/provider' })
     }
 
     const { rows } = await query('SELECT * FROM bookings WHERE id = ?', [req.params.id])
@@ -850,13 +897,16 @@ router.delete('/:id', authCheck, requirePermission('can_manage_bookings'), async
 
 // PATCH /api/bookings/:id — admin/second_admin, edit most fields on an
 // existing booking (contact info, trip details, vehicle, passenger/luggage
-// counts, notes, and — unlike everywhere else in this file — total_price
-// itself). Every field is optional and only whatever keys are present in
-// the request body get updated, so the client can send just the one field
-// the admin changed. Deliberately does not touch customer_id, driver_id
-// (see /assign-driver), booking_status (see /cancel and the driver-only
-// /status route), payment_status (see /payment-status), or the Stripe
-// fields — those all have their own dedicated, more careful routes.
+// counts, notes, reference, provider attribution/price, and — unlike
+// everywhere else in this file — total_price itself). Every field is
+// optional and only whatever keys are present in the request body get
+// updated, so the client can send just the one field the admin changed.
+// Still deliberately does not touch driver_id (see /assign-driver),
+// booking_status (see /cancel and the driver-only /status route),
+// payment_status (see /payment-status), or the Stripe fields — those all
+// have their own dedicated, more careful routes. customer_id is now the one
+// exception (see `provider_id` below) — everything else about "who this
+// booking belongs to" still goes through those dedicated routes.
 router.patch('/:id', authCheck, requirePermission('can_manage_bookings'), async (req, res) => {
   try {
     const { rows: existingRows } = await query('SELECT id FROM bookings WHERE id = ?', [req.params.id])
@@ -916,11 +966,52 @@ router.patch('/:id', authCheck, requirePermission('can_manage_bookings'), async 
     if ('suitcases' in body) set('suitcases', Math.min(20, Math.max(0, Number(body.suitcases) || 0)))
     if ('child_seats' in body) set('child_seats', Math.min(CHILD_SEAT_MAX, Math.max(0, Number(body.child_seats) || 0)))
     if ('notes' in body) set('notes', String(body.notes || '').trim().slice(0, 250) || null)
+    if ('reference' in body) set('reference', String(body.reference || '').trim().slice(0, 100) || null)
 
     if ('vehicle_id' in body) {
       const { rows: vehicleRows } = await query('SELECT id FROM vehicles WHERE id = ? AND active = true', [body.vehicle_id])
       if (!vehicleRows.length) return res.status(400).json({ message: 'Invalid vehicle selected' })
       set('vehicle_id', body.vehicle_id)
+    }
+
+    // provider_price mirrors driver_price — a rate admin sets for this
+    // booking, separate from total_price, that counts toward the owning
+    // provider's monthly settlement. Send '' or null to clear it back out.
+    if ('provider_price' in body) {
+      const price = body.provider_price === '' || body.provider_price == null ? null : Number(body.provider_price)
+      if (price !== null && (!Number.isFinite(price) || price < 0)) {
+        return res.status(400).json({ message: 'Provider price must be a valid non-negative number' })
+      }
+      set('provider_price', price !== null ? Math.round(price * 100) / 100 : null)
+    }
+
+    // provider_id re-attributes an existing booking to a provider's account
+    // (or clears it back to whoever's editing it now) — the same mechanism
+    // POST /provider uses at creation time, just applied after the fact
+    // (e.g. admin realises a WhatsApp booking was actually placed on behalf
+    // of a specific provider). Guarded against ever touching a booking a
+    // real customer placed themselves — re-attributing that would silently
+    // vanish it from their own dashboard.
+    let notifyNewProviderId = null
+    if ('provider_id' in body) {
+      const { rows: ownerRows } = await query(
+        `SELECT u.role FROM bookings b LEFT JOIN users u ON u.id = b.customer_id WHERE b.id = ?`,
+        [req.params.id],
+      )
+      if (ownerRows[0]?.role === 'customer') {
+        return res.status(400).json({ message: "This booking was placed directly by a customer and can't be attributed to a provider." })
+      }
+      if (body.provider_id) {
+        const { rows: providerRows } = await query(
+          `SELECT id FROM users WHERE id = ? AND role = 'provider' AND status = 'active'`,
+          [body.provider_id],
+        )
+        if (!providerRows.length) return res.status(400).json({ message: 'Invalid provider selected' })
+        set('customer_id', providerRows[0].id)
+        notifyNewProviderId = providerRows[0].id
+      } else {
+        set('customer_id', req.user.id)
+      }
     }
 
     // Unlike every other route in this file, an admin editing an existing
@@ -941,7 +1032,7 @@ router.patch('/:id', authCheck, requirePermission('can_manage_bookings'), async 
     await query(`UPDATE bookings SET ${sets.join(', ')} WHERE id = ?`, params)
 
     const { rows } = await query(
-      `SELECT b.*, v.name AS vehicle_name, u.name AS customer_name, u.email AS customer_email
+      `SELECT b.*, v.name AS vehicle_name, u.name AS customer_name, u.email AS customer_email, u.role AS customer_role
        FROM bookings b
        LEFT JOIN vehicles v ON v.id = b.vehicle_id
        LEFT JOIN users u ON u.id = b.customer_id
@@ -968,6 +1059,29 @@ router.patch('/:id', authCheck, requirePermission('can_manage_bookings'), async 
           totalPrice: booking.total_price,
         }),
       }).catch((err) => console.error('Failed to send booking-updated email', err))
+    }
+
+    // Other admins get a heads-up too (not the one who just made the edit —
+    // they already know), and the provider it's attributed to (if any)
+    // hears about it whether or not this particular edit changed who it's
+    // attributed to.
+    notifyAdmins(
+      {
+        type: 'booking_updated',
+        title: 'Booking Updated',
+        message: `#${booking.id} — ${booking.passenger_name || booking.customer_name}, ${booking.date}`,
+        link: '/admin',
+      },
+      req.user.id,
+    )
+    const providerToNotify = notifyNewProviderId || (booking.customer_role === 'provider' ? booking.customer_id : null)
+    if (providerToNotify) {
+      notify(providerToNotify, {
+        type: 'booking_updated',
+        title: 'Your Booking Was Updated',
+        message: `#${booking.id} — ${booking.passenger_name || booking.customer_name}, ${booking.date}`,
+        link: '/provider',
+      })
     }
 
     res.json(booking)
@@ -1017,15 +1131,18 @@ router.patch(
 
       await query(`UPDATE bookings SET driver_id = ?${priceUpdateClause} WHERE id = ?`, [...params, req.params.id])
       const { rows } = await query(
-        `SELECT b.*, u.name AS driver_name, u.email AS driver_email
+        `SELECT b.*, u.name AS driver_name, u.email AS driver_email, c.role AS customer_role
          FROM bookings b
          LEFT JOIN users u ON u.id = b.driver_id
+         LEFT JOIN users c ON c.id = b.customer_id
          WHERE b.id = ?`,
         [req.params.id],
       )
       if (!rows.length) return res.status(404).json({ message: 'Booking not found' })
 
       const booking = rows[0]
+      const tripSummary = `${booking.date} at ${String(booking.time).slice(0, 5)} — ${booking.pickup} → ${booking.dropoff || 'Hourly'}`
+
       if (booking.driver_email) {
         sendMail({
           to: booking.driver_email,
@@ -1038,6 +1155,17 @@ router.patch(
             time: booking.time,
           }),
         }).catch((err) => console.error('Failed to send booking-assigned email', err))
+      }
+      if (booking.driver_id) {
+        notify(booking.driver_id, { type: 'driver_assigned', title: 'New Ride Assigned', message: tripSummary, link: '/driver' })
+      }
+      if (booking.customer_role === 'provider') {
+        notify(booking.customer_id, {
+          type: 'driver_assigned',
+          title: 'Driver Assigned to Your Booking',
+          message: tripSummary,
+          link: '/provider',
+        })
       }
 
       const wasReassignedAway =
@@ -1054,6 +1182,14 @@ router.patch(
             time: previous.time,
           }),
         }).catch((err) => console.error('Failed to send driver-reassigned email', err))
+      }
+      if (wasReassignedAway && previous.previous_driver_id) {
+        notify(previous.previous_driver_id, {
+          type: 'driver_removed',
+          title: 'Schedule Update',
+          message: `You're no longer on this ride: ${previous.date} — ${previous.pickup} → ${previous.dropoff || 'Hourly'}`,
+          link: '/driver',
+        })
       }
 
       res.json(rows[0])

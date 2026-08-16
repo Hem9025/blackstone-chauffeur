@@ -21,6 +21,7 @@ function sameDay(a, b) {
 export default function SecondAdminDashboard() {
   const [list, setList] = useState([])
   const [drivers, setDrivers] = useState([])
+  const [providers, setProviders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [driverInputs, setDriverInputs] = useState({})
@@ -68,6 +69,7 @@ export default function SecondAdminDashboard() {
 
   useEffect(() => {
     bookingsApi.drivers().then(setDrivers).catch(() => setDrivers([]))
+    bookingsApi.providers().then(setProviders).catch(() => setProviders([]))
   }, [])
 
   // Keeps an open detail popup showing live data — e.g. assigning a driver
@@ -349,6 +351,7 @@ export default function SecondAdminDashboard() {
       <BookingDetailsModal
         booking={selectedBooking}
         drivers={drivers}
+        providers={providers}
         onClose={() => setSelectedBooking(null)}
         onUpdated={load}
         actions={

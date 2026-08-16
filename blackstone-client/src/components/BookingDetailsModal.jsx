@@ -61,10 +61,15 @@ const inputClass = 'w-full border border-black/15 px-3 py-2 text-sm'
 //
 // Edit mode: admin/second_admin can edit most fields on a booking —
 // contact info, trip details, vehicle (reference), passenger/luggage/child
-// seat counts, notes, and — deliberately, unlike the customer-facing
-// booking flow — the total price itself, for correcting a mistake or
-// adjusting a negotiated fare after the fact.
-export default function BookingDetailsModal({ booking, drivers = [], onClose, actions, onUpdated }) {
+// seat counts, notes, reference, and — deliberately, unlike the
+// customer-facing booking flow — the total price itself, for correcting a
+// mistake or adjusting a negotiated fare after the fact. Provider
+// attribution and provider price are also editable here, but only for
+// bookings that weren't placed directly by a real customer — see
+// `canReattributeProvider` below, which mirrors a guard the server itself
+// enforces (re-attributing a genuine customer's own booking would silently
+// vanish it from their dashboard).
+export default function BookingDetailsModal({ booking, drivers = [], providers = [], onClose, actions, onUpdated }) {
   const [savingPayment, setSavingPayment] = useState(false)
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState(null)
@@ -80,6 +85,8 @@ export default function BookingDetailsModal({ booking, drivers = [], onClose, ac
   const driver = drivers.find((d) => String(d.id) === String(booking.driver_id))
   const stopAddresses = Array.isArray(booking.stop_addresses) ? booking.stop_addresses : []
   const extras = Array.isArray(booking.extras) ? booking.extras : []
+  const bookedViaProvider = booking.customer_role === 'provider' ? booking.customer_name : null
+  const canReattributeProvider = booking.customer_role !== 'customer'
 
   async function handlePaymentStatusChange(e) {
     const status = e.target.value
@@ -124,6 +131,9 @@ export default function BookingDetailsModal({ booking, drivers = [], onClose, ac
       suitcases: booking.suitcases != null ? String(booking.suitcases) : '0',
       child_seats: booking.child_seats != null ? String(booking.child_seats) : '0',
       notes: booking.notes || '',
+      reference: booking.reference || '',
+      provider_id: booking.customer_role === 'provider' ? String(booking.customer_id) : '',
+      provider_price: booking.provider_price != null ? String(booking.provider_price) : '',
       total_price: booking.total_price != null ? String(booking.total_price) : '',
     })
     setSaveError('')
@@ -178,7 +188,15 @@ export default function BookingDetailsModal({ booking, drivers = [], onClose, ac
         suitcases: Number(form.suitcases),
         child_seats: Number(form.child_seats),
         notes: form.notes,
+        reference: form.reference.trim() || null,
         total_price: priceValue,
+      }
+      // Only sent for bookings eligible for provider re-attribution — the
+      // server rejects this key outright on a genuine customer's own
+      // booking, so it's left out entirely rather than sent as empty.
+      if (canReattributeProvider) {
+        payload.provider_id = form.provider_id || ''
+        payload.provider_price = form.provider_price === '' ? '' : Number(form.provider_price)
       }
       await bookingsApi.updateDetails(booking.id, payload)
       onUpdated?.()
@@ -228,6 +246,8 @@ export default function BookingDetailsModal({ booking, drivers = [], onClose, ac
               <Field label="Name" value={passengerName} />
               <Field label="Email" value={passengerEmail} />
               <Field label="Phone" value={booking.passenger_phone} />
+              <Field label="Booked Via" value={bookedViaProvider} />
+              <Field label="Reference" value={booking.reference} />
             </Section>
 
             <Section title="Trip">
@@ -270,6 +290,7 @@ export default function BookingDetailsModal({ booking, drivers = [], onClose, ac
 
             <Section title="Total & Booked">
               <Field label="Total Price" value={formatCurrency(booking.total_price)} />
+              {booking.provider_price != null && <Field label="Provider Price" value={formatCurrency(booking.provider_price)} />}
               <Field label="Booked On" value={booking.created_at ? formatDate(booking.created_at) : null} />
             </Section>
 
@@ -404,6 +425,50 @@ export default function BookingDetailsModal({ booking, drivers = [], onClose, ac
                 value={form.notes}
                 onChange={(e) => set('notes', e.target.value)}
               />
+            </Section>
+
+            <Section title="Attribution">
+              <EditRow label="Reference">
+                <input
+                  className={inputClass}
+                  value={form.reference}
+                  onChange={(e) => set('reference', e.target.value)}
+                  placeholder="A booking or PO number, or any tag for your own records"
+                />
+              </EditRow>
+              {canReattributeProvider && (
+                <EditRow label="Provider">
+                  <select
+                    className={inputClass}
+                    value={form.provider_id}
+                    onChange={(e) => set('provider_id', e.target.value)}
+                  >
+                    <option value="">None — keep this on the admin account</option>
+                    {providers.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </EditRow>
+              )}
+              {canReattributeProvider && form.provider_id && (
+                <EditRow label="Provider Price">
+                  <div className="flex items-center border border-black/15 px-3 py-2">
+                    <span className="mr-1 text-black/40">$</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-full text-sm outline-none"
+                      value={form.provider_price}
+                      onChange={(e) => set('provider_price', e.target.value)}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-black/40">
+                    What this booking counts toward for the provider's monthly settlement.
+                  </p>
+                </EditRow>
+              )}
             </Section>
 
             <Section title="Total Price">

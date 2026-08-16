@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import { Menu, X, ChevronDown } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Button from './Button'
+import NotificationBell from './NotificationBell'
 
 const links = [
   { to: '/', label: 'Home' },
@@ -147,14 +148,20 @@ export default function Navbar() {
         </nav>
 
         {/* shrink-0 guarantees this never gets squeezed out of view by the
-            logo on a narrow screen, no matter how wide the logo renders. */}
-        <button
-          className="shrink-0 text-brand-white lg:hidden"
-          onClick={() => setOpen((o) => !o)}
-          aria-label="Toggle menu"
-        >
-          {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
+            logo on a narrow screen, no matter how wide the logo renders.
+            The bell sits here (not inside the lg-only nav above) so it's
+            visible at every breakpoint, mobile included, without opening
+            the hamburger menu first. */}
+        <div className="flex shrink-0 items-center gap-4">
+          {user && <NotificationBell dark />}
+          <button
+            className="text-brand-white lg:hidden"
+            onClick={() => setOpen((o) => !o)}
+            aria-label="Toggle menu"
+          >
+            {open ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </div>
 
       {open && (

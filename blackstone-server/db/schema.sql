@@ -90,6 +90,15 @@ CREATE TABLE IF NOT EXISTS bookings (
   -- (what the customer is charged). NULL until admin sets one. Only ever
   -- shown to the driver it's assigned to, never to the customer.
   driver_price DECIMAL(10, 2),
+  -- The rate this booking counts toward for the owning provider's monthly
+  -- settlement (see provider_payments) — set by admin, separate from and
+  -- never derived from total_price (what the end passenger is charged).
+  -- NULL until admin sets one; irrelevant for ordinary customer bookings.
+  provider_price DECIMAL(10, 2),
+  -- Free-text external reference — a provider's own booking/PO number, or
+  -- any other tag admin wants attached for their own records. Purely
+  -- informational, shown alongside notes.
+  reference VARCHAR(100),
   payment_status VARCHAR(20) NOT NULL DEFAULT 'pending'
     CHECK (payment_status IN ('pending', 'paid', 'failed', 'refunded')),
   booking_status VARCHAR(20) NOT NULL DEFAULT 'pending'
@@ -101,6 +110,29 @@ CREATE TABLE IF NOT EXISTS bookings (
   CONSTRAINT fk_bookings_customer FOREIGN KEY (customer_id) REFERENCES users(id),
   CONSTRAINT fk_bookings_vehicle FOREIGN KEY (vehicle_id) REFERENCES vehicles(id),
   CONSTRAINT fk_bookings_driver FOREIGN KEY (driver_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- In-app notifications — a bell icon in the navbar polls GET
+-- /api/notifications for whichever user is logged in. One row per
+-- recipient per event (fan-out on write) rather than a broadcast table, so
+-- each person's read/unread state is independent — e.g. one admin reading a
+-- "new booking" notification doesn't mark it read for a second admin too.
+CREATE TABLE IF NOT EXISTS notifications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  -- e.g. 'booking_created', 'booking_updated', 'driver_assigned',
+  -- 'driver_removed', 'booking_cancelled' — not enforced by a CHECK since
+  -- new types are expected to be added over time without a migration.
+  type VARCHAR(50) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  message VARCHAR(500),
+  -- Where clicking the notification should take you, e.g. '/admin' or
+  -- '/driver' — a relative in-app path, not a full URL.
+  link VARCHAR(255),
+  is_read BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_notifications_user (user_id, is_read)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS add_ons (

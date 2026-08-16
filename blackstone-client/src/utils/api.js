@@ -115,6 +115,12 @@ export const reviews = {
   get: () => api.get('/reviews', { auth: false }),
 }
 
+export const notifications = {
+  list: () => api.get('/notifications'),
+  markRead: (id) => api.patch(`/notifications/${id}/read`),
+  markAllRead: () => api.patch('/notifications/read-all'),
+}
+
 export const admin = {
   users: () => api.get('/admin/users'),
   createUser: (payload) => api.post('/admin/users', payload),
