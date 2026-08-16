@@ -59,8 +59,12 @@ export default function Navbar() {
         isHeroRoute ? 'fixed' : 'sticky'
       } ${isTinted ? 'bg-black/20' : 'bg-brand-black'}`}
     >
-      {/* Single nav row — no separate utility bar, kept short */}
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 md:px-8">
+      {/* Single nav row — no separate utility bar, kept short. Deliberately
+          NOT capped to max-w-7xl like page content below it: on wide
+          screens that left a large empty gap between Book Now and the
+          actual browser edge. The header spans the full width instead, so
+          the logo and the menu/Book Now sit flush against the real edges. */}
+      <div className="flex items-center justify-between px-4 py-2.5 md:px-8 lg:px-10">
         <Link to="/" className="flex shrink-0 items-center gap-2">
           {/* Smaller on phones — h-16 for everything under md was oversized
               on narrow screens (confirmed on an actual device screenshot).
