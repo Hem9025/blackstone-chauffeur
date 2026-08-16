@@ -59,12 +59,8 @@ export default function Navbar() {
         isHeroRoute ? 'fixed' : 'sticky'
       } ${isTinted ? 'bg-black/20' : 'bg-brand-black'}`}
     >
-      {/* Single nav row — no separate utility bar, kept short. Spans the
-          full header width (no max-w cap) so the menu/Book Now sit flush
-          against the real right edge on every screen size, and gap-8
-          guarantees real breathing room next to the logo even if
-          justify-between alone wouldn't leave much on a narrower window. */}
-      <div className="flex items-center justify-between gap-8 px-4 py-2.5 md:px-8 lg:px-12">
+      {/* Single nav row — no separate utility bar, kept short */}
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 md:px-8">
         <Link to="/" className="flex shrink-0 items-center gap-2">
           {/* Smaller on phones — h-16 for everything under md was oversized
               on narrow screens (confirmed on an actual device screenshot).
@@ -136,8 +132,8 @@ export default function Navbar() {
                 <Link to="/profile" className="hover:text-brand-gold">
                   Profile
                 </Link>
-                <NotificationBell dark />
                 <button onClick={logout} className="hover:text-brand-gold">Logout</button>
+                <NotificationBell dark />
               </>
             ) : (
               <>
