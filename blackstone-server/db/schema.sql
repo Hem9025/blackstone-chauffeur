@@ -178,6 +178,23 @@ INSERT INTO admin_permissions (id)
 SELECT * FROM (SELECT 1 AS id) AS tmp
 WHERE NOT EXISTS (SELECT 1 FROM admin_permissions WHERE id = 1);
 
+-- Per-second-admin overrides. A second_admin with no row here inherits the
+-- single admin_permissions default above (unchanged behaviour); admin can
+-- give an individual second_admin their own set of flags by writing a row
+-- here instead, without affecting anyone else's access. Same flags/
+-- defaults as admin_permissions for consistency, though the defaults on
+-- this table are rarely relied on directly — a row is always seeded from
+-- the current effective permissions at the moment admin first customizes
+-- that user (see routes/permissions.js), not from these column defaults.
+CREATE TABLE IF NOT EXISTS user_permissions (
+  user_id INT PRIMARY KEY,
+  can_manage_bookings BOOLEAN NOT NULL DEFAULT TRUE,
+  can_manage_vehicles BOOLEAN NOT NULL DEFAULT FALSE,
+  can_manage_users BOOLEAN NOT NULL DEFAULT FALSE,
+  can_view_stats BOOLEAN NOT NULL DEFAULT FALSE,
+  CONSTRAINT fk_user_permissions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS enquiries (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,

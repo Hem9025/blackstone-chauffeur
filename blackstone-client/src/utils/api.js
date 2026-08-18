@@ -136,6 +136,9 @@ export const admin = {
 export const permissions = {
   get: () => api.get('/permissions'),
   update: (payload) => api.patch('/permissions', payload),
+  listUsers: () => api.get('/permissions/users'),
+  updateUser: (id, payload) => api.patch(`/permissions/users/${id}`, payload),
+  resetUser: (id) => api.delete(`/permissions/users/${id}`),
 }
 
 export { getToken }
