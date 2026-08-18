@@ -21,7 +21,7 @@ export default function FleetCard({ vehicle }) {
     >
       <div
         className={`aspect-[4/3] overflow-hidden ${
-          isPortrait ? 'bg-gradient-to-br from-black/[0.04] to-black/[0.08] p-5' : 'bg-black/5'
+          isPortrait ? 'bg-gradient-to-br from-black/[0.04] to-black/[0.08] p-2' : 'bg-black/5'
         }`}
       >
         <img

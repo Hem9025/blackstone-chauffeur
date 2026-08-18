@@ -42,7 +42,7 @@ export default function FleetDetail() {
             <span className="absolute left-6 top-6 z-10 rounded-full bg-brand-gold px-4 py-1.5 text-xs font-medium uppercase tracking-[0.15em] text-brand-black shadow">
               {vehicle.tagline}
             </span>
-            <div className="aspect-[4/3] p-6 sm:aspect-[16/9] md:min-h-[440px] md:p-10 lg:min-h-[540px]">
+            <div className="aspect-[4/3] p-2 sm:aspect-[16/9] md:min-h-[440px] md:p-4 lg:min-h-[540px]">
               <img
                 src={vehicle.heroImage}
                 alt={vehicle.title}
