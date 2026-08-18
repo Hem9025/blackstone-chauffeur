@@ -5,19 +5,20 @@ import { Elements } from '@stripe/react-stripe-js'
 import { useJsApiLoader } from '@react-google-maps/api'
 import {
   Calendar, Clock, Users, Briefcase, Info,
-  Check, ArrowRight, ArrowLeft, ShieldCheck, RotateCcw, Headphones, BadgeDollarSign, Plus, X, Plane,
+  Check, ArrowRight, ArrowLeft, ShieldCheck, RotateCcw, Headphones, BadgeDollarSign, Plus, X, Plane, Mail, CheckCircle2,
 } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
+import Button from '../components/Button'
 import StripePaymentForm from '../components/StripePaymentForm'
 import PlacesAutocompleteInput from '../components/PlacesAutocompleteInput'
 import RouteMap from '../components/RouteMap'
-import { vehicles as vehiclesApi, bookings as bookingsApi } from '../utils/api'
+import { vehicles as vehiclesApi, bookings as bookingsApi, enquiries as enquiriesApi } from '../utils/api'
 import { formatCurrency } from '../utils/helpers'
 import { calculateFare, tierPriceForDistance, trafficSurcharge, rideFareSubtotal, nightSurcharge, isNightBooking } from '../utils/pricing'
 import { useAuth } from '../context/AuthContext'
 import {
   minBookingDate, isDateFarEnoughAhead, MIN_ADVANCE_DAYS,
-  isWithinServiceRadius, SERVICE_RADIUS_KM,
+  isWithinServiceRadius,
 } from '../utils/bookingRules'
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
@@ -161,6 +162,7 @@ function BookingContent({ mapsLoaded }) {
   const [bookingId, setBookingId] = useState(draft?.bookingId ?? null)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [enquirySent, setEnquirySent] = useState(false)
 
   // Keeps the draft in sessionStorage in sync with every field above, so a
   // refresh at any point in the flow (including mid-payment on step 3)
@@ -296,17 +298,51 @@ function BookingContent({ mapsLoaded }) {
     setStops((prev) => prev.map((s, i) => (i === index ? place : s)))
   }
 
-  // Only gates on the pickup point (not the destination) — that's what
-  // determines how far a chauffeur has to travel to reach the client, which
-  // is the actual constraint on instant, fixed-price online booking.
-  const pickupOutOfRange = pickup.lat != null && !isWithinServiceRadius(pickup.lat, pickup.lng)
+  // Whether this trip needs a custom-quote enquiry instead of instant online
+  // booking. Auckland is this business's home base, so:
+  //  - a same-city trip is only instantly bookable when that city IS
+  //    Auckland (a same-city trip anywhere else, e.g. Hamilton → Hamilton,
+  //    isn't something dispatch can fix-price the same way)
+  //  - an Auckland-outbound trip (pickup in Auckland, dropping off
+  //    elsewhere) is instantly bookable within the standard 200km radius
+  //  - everything else — a trip not starting in Auckland, two different
+  //    non-Auckland cities, or an Auckland trip beyond 200km — needs an
+  //    enquiry instead.
+  // City names come straight from Google's address autocomplete (see
+  // PlacesAutocompleteInput). If pickup resolves to Auckland, the radius
+  // check still applies even when dropoff's city couldn't be resolved. If
+  // pickup's city is missing or isn't Auckland, and the two aren't a
+  // confirmed same-city match, this defaults to requiring an enquiry —
+  // safer than silently instant-booking a route we can't classify.
+  function normalizeCity(city) {
+    return city ? String(city).trim().toLowerCase() : ''
+  }
+  const pickupCity = normalizeCity(pickup.city)
+  const dropoffCity = normalizeCity(dropoff.city)
+  const pickupIsAuckland = pickupCity === 'auckland'
+
+  const requiresEnquiry = useMemo(() => {
+    if (!needsDropoff) {
+      // Hourly bookings have no destination to compare cities against —
+      // just gate on how far the pickup itself is from Auckland.
+      return pickup.lat != null && !isWithinServiceRadius(pickup.lat, pickup.lng)
+    }
+    if (!pickup.address || !dropoff.address) return false
+    if (pickupCity && dropoffCity && pickupCity === dropoffCity) {
+      return !pickupIsAuckland
+    }
+    if (pickupIsAuckland) {
+      return !isWithinServiceRadius(dropoff.lat, dropoff.lng)
+    }
+    return true
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needsDropoff, pickup.address, pickup.lat, pickup.lng, dropoff.address, dropoff.lat, dropoff.lng, pickupCity, dropoffCity, pickupIsAuckland])
 
   function goToStep1Valid() {
     if (!pickup.address || !date || !time || !isDateFarEnoughAhead(date)) return false
     if (needsDropoff && !dropoff.address) return false
     if (needsHours && !hours) return false
     if (isAirport && !flightNumber.trim()) return false
-    if (pickupOutOfRange) return false
     return true
   }
 
@@ -359,6 +395,46 @@ function BookingContent({ mapsLoaded }) {
     }
   }
 
+  // Routes that fall outside instant-booking eligibility (see
+  // requiresEnquiry above) skip payment entirely — there's no fixed price
+  // to charge, so this sends everything the customer already filled in as
+  // a regular enquiry instead, the same one the Contact page submits to.
+  async function handleSubmitEnquiry() {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+    setSubmitting(true)
+    setError('')
+    try {
+      const details = [
+        `Trip type: ${tripType.replace('_', ' ')}${isAirport ? ' (airport transfer)' : ''}`,
+        `Pickup: ${pickup.address}`,
+        needsDropoff && dropoff.address ? `Destination: ${dropoff.address}` : null,
+        needsHours && hours ? `Hours: ${hours}` : null,
+        `Date: ${date} at ${time}`,
+        `Passengers: ${passengers}, Luggage: ${luggage}`,
+        selectedVehicle ? `Preferred vehicle: ${selectedVehicle.name}` : null,
+        needsFlightNumber && flightNumber ? `Flight number: ${flightNumber}` : null,
+        notes ? `Notes: ${notes}` : null,
+      ].filter(Boolean).join('\n')
+
+      await enquiriesApi.submit({
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        type: 'booking-enquiry',
+        message: `Booking enquiry — this route is outside our standard instant-booking area and needs a custom quote.\n\n${details}`,
+      })
+      clearBookingDraft()
+      setEnquirySent(true)
+    } catch (err) {
+      setError(err.message || 'Failed to send enquiry')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   async function handlePaymentSuccess() {
     // Stripe has already confirmed the charge on their end at this point —
     // this call just verifies it server-side and marks the booking paid so
@@ -376,6 +452,30 @@ function BookingContent({ mapsLoaded }) {
     }
     clearBookingDraft()
     navigate('/booking/success')
+  }
+
+  // Enquiry-only routes never reach Stripe — once sent, replace the whole
+  // 3-step form with a plain confirmation instead of advancing to step 3
+  // (which is Stripe-shaped and doesn't apply here).
+  if (enquirySent) {
+    return (
+      <div>
+        <PageMeta title="Enquiry Sent" description="Your BlackStone Chauffeur booking enquiry has been sent." />
+        <section className="mx-auto max-w-xl px-4 py-24 text-center md:px-8">
+          <CheckCircle2 size={40} className="mx-auto text-brand-gold" />
+          <p className="mt-4 text-sm uppercase tracking-[0.2em] text-brand-gold">Enquiry Sent</p>
+          <h1 className="mt-2 font-heading text-4xl text-brand-black">We've got your details.</h1>
+          <p className="mt-4 text-brand-black/60">
+            This route needs a custom quote rather than instant online pricing. We'll be in touch by
+            email shortly with a price and to confirm the trip.
+          </p>
+          <div className="mt-8 flex justify-center gap-4">
+            <Button to="/dashboard">View My Bookings</Button>
+            <Button to="/" variant="secondary">Back to Home</Button>
+          </div>
+        </section>
+      </div>
+    )
   }
 
   return (
@@ -477,17 +577,6 @@ function BookingContent({ mapsLoaded }) {
                   />
                 </div>
 
-                {pickupOutOfRange && (
-                  <div className="sm:col-span-2 flex items-start gap-2 border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
-                    <Info size={16} className="mt-0.5 shrink-0" />
-                    <p>
-                      This pickup is outside our standard {SERVICE_RADIUS_KM}km online-booking service area.
-                      Please <a href="/contact" className="underline">send us an enquiry</a> instead and we'll
-                      arrange a custom quote.
-                    </p>
-                  </div>
-                )}
-
                 {needsDropoff && (
                   <div>
                     <label className="mb-2 block text-sm text-black/60">Destination</label>
@@ -515,6 +604,17 @@ function BookingContent({ mapsLoaded }) {
                         <option key={h} value={h}>{h} hours</option>
                       ))}
                     </select>
+                  </div>
+                )}
+
+                {requiresEnquiry && (
+                  <div className="sm:col-span-2 flex items-start gap-2 border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+                    <Info size={16} className="mt-0.5 shrink-0" />
+                    <p>
+                      This route is outside our standard instant-booking area — you can still fill in the rest of
+                      the details below, but instead of paying online you'll send us an enquiry and we'll get back
+                      to you with a custom quote.
+                    </p>
                   </div>
                 )}
 
@@ -1026,12 +1126,21 @@ function BookingContent({ mapsLoaded }) {
                 disabled={(step === 1 && !goToStep1Valid()) || (step === 2 && (!selectedVehicle || submitting))}
                 onClick={() => {
                   if (step === 1) setStep(2)
+                  else if (requiresEnquiry) handleSubmitEnquiry()
                   else handleCreateBooking()
                 }}
                 className="flex flex-1 items-center justify-center gap-2 bg-brand-gold px-6 py-3 text-sm font-medium text-brand-black transition-colors hover:bg-brand-champagne disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {step === 1 ? 'Continue to Select Vehicle' : submitting ? 'Preparing payment…' : 'Continue to Payment'}
-                <ArrowRight size={16} />
+                {step === 1
+                  ? 'Continue to Select Vehicle'
+                  : requiresEnquiry
+                    ? submitting
+                      ? 'Sending enquiry…'
+                      : 'Send Enquiry'
+                    : submitting
+                      ? 'Preparing payment…'
+                      : 'Continue to Payment'}
+                {step === 2 && requiresEnquiry ? <Mail size={16} /> : <ArrowRight size={16} />}
               </button>
             </div>
           )}

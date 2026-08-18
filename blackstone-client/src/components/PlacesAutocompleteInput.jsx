@@ -2,6 +2,23 @@ import { useRef } from 'react'
 import { Autocomplete } from '@react-google-maps/api'
 import { MapPin } from 'lucide-react'
 
+// Pulls a city/town name out of Google's address_components — tries
+// 'locality' first (the usual city field for NZ addresses, including
+// Auckland's merged-council suburbs like Māngere), then falls back through
+// a couple of looser types for addresses that don't get a locality (rural
+// pickups, some regional airports). Used to decide whether a trip is
+// bookable instantly or needs an enquiry (see Booking.jsx's tripEligibility).
+const CITY_COMPONENT_TYPES = ['locality', 'postal_town', 'administrative_area_level_2', 'sublocality_level_1']
+
+function extractCity(addressComponents) {
+  if (!Array.isArray(addressComponents)) return null
+  for (const type of CITY_COMPONENT_TYPES) {
+    const match = addressComponents.find((c) => c.types.includes(type))
+    if (match) return match.long_name
+  }
+  return null
+}
+
 /**
  * A text input backed by Google Places Autocomplete. Requires the Maps JS
  * API (with the "places" library) to already be loaded — pass `isLoaded`
@@ -30,6 +47,7 @@ export default function PlacesAutocompleteInput({
       address: place.formatted_address || place.name || value,
       lat: location.lat(),
       lng: location.lng(),
+      city: extractCity(place.address_components),
     })
   }
 
