@@ -184,7 +184,7 @@ export default function About() {
             <div className="aspect-[4/3] overflow-hidden md:aspect-auto md:h-full">
               <img
                 src={IMAGES.aboutSecondary}
-                alt="BlackStone Chauffeur professional driver"
+                alt="BlackStone Chauffeur BMW 7 Series on the road"
                 className="h-full w-full object-cover"
               />
             </div>

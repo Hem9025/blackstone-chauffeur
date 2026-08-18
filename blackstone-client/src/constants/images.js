@@ -252,7 +252,10 @@ export const IMAGES = {
   },
 
   about: unsplash('photo-1772631340503-55136169d9ae', 1400),
-  aboutSecondary: unsplash('photo-1772909654571-d4a21cc0785f', 1000),
+  // Real client shot of the fleet actually on the move through the city —
+  // pairs with the "Delivering Excellence in Every Journey" heading next
+  // to it better than a static greeting shot did.
+  aboutSecondary: '/images/gallery/2-bmw-7-series-city.jpg',
 
   // Real client-supplied photography — fleet, weddings, and airport/hotel
   // arrivals. Number plates are blurred for privacy.
