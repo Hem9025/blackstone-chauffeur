@@ -294,7 +294,7 @@ router.get('/stats', requirePermission('can_view_stats'), async (req, res) => {
   try {
     const { rows } = await query(
       `SELECT
-         u.id, u.name, u.email, u.phone,
+         u.id, u.name, u.email, u.phone, u.status, u.created_at,
          COUNT(b.id) AS total_bookings,
          SUM(CASE WHEN b.booking_status = 'completed' THEN 1 ELSE 0 END) AS completed_count,
          SUM(CASE WHEN b.booking_status IN ('pending','assigned','en_route','arrived') THEN 1 ELSE 0 END) AS upcoming_count,
@@ -303,7 +303,7 @@ router.get('/stats', requirePermission('can_view_stats'), async (req, res) => {
        FROM users u
        LEFT JOIN bookings b ON b.${joinColumn} = u.id
        WHERE u.role = ? ${userFilter}
-       GROUP BY u.id, u.name, u.email, u.phone
+       GROUP BY u.id, u.name, u.email, u.phone, u.status, u.created_at
        ORDER BY u.name`,
       params,
     )
@@ -319,6 +319,8 @@ router.get('/stats', requirePermission('can_view_stats'), async (req, res) => {
         name: r.name,
         email: r.email,
         phone: r.phone,
+        status: r.status,
+        created_at: r.created_at,
         total_bookings: Number(r.total_bookings) || 0,
         completed_count: Number(r.completed_count) || 0,
         upcoming_count: Number(r.upcoming_count) || 0,

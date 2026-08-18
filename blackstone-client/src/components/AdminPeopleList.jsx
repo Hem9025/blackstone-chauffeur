@@ -4,6 +4,14 @@ import { Search, X, ChevronRight } from 'lucide-react'
 import { admin as adminApi } from '../utils/api'
 import { formatCurrency } from '../utils/helpers'
 
+const SORT_OPTIONS = {
+  name: { label: 'Name (A–Z)', compare: (a, b) => (a.name || '').localeCompare(b.name || '') },
+  bookings: { label: 'Most Bookings', compare: (a, b) => b.total_bookings - a.total_bookings },
+  revenue: { label: 'Highest Revenue', compare: (a, b) => b.completed_revenue - a.completed_revenue },
+  upcoming: { label: 'Most Upcoming', compare: (a, b) => b.upcoming_count - a.upcoming_count },
+  newest: { label: 'Newest First', compare: (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0) },
+}
+
 // Shared table for the separate Drivers and Providers admin pages — same
 // shape as the old combined "Drivers & Providers" page, just fixed to one
 // role instead of toggling between them, and each row now links to that
@@ -18,6 +26,8 @@ export default function AdminPeopleList({ role }) {
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [sortBy, setSortBy] = useState('name')
 
   function load() {
     setLoading(true)
@@ -35,6 +45,8 @@ export default function AdminPeopleList({ role }) {
   useEffect(() => {
     setSelectedId('')
     setSearch('')
+    setStatusFilter('')
+    setSortBy('name')
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role])
@@ -51,8 +63,10 @@ export default function AdminPeopleList({ role }) {
           u.phone?.toLowerCase().includes(q),
       )
     }
-    return rows
-  }, [list, search, selectedId])
+    if (statusFilter) rows = rows.filter((u) => u.status === statusFilter)
+    const sorter = SORT_OPTIONS[sortBy] || SORT_OPTIONS.name
+    return [...rows].sort(sorter.compare)
+  }, [list, search, selectedId, statusFilter, sortBy])
 
   const totals = useMemo(
     () =>
@@ -104,11 +118,31 @@ export default function AdminPeopleList({ role }) {
             <option key={u.id} value={u.id}>{u.name}</option>
           ))}
         </select>
-        {(search || selectedId) && (
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="border border-brand-black/15 px-3 py-2 text-sm"
+        >
+          <option value="">All statuses</option>
+          <option value="active">Active</option>
+          <option value="pending">Pending</option>
+        </select>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="border border-brand-black/15 px-3 py-2 text-sm"
+        >
+          {Object.entries(SORT_OPTIONS).map(([key, opt]) => (
+            <option key={key} value={key}>Sort: {opt.label}</option>
+          ))}
+        </select>
+        {(search || selectedId || statusFilter || sortBy !== 'name') && (
           <button
             onClick={() => {
               setSearch('')
               setSelectedId('')
+              setStatusFilter('')
+              setSortBy('name')
             }}
             className="flex items-center gap-1 text-xs text-brand-black/50 hover:text-brand-black"
           >
@@ -136,6 +170,7 @@ export default function AdminPeopleList({ role }) {
               <thead>
                 <tr className="border-b border-brand-black/10 text-left text-brand-black/50">
                   <th className="py-2 pr-4">Name</th>
+                  <th className="py-2 pr-4">Status</th>
                   <th className="py-2 pr-4">Contact</th>
                   <th className="py-2 pr-4">Total</th>
                   <th className="py-2 pr-4">Completed</th>
@@ -157,6 +192,15 @@ export default function AdminPeopleList({ role }) {
                       <Link to={`/admin/${role}s/${u.id}`} className="flex w-full items-center py-2 pr-4">
                         {u.name}
                       </Link>
+                    </td>
+                    <td className="py-2 pr-4">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs capitalize ${
+                          u.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
+                        }`}
+                      >
+                        {u.status || 'active'}
+                      </span>
                     </td>
                     <td className="py-2 pr-4 text-brand-black/60">
                       <div>{u.email}</div>
