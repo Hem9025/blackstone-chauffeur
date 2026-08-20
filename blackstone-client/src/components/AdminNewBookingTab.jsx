@@ -296,6 +296,10 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
       setSuccess(booking)
       showToast(`Booking #${booking.id} created for ${booking.passenger_name}.`)
       onCreated?.()
+      // The success banner renders at the very top of this form — scroll
+      // there so it's actually seen instead of landing off-screen above
+      // wherever the person had scrolled to while filling it in.
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       // Reset everything for the next booking.
       setWhatsappText('')
       setParseWarnings([])

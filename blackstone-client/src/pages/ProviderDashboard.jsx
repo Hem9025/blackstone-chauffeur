@@ -284,6 +284,10 @@ function NewBookingTab({ mapsLoaded }) {
       })
       setSuccess(booking)
       showToast(`Booking #${booking.id} created for ${booking.passenger_name}.`)
+      // The success banner renders at the top of this form — scroll there so
+      // it's actually seen instead of landing off-screen above wherever the
+      // person had scrolled to while filling it in.
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       // Reset form for the next booking.
       setWhatsappText('')
       setParseWarnings([])
