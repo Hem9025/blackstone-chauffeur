@@ -9,6 +9,7 @@ import { vehicles as vehiclesApi, bookings as bookingsApi } from '../utils/api'
 import { formatCurrency, formatDate } from '../utils/helpers'
 import { calculateFare, tierPriceForDistance } from '../utils/pricing'
 import { bookingsToCSV } from '../utils/exportBookings'
+import { useToast } from '../context/ToastContext'
 // Note: unlike the customer-facing Booking.jsx, provider-created bookings
 // have no minimum-advance-days restriction — providers can book last-minute
 // or same-day rides for their clients. bookingRules.js is intentionally not
@@ -86,6 +87,7 @@ function ProviderDashboardContent({ mapsLoaded }) {
 }
 
 function NewBookingTab({ mapsLoaded }) {
+  const { showToast } = useToast()
   const [vehicleList, setVehicleList] = useState([])
 
   const [whatsappText, setWhatsappText] = useState('')
@@ -281,6 +283,7 @@ function NewBookingTab({ mapsLoaded }) {
         total_price: priceValue,
       })
       setSuccess(booking)
+      showToast(`Booking #${booking.id} created for ${booking.passenger_name}.`)
       // Reset form for the next booking.
       setWhatsappText('')
       setParseWarnings([])

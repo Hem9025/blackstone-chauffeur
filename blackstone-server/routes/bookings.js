@@ -434,14 +434,18 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
       }).catch((err) => console.error('Failed to send new-booking-admin email', err))
     }
 
-    if (req.user.role !== 'admin') {
-      notifyAdmins({
-        type: 'booking_created',
-        title: 'New Booking',
-        message: `${passenger_name} — ${pickup} → ${resolvedDropoff}, ${date} (via provider)`,
-        link: '/admin',
-      })
-    }
+    // Always fires, even when an admin created the booking themselves — a
+    // solo operator running this alone still wants a record of what they
+    // just created, and a second_admin (if one exists) should never be able
+    // to miss a booking an admin logged. Deliberately not excluded via
+    // excludeUserId the way cancellations are: this one doubles as a running
+    // "what did I just do" log, not just a heads-up to someone else.
+    notifyAdmins({
+      type: 'booking_created',
+      title: 'New Booking',
+      message: `${passenger_name} — ${pickup} → ${resolvedDropoff}, ${date}${req.user.role === 'provider' ? ' (via provider)' : ''}`,
+      link: '/admin',
+    })
     // Staff attributed this to a different provider than whoever's
     // creating it (e.g. admin logging a booking on a provider's behalf) —
     // let that provider know it landed on their account.

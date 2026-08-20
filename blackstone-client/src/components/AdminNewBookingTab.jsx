@@ -8,6 +8,7 @@ import { vehicles as vehiclesApi, bookings as bookingsApi } from '../utils/api'
 import { formatCurrency } from '../utils/helpers'
 import { calculateFare, tierPriceForDistance } from '../utils/pricing'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 // Note: unlike the customer-facing Booking.jsx, admin-created bookings have
 // no minimum-advance-days restriction — staff can book last-minute or
 // same-day rides on a client's behalf. bookingRules.js is intentionally not
@@ -56,6 +57,7 @@ export default function AdminNewBookingTab({ onCreated }) {
 
 function AdminNewBookingForm({ mapsLoaded, onCreated }) {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const isAdmin = user?.role === 'admin' || user?.role === 'second_admin'
 
   const [vehicleList, setVehicleList] = useState([])
@@ -292,6 +294,7 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
         driver_price: isAdmin && driverId && driverPrice !== '' ? driverPrice : undefined,
       })
       setSuccess(booking)
+      showToast(`Booking #${booking.id} created for ${booking.passenger_name}.`)
       onCreated?.()
       // Reset everything for the next booking.
       setWhatsappText('')
