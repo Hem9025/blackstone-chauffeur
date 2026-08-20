@@ -34,8 +34,15 @@ export function streamBookingsReport(res, bookings, title) {
   doc.moveDown(1)
 
   const startX = 40
+  // PDFKit has no built-in table layout — `y` is tracked by hand and
+  // advanced a fixed 16px per row (drawRow below) since every row uses the
+  // same fixed 8pt font, so line height never varies row to row.
   let y = doc.y
 
+  // Draws one row of cells left-to-right at the current `y`, each column
+  // clipped to its configured width with an ellipsis rather than wrapping —
+  // a table row that wrapped to two lines would silently break every
+  // following row's fixed 16px vertical spacing.
   function drawRow(values, { bold = false, color = BLACK } = {}) {
     let x = startX
     doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(8).fillColor(color)
@@ -51,6 +58,10 @@ export function streamBookingsReport(res, bookings, title) {
   y += 4
 
   bookings.forEach((b) => {
+    // 540 is the last safe y before A4-landscape's bottom margin at this
+    // page size/margin combo — start a fresh page (with its own header
+    // row-free body, matching how the rest of this report is laid out)
+    // rather than letting rows run off the bottom of the page.
     if (y > 540) {
       doc.addPage({ size: 'A4', margin: 40, layout: 'landscape' })
       y = 40

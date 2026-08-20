@@ -61,6 +61,12 @@ export function streamInvoice(res, booking) {
   doc.text(passenger)
   if (booking.passenger_phone) doc.text(booking.passenger_phone)
 
+  // Only shown when the two names actually differ from a real account —
+  // a customer's own booking has passenger_name/customer_name pointing at
+  // the same person, so there's nothing useful to add a second block for.
+  // This only appears for provider/admin-placed bookings, where the
+  // passenger riding is someone else's client rather than the account
+  // that placed the booking.
   if (booking.passenger_name && booking.customer_name) {
     doc.moveDown(0.5)
     doc.font('Helvetica-Bold').fillColor(BLACK).fontSize(11).text('Booked By')
@@ -93,7 +99,12 @@ export function streamInvoice(res, booking) {
 
   doc.moveDown(1.5)
 
-  // Line items
+  // Line items. The booking row only stores one final total_price, not a
+  // breakdown — so the base fare shown on the invoice is derived by
+  // subtracting the known add-on prices back out, rather than read from a
+  // separate column. This mirrors exactly what was charged (total_price is
+  // authoritative — see utils/pricing.js), it just re-derives the split for
+  // display.
   const extras = Array.isArray(booking.extras) ? booking.extras : []
   const extrasTotal = extras.reduce((sum, e) => sum + Number(e.price || 0), 0)
   const fare = Number(booking.total_price) - extrasTotal

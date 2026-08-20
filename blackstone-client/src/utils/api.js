@@ -1,9 +1,21 @@
+// Thin fetch wrapper shared by every API call in the app, plus one grouped
+// export per backend route file (auth, bookings, vehicles, ...) below. Each
+// export is a one-line mapping from a JS method name to an HTTP call — look
+// here first when wiring a new UI action to the server, rather than calling
+// fetch() directly from a component.
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api'
 
 function getToken() {
   return localStorage.getItem('bc_token')
 }
 
+// `auth: false` is opt-out, not opt-in — most routes require a logged-in
+// user, so the default is to attach whatever token is in localStorage (if
+// any) and let the server's own authCheck middleware decide whether that
+// route actually needs one. Explicitly public routes (login, register,
+// forgot-password, GET vehicles) pass `{ auth: false }` purely so a stale
+// invalid token already in storage can never cause a public request to be
+// wrongly rejected as unauthenticated.
 async function request(path, { method = 'GET', body, auth = true, headers = {} } = {}) {
   const finalHeaders = { 'Content-Type': 'application/json', ...headers }
 

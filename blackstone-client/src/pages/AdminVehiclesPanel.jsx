@@ -26,6 +26,12 @@ const BLANK_FORM = {
 
 const BLANK_TIER = { min: '', max: '', price: '' }
 
+// These three functions round-trip between the shape the server stores
+// (vehicles.distance_tiers as a JSON array of {min,max,price}; features as
+// a JSON array of strings) and the shape this form's plain <input>s can
+// edit (comma-separated text; one row per tier). vehicleToForm/tiersToRows
+// go server -> form when opening the edit panel; rowsToTiers goes back
+// form -> server in handleSubmit below.
 function vehicleToForm(v) {
   return {
     name: v.name || '',
@@ -126,6 +132,12 @@ export default function AdminVehiclesPanel() {
     setTierRows((rows) => rows.filter((_, i) => i !== index))
   }
 
+  // Builds the update/create payload by spreading `form` — which only ever
+  // holds the fixed set of keys in BLANK_FORM, never arbitrary ones — so
+  // this UI can only ever send a known, well-formed set of fields to the
+  // server. (The server's PATCH /api/vehicles/:id still whitelists columns
+  // independently rather than trusting that — see that route's comments —
+  // since this form isn't the only way to reach that endpoint.)
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
