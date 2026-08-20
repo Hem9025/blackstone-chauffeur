@@ -240,6 +240,20 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
     vehicleId &&
     priceValid
 
+  // The submit button just goes disabled with no other feedback when one of
+  // these is missing (a faded button is easy to miss and easy to mistake for
+  // "broken") — spelling out what's still needed makes that obvious instead
+  // of silent.
+  const missingFields = []
+  if (!passengerName) missingFields.push('passenger name')
+  if (!pickup.address) missingFields.push('pickup location')
+  if (needsDropoff && !dropoff.address) missingFields.push('destination')
+  if (needsHours && !hours) missingFields.push('hours')
+  if (!date) missingFields.push('date')
+  if (!time) missingFields.push('time')
+  if (!vehicleId) missingFields.push('vehicle')
+  if (!priceValid) missingFields.push('a valid price')
+
   async function handleSubmit(e) {
     e.preventDefault()
     if (!canSubmit) return
@@ -781,6 +795,10 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
           </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
+
+          {!canSubmit && !submitting && missingFields.length > 0 && (
+            <p className="text-xs text-amber-700">Still needed: {missingFields.join(', ')}</p>
+          )}
 
           <Button type="submit" disabled={!canSubmit || submitting}>
             {submitting ? 'Creating booking…' : 'Create Booking'}

@@ -1,7 +1,12 @@
 import { Link } from 'react-router-dom'
 
+// disabled:* utilities matter here: without them, a disabled <button> is
+// functionally inert (the browser silently blocks the click) but looks
+// completely normal — which reads as "the button doesn't work" rather than
+// "a required field is still missing." This one line fixes that everywhere
+// this component is used with a `disabled` prop.
 const base =
-  'inline-flex items-center justify-center px-6 py-3 font-medium tracking-wide transition-colors rounded-sm'
+  'inline-flex items-center justify-center px-6 py-3 font-medium tracking-wide transition-colors rounded-sm disabled:cursor-not-allowed disabled:opacity-40'
 const variants = {
   // Gold is used sparingly, as the one accent color — everything else is black/white.
   primary: 'bg-brand-gold text-brand-black hover:bg-brand-champagne',
