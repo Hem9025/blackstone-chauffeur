@@ -18,6 +18,10 @@ dist-ssr
 .env.*
 !.env.example
 
+# Original, uncropped copies of images kept locally for reference —
+# never needs to ship or be committed.
+backups/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
