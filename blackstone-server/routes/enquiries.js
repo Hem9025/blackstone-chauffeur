@@ -3,15 +3,18 @@ import { query } from '../db/index.js'
 import { sendMail } from '../emails/mailer.js'
 import { enquiryAdminTemplate } from '../emails/templates/enquiryAdmin.js'
 import { enquiryConfirmationTemplate } from '../emails/templates/enquiryConfirmation.js'
+import { enquiryLimiter } from '../middleware/rateLimit.js'
 
 const router = Router()
 
-// POST /api/enquiries — public
+// POST /api/enquiries — public, no auth. Rate-limited (see
+// middleware/rateLimit.js) — this is the easiest endpoint in the app for
+// someone to script and spam, since it needs no account at all.
 // `name` is optional — the homepage "Get in Touch" quick-contact widget
 // (type: 'quick-contact') only collects an email address plus trip details
 // folded into `message`, so this falls back to a placeholder name rather
 // than forcing that widget to add a Name field just to satisfy this route.
-router.post('/', async (req, res) => {
+router.post('/', enquiryLimiter, async (req, res) => {
   const { name, email, phone, message, type } = req.body || {}
 
   if (!email || !message) {

@@ -7,6 +7,7 @@ import authCheck from '../middleware/authCheck.js'
 import { sendMail } from '../emails/mailer.js'
 import { driverPendingTemplate } from '../emails/templates/driverPending.js'
 import { passwordResetTemplate } from '../emails/templates/passwordReset.js'
+import { loginLimiter, forgotPasswordLimiter } from '../middleware/rateLimit.js'
 
 const router = Router()
 
@@ -73,8 +74,10 @@ router.post('/register', async (req, res) => {
   }
 })
 
-// POST /api/auth/login
-router.post('/login', async (req, res) => {
+// POST /api/auth/login — rate-limited (see middleware/rateLimit.js): this
+// route had no protection at all against repeated password guessing against
+// a known email before this.
+router.post('/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body || {}
 
   if (!email || !password) {
@@ -168,7 +171,7 @@ router.patch('/password', authCheck, async (req, res) => {
 // reset email with a one-hour-lived token (fire-and-forget, like every
 // other transactional email in this app — a slow/failed send shouldn't
 // hold up or fail the request).
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
   const { email } = req.body || {}
   if (!email) {
     return res.status(400).json({ message: 'email is required' })
