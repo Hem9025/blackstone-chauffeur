@@ -327,7 +327,7 @@ export default function SecondAdminDashboard() {
                   >
                     <div>
                       <p className="text-sm font-medium text-brand-black">
-                        {String(b.time).slice(0, 5)} — {b.pickup} → {b.dropoff}
+                        {b.time ? String(b.time).slice(0, 5) : 'TBC'} — {b.pickup} → {b.dropoff || 'Destination TBC'}
                       </p>
                       <p className="mt-1 text-xs text-brand-black/50">
                         {b.passenger_name || b.customer_name || '—'} · {formatCurrency(b.total_price)}

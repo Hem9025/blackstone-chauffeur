@@ -108,12 +108,12 @@ export default function DriverDashboard() {
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-brand-black">
-                        {ride.pickup} → {ride.dropoff}
+                        {ride.pickup} → {ride.dropoff || 'Destination TBC'}
                       </p>
                       <StatusBadge status={ride.booking_status} />
                     </div>
                     <p className="text-sm text-brand-black/50">
-                      {formatDate(ride.date)} at {String(ride.time).slice(0, 5)}
+                      {formatDate(ride.date)} at {ride.time ? String(ride.time).slice(0, 5) : 'TBC'}
                     </p>
                     {/* Never the customer's total_price — only ever what
                         admin has set aside as this driver's own pay for
@@ -144,7 +144,7 @@ export default function DriverDashboard() {
                 {dayRides.map((ride) => (
                   <div key={ride.id} className="border-b border-brand-black/5 pb-4 last:border-0 last:pb-0">
                     <p className="text-sm font-medium text-brand-black">
-                      {String(ride.time).slice(0, 5)} — {ride.pickup} → {ride.dropoff}
+                      {ride.time ? String(ride.time).slice(0, 5) : 'TBC'} — {ride.pickup} → {ride.dropoff || 'Destination TBC'}
                     </p>
                     <div className="mt-1 flex items-center gap-2">
                       <StatusBadge status={ride.booking_status} />

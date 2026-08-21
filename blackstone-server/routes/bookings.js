@@ -265,8 +265,14 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
   } = req.body || {}
   const isStaff = req.user.role === 'admin' || req.user.role === 'second_admin'
 
-  if (!passenger_name || !pickup || !date || !time || !vehicle_id) {
-    return res.status(400).json({ message: 'passenger_name, vehicle_id, pickup, date, and time are required' })
+  // Only the passenger's name is truly required at creation time. Vehicle,
+  // pickup, destination, and date/time are all optional here — a booking can
+  // come in before every detail is settled (e.g. a phone call where the exact
+  // pickup time is still being confirmed), and whatever's missing can be
+  // filled in later via PATCH /:id. The DB columns for these were made
+  // nullable to match (see db/migrations.js NULLABLE_COLUMNS).
+  if (!passenger_name) {
+    return res.status(400).json({ message: 'Passenger name is required' })
   }
 
   // Provider/admin bookings are manually priced — the vehicle picker here is
@@ -293,9 +299,10 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
   const isHourly = resolvedTripType === 'hourly'
   const needsDropoff = !isHourly
 
-  if (needsDropoff && !dropoff) {
-    return res.status(400).json({ message: 'Destination is required for this trip type' })
-  }
+  // Destination is no longer required even for one-way/return trips — it can
+  // be added later once the client confirms it. Hours is still required for
+  // an hourly booking since there's no other way to price/schedule it and the
+  // person creating the booking has explicitly chosen "hourly" as the type.
   if (isHourly && (!hours || Number(hours) <= 0)) {
     return res.status(400).json({ message: 'Please select the number of hours for an hourly booking' })
   }
@@ -309,19 +316,37 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
   const resolvedNotes = String(notes || '').trim().slice(0, 250) || null
   const resolvedReference = String(reference || '').trim().slice(0, 100) || null
 
-  const resolvedDropoff = needsDropoff ? dropoff : 'As directed (Hourly)'
+  // dropoff/pickup/date/time/vehicle_id all fall back to null rather than an
+  // empty string/undefined — mysql2 rejects `undefined` params outright, and
+  // an empty string would show up as a blank-but-present value everywhere
+  // downstream instead of clearly reading as "not set yet".
+  const resolvedPickup = pickup ? String(pickup).trim() : null
+  const resolvedDropoff = isHourly ? 'As directed (Hourly)' : (dropoff ? String(dropoff).trim() : null)
+  const resolvedDate = date || null
+  const resolvedTime = time || null
+  const resolvedVehicleId = vehicle_id || null
   const resolvedDistanceKm = needsDropoff ? distance_km : null
   const resolvedDurationMin = isHourly ? Number(hours) * 60 : needsDropoff ? duration_min : 0
   const resolvedHours = isHourly ? Number(hours) : null
 
+  // Plain-text fallbacks for anything left blank, used only in notification/
+  // email copy below — the DB itself stores the real null, not this string.
+  const displayPickup = resolvedPickup || 'Pickup TBC'
+  const displayDropoff = resolvedDropoff || 'Destination TBC'
+  const displayDate = resolvedDate || 'Date TBC'
+  const displayTime = resolvedTime ? String(resolvedTime).slice(0, 5) : 'Time TBC'
+
   try {
-    // Vehicle is now just a quick-reference label on provider/admin bookings
-    // (it no longer drives pricing), but the row is still required at the DB
-    // level (vehicle_id is NOT NULL), so it still needs to resolve to a real,
-    // active vehicle.
-    const { rows: vehicleRows } = await query('SELECT * FROM vehicles WHERE id = ? AND active = true', [vehicle_id])
-    if (!vehicleRows.length) return res.status(400).json({ message: 'Invalid vehicle selected' })
-    const vehicle = vehicleRows[0]
+    // Vehicle is just a quick-reference label on provider/admin bookings (it
+    // no longer drives pricing) and is now optional — skip the lookup
+    // entirely when none was picked, and fall back to a placeholder name
+    // wherever it's shown.
+    let vehicle = null
+    if (resolvedVehicleId) {
+      const { rows: vehicleRows } = await query('SELECT * FROM vehicles WHERE id = ? AND active = true', [resolvedVehicleId])
+      if (!vehicleRows.length) return res.status(400).json({ message: 'Invalid vehicle selected' })
+      vehicle = vehicleRows[0]
+    }
 
     // Attribute the booking to a chosen provider instead of the creator's
     // own account — e.g. admin logging a booking that came in via a
@@ -384,13 +409,13 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')`,
       [
         resolvedCustomerId,
-        vehicle_id,
+        resolvedVehicleId,
         resolvedDriverId,
         resolvedDriverPrice,
-        pickup,
+        resolvedPickup,
         resolvedDropoff,
-        date,
-        time,
+        resolvedDate,
+        resolvedTime,
         passenger_name,
         passenger_phone || null,
         passenger_email || null,
@@ -422,12 +447,12 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
         subject: `New booking — ${passenger_name} (via provider)`,
         html: newBookingAdminTemplate({
           customerName: passenger_name,
-          vehicleName: vehicle.name,
+          vehicleName: vehicle?.name || 'Vehicle TBC',
           serviceType: resolvedServiceType,
-          pickup,
-          dropoff: resolvedDropoff,
-          date,
-          time,
+          pickup: displayPickup,
+          dropoff: displayDropoff,
+          date: displayDate,
+          time: displayTime,
           hours: resolvedHours,
           totalPrice: total_price,
         }),
@@ -443,7 +468,7 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
     notifyAdmins({
       type: 'booking_created',
       title: 'New Booking',
-      message: `${passenger_name} — ${pickup} → ${resolvedDropoff}, ${date}${req.user.role === 'provider' ? ' (via provider)' : ''}`,
+      message: `${passenger_name} — ${displayPickup} → ${displayDropoff}, ${displayDate}${req.user.role === 'provider' ? ' (via provider)' : ''}`,
       link: '/admin',
     })
     // Staff attributed this to a different provider than whoever's
@@ -453,7 +478,7 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
       notify(resolvedCustomerId, {
         type: 'booking_created',
         title: 'New Booking Added to Your Account',
-        message: `${passenger_name} — ${pickup} → ${resolvedDropoff}, ${date}`,
+        message: `${passenger_name} — ${displayPickup} → ${displayDropoff}, ${displayDate}`,
         link: '/provider',
       })
     }
@@ -461,7 +486,7 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
       notify(resolvedDriverId, {
         type: 'driver_assigned',
         title: 'New Ride Assigned',
-        message: `${date} at ${String(time).slice(0, 5)} — ${pickup} → ${resolvedDropoff}`,
+        message: `${displayDate} at ${displayTime} — ${displayPickup} → ${displayDropoff}`,
         link: '/driver',
       })
     }
@@ -476,10 +501,10 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
         subject: 'Booking confirmed — BlackStone Chauffeur',
         html: bookingConfirmationTemplate({
           customerName: passenger_name,
-          pickup,
-          dropoff: resolvedDropoff,
-          date,
-          time,
+          pickup: displayPickup,
+          dropoff: displayDropoff,
+          date: displayDate,
+          time: displayTime,
           totalPrice: total_price,
         }),
       }).catch((err) => console.error('Failed to send booking-confirmation email (provider booking)', err))
@@ -493,10 +518,10 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
         subject: 'New ride assigned — BlackStone Chauffeur',
         html: bookingAssignedTemplate({
           driverName: assignedDriver.name,
-          pickup,
-          dropoff: resolvedDropoff,
-          date,
-          time,
+          pickup: displayPickup,
+          dropoff: displayDropoff,
+          date: displayDate,
+          time: displayTime,
         }),
       }).catch((err) => console.error('Failed to send booking-assigned email (provider booking)', err))
     }
@@ -950,14 +975,15 @@ router.patch('/:id', authCheck, requirePermission('can_manage_bookings'), async 
       set('pickup', pickup)
     }
     if ('dropoff' in body) set('dropoff', String(body.dropoff || '').trim() || null)
-    if ('date' in body) {
-      if (!body.date) return res.status(400).json({ message: 'Date cannot be empty' })
-      set('date', body.date)
-    }
-    if ('time' in body) {
-      if (!body.time) return res.status(400).json({ message: 'Time cannot be empty' })
-      set('time', body.time)
-    }
+    // date/time are nullable (see db/migrations.js NULLABLE_COLUMNS) — this
+    // route doubles as the way to fill either of them in for the first time
+    // on a booking that was created without them, so an empty value is
+    // allowed through as null rather than rejected. The edit form always
+    // sends these keys regardless of whether they were touched, so rejecting
+    // blank would also block saving unrelated changes on a booking that
+    // still has no date/time set.
+    if ('date' in body) set('date', body.date || null)
+    if ('time' in body) set('time', body.time || null)
     if ('trip_type' in body) {
       if (!['one_way', 'return', 'hourly'].includes(body.trip_type)) {
         return res.status(400).json({ message: 'Invalid trip type' })
@@ -984,10 +1010,18 @@ router.patch('/:id', authCheck, requirePermission('can_manage_bookings'), async 
     if ('notes' in body) set('notes', String(body.notes || '').trim().slice(0, 250) || null)
     if ('reference' in body) set('reference', String(body.reference || '').trim().slice(0, 100) || null)
 
+    // vehicle_id is nullable too — an empty value clears it back to "not
+    // decided yet" rather than erroring, same reasoning as date/time above.
+    // Only actually look the vehicle up (and reject an invalid one) when a
+    // real id was sent.
     if ('vehicle_id' in body) {
-      const { rows: vehicleRows } = await query('SELECT id FROM vehicles WHERE id = ? AND active = true', [body.vehicle_id])
-      if (!vehicleRows.length) return res.status(400).json({ message: 'Invalid vehicle selected' })
-      set('vehicle_id', body.vehicle_id)
+      if (!body.vehicle_id) {
+        set('vehicle_id', null)
+      } else {
+        const { rows: vehicleRows } = await query('SELECT id FROM vehicles WHERE id = ? AND active = true', [body.vehicle_id])
+        if (!vehicleRows.length) return res.status(400).json({ message: 'Invalid vehicle selected' })
+        set('vehicle_id', body.vehicle_id)
+      }
     }
 
     // provider_price mirrors driver_price — a rate admin sets for this

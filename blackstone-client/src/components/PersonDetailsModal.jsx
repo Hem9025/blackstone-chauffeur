@@ -137,7 +137,7 @@ export default function PersonDetailsModal({ person, role, onClose }) {
             {bookingList.map((b) => (
               <div key={b.id} className="border border-black/10 p-3 text-sm">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-black">{formatDate(b.date)} — {b.pickup} → {b.dropoff}</p>
+                  <p className="text-black">{formatDate(b.date)} — {b.pickup} → {b.dropoff || 'Destination TBC'}</p>
                   <p className="shrink-0 text-black">{formatCurrency(b.total_price)}</p>
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2">

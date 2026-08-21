@@ -80,11 +80,15 @@ export function streamInvoice(res, booking) {
   // Trip details
   doc.font('Helvetica-Bold').fillColor(BLACK).fontSize(11).text('Trip Details')
   doc.moveDown(0.3)
+  // Vehicle/pickup/dropoff/date/time can all be null on a provider/admin
+  // booking that was created before every detail was confirmed (see
+  // routes/bookings.js POST /provider) — fall back to a placeholder rather
+  // than showing a raw "null" string or the Unix epoch from `new Date(null)`.
   const tripRows = [
-    ['Pickup', booking.pickup],
-    ['Drop-off', booking.dropoff],
-    ['Date', new Date(booking.date).toLocaleDateString('en-NZ')],
-    ['Time', String(booking.time).slice(0, 5)],
+    ['Pickup', booking.pickup || 'To be confirmed'],
+    ['Drop-off', booking.dropoff || 'To be confirmed'],
+    ['Date', booking.date ? new Date(booking.date).toLocaleDateString('en-NZ') : 'To be confirmed'],
+    ['Time', booking.time ? String(booking.time).slice(0, 5) : 'To be confirmed'],
     ['Vehicle', booking.vehicle_name || '—'],
   ]
   if (booking.distance_km) tripRows.push(['Distance', `${booking.distance_km} km`])

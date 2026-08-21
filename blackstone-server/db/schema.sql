@@ -43,12 +43,17 @@ CREATE TABLE IF NOT EXISTS vehicles (
 CREATE TABLE IF NOT EXISTS bookings (
   id INT AUTO_INCREMENT PRIMARY KEY,
   customer_id INT NOT NULL,
-  vehicle_id INT NOT NULL,
+  -- vehicle_id, pickup, dropoff, date, and time are nullable: a provider/admin
+  -- can create a booking with just the essentials and fill the rest in later
+  -- via PATCH /api/bookings/:id (see routes/bookings.js). Ordinary customer
+  -- self-service bookings (POST /api/bookings) still always send all of these,
+  -- so this only affects the provider/admin "create booking" flow in practice.
+  vehicle_id INT,
   driver_id INT,
-  pickup TEXT NOT NULL,
-  dropoff TEXT NOT NULL,
-  date DATE NOT NULL,
-  time TIME NOT NULL,
+  pickup TEXT,
+  dropoff TEXT,
+  date DATE,
+  time TIME,
   -- Set on provider-placed bookings (the provider's own account owns the
   -- booking via customer_id, but the passenger is someone else). NULL for
   -- ordinary customer bookings, where the passenger is the customer.

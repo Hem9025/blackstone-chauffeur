@@ -113,7 +113,7 @@ export default function BookingCalendar({ bookings, selectedDate, onSelectDate }
                 {dayBookings.slice(0, 3).map((b) => (
                   <span key={b.id} className="flex items-center gap-1 truncate text-[10px] text-brand-black/70">
                     <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_DOT[b.booking_status] || 'bg-brand-black/30'}`} />
-                    <span className="truncate">{String(b.time).slice(0, 5)} {b.pickup}</span>
+                    <span className="truncate">{b.time ? String(b.time).slice(0, 5) : '--:--'} {b.pickup || 'Pickup TBC'}</span>
                   </span>
                 ))}
                 {dayBookings.length > 3 && (

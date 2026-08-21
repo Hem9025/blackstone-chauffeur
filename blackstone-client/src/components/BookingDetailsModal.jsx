@@ -152,15 +152,16 @@ export default function BookingDetailsModal({ booking, drivers = [], providers =
 
   const priceValue = Number(form?.total_price)
   const priceValid = form?.total_price !== '' && Number.isFinite(priceValue) && priceValue > 0
+  // Destination, vehicle, and date/time are optional here too — this is the
+  // exact screen used to fill them in later for a booking that was created
+  // without them, so requiring them up front to save anything else would
+  // defeat the point. Only name, pickup, and (for hourly trips) hours block
+  // saving.
   const canSave =
     form &&
     form.passenger_name.trim() &&
     form.pickup.trim() &&
-    (!needsDropoff || form.dropoff.trim()) &&
     (!needsHours || form.hours) &&
-    form.date &&
-    form.time &&
-    form.vehicle_id &&
     priceValid
 
   async function handleSave() {
@@ -333,7 +334,7 @@ export default function BookingDetailsModal({ booking, drivers = [], providers =
                 </div>
               </EditRow>
               {needsDropoff && (
-                <EditRow label="Destination">
+                <EditRow label="Destination (optional)">
                   <input className={inputClass} value={form.dropoff} onChange={(e) => set('dropoff', e.target.value)} />
                 </EditRow>
               )}
@@ -348,10 +349,10 @@ export default function BookingDetailsModal({ booking, drivers = [], providers =
                 </EditRow>
               )}
               <div className="grid grid-cols-2 gap-3">
-                <EditRow label="Date">
+                <EditRow label="Date (optional)">
                   <input type="date" className={inputClass} value={form.date} onChange={(e) => set('date', e.target.value)} />
                 </EditRow>
-                <EditRow label="Time">
+                <EditRow label="Time (optional)">
                   <input type="time" className={inputClass} value={form.time} onChange={(e) => set('time', e.target.value)} />
                 </EditRow>
               </div>
@@ -375,9 +376,9 @@ export default function BookingDetailsModal({ booking, drivers = [], providers =
             </Section>
 
             <Section title="Vehicle & Party">
-              <EditRow label="Vehicle (reference only)">
+              <EditRow label="Vehicle (optional, reference only)">
                 <select className={inputClass} value={form.vehicle_id} onChange={(e) => set('vehicle_id', e.target.value)}>
-                  <option value="">{vehiclesLoaded ? 'Select a vehicle' : 'Loading vehicles…'}</option>
+                  <option value="">{vehiclesLoaded ? 'None yet — select later' : 'Loading vehicles…'}</option>
                   {vehicleList.map((v) => (
                     <option key={v.id} value={v.id}>{v.name}</option>
                   ))}

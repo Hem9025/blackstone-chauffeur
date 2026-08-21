@@ -232,14 +232,15 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
   const priceValue = manualPrice === '' ? 0 : Number(manualPrice)
   const priceValid = manualPrice === '' || (Number.isFinite(priceValue) && priceValue >= 0)
 
+  // Destination, vehicle, and exact date/time are all optional at creation
+  // time — a booking can be logged with just the essentials (name + pickup)
+  // and the rest filled in later from the booking's detail view once it's
+  // confirmed. Only passenger name, pickup, and (for hourly trips) hours
+  // actually block submission.
   const canSubmit =
     passengerName &&
     pickup.address &&
-    (!needsDropoff || dropoff.address) &&
     (!needsHours || hours) &&
-    date &&
-    time &&
-    vehicleId &&
     priceValid
 
   // The submit button just goes disabled with no other feedback when one of
@@ -249,11 +250,7 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
   const missingFields = []
   if (!passengerName) missingFields.push('passenger name')
   if (!pickup.address) missingFields.push('pickup location')
-  if (needsDropoff && !dropoff.address) missingFields.push('destination')
   if (needsHours && !hours) missingFields.push('hours')
-  if (!date) missingFields.push('date')
-  if (!time) missingFields.push('time')
-  if (!vehicleId) missingFields.push('vehicle')
   if (!priceValid) missingFields.push('a valid price')
 
   async function handleSubmit(e) {
@@ -468,21 +465,20 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
               </div>
               {needsDropoff && (
                 <div>
-                  <label className="mb-2 block text-sm text-black/60">Destination</label>
+                  <label className="mb-2 block text-sm text-black/60">Destination (optional)</label>
                   <PlacesAutocompleteInput
                     isLoaded={mapsLoaded}
                     value={dropoff.address}
                     onChange={(val) => setDropoff((d) => ({ ...d, address: val }))}
                     onPlaceSelected={setDropoff}
-                    placeholder="Enter destination"
+                    placeholder="Leave blank if not confirmed yet"
                     className="w-full border border-black/15 px-4 py-3 pr-10 text-sm"
                   />
                 </div>
               )}
               <div>
-                <label className="mb-2 block text-sm text-black/60">Date</label>
+                <label className="mb-2 block text-sm text-black/60">Date (optional)</label>
                 <input
-                  required
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
@@ -490,9 +486,8 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm text-black/60">Time</label>
+                <label className="mb-2 block text-sm text-black/60">Time (optional)</label>
                 <input
-                  required
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
@@ -572,8 +567,8 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
           </div>
 
           <div className="border border-black/10 bg-white p-6 md:p-8">
-            <h2 className="font-heading text-xl text-black">Vehicle</h2>
-            <p className="mt-1 text-sm text-black/50">Quick reference only — it doesn't affect the price, just records what the client rides in.</p>
+            <h2 className="font-heading text-xl text-black">Vehicle (optional)</h2>
+            <p className="mt-1 text-sm text-black/50">Quick reference only — it doesn't affect the price, just records what the client rides in. Leave blank and set it later if it isn't decided yet.</p>
             <div className="mt-4">
               <select
                 value={vehicleId}
@@ -581,7 +576,7 @@ function AdminNewBookingForm({ mapsLoaded, onCreated }) {
                 className="w-full border border-black/15 px-4 py-3 text-sm"
               >
                 <option value="">
-                  {vehicleList.length === 0 ? 'Loading vehicles…' : 'Select a vehicle'}
+                  {vehicleList.length === 0 ? 'Loading vehicles…' : 'None yet — select later'}
                 </option>
                 {vehicleList.map((v) => (
                   <option key={v.id} value={v.id}>{v.name}</option>

@@ -13,7 +13,11 @@ function formatForGoogle(date) {
 }
 
 export function googleCalendarUrl(booking) {
-  const day = new Date(booking.date)
+  // Date/time can be null on a provider/admin booking that hasn't had them
+  // confirmed yet (see routes/bookings.js POST /provider) — `new Date(null)`
+  // would silently produce a bogus 1970 event instead, so fall back to
+  // today's date as a sane placeholder rather than that.
+  const day = booking.date ? new Date(booking.date) : new Date()
   const [hh = '00', mm = '00'] = String(booking.time || '00:00').split(':')
   const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), Number(hh), Number(mm))
 

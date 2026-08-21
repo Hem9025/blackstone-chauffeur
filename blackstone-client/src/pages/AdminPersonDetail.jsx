@@ -271,7 +271,7 @@ export default function AdminPersonDetail({ role }) {
               {bookingList.map((b) => (
                 <div key={b.id} className="border border-brand-black/10 bg-white p-4 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-brand-black">{formatDate(b.date)} — {b.pickup} → {b.dropoff}</p>
+                    <p className="text-brand-black">{formatDate(b.date)} — {b.pickup} → {b.dropoff || 'Destination TBC'}</p>
                     <p className="shrink-0 text-brand-black">{formatCurrency(b.total_price)}</p>
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-2">

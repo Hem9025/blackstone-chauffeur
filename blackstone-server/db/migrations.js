@@ -23,6 +23,20 @@ const COLUMN_ADDITIONS = [
   { table: 'bookings', column: 'reference', definition: 'VARCHAR(100)' },
 ]
 
+// Loosens NOT NULL columns on a database that was already provisioned before
+// they became optional, so provider/admin bookings can be created with these
+// left blank and filled in later (see routes/bookings.js POST /provider and
+// PATCH /:id). Unlike COLUMN_ADDITIONS, this doesn't need an existence check
+// first — MODIFY COLUMN is naturally idempotent, so re-running it against a
+// column that's already nullable is a harmless no-op.
+const NULLABLE_COLUMNS = [
+  { table: 'bookings', column: 'vehicle_id', definition: 'INT NULL' },
+  { table: 'bookings', column: 'pickup', definition: 'TEXT NULL' },
+  { table: 'bookings', column: 'dropoff', definition: 'TEXT NULL' },
+  { table: 'bookings', column: 'date', definition: 'DATE NULL' },
+  { table: 'bookings', column: 'time', definition: 'TIME NULL' },
+]
+
 export async function runMigrations(rawQuery, databaseName) {
   for (const { table, column, definition } of COLUMN_ADDITIONS) {
     const { rows } = await rawQuery(
@@ -34,6 +48,19 @@ export async function runMigrations(rawQuery, databaseName) {
     if (!exists) {
       await rawQuery(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`)
       console.log(`[db] Migration: added ${table}.${column}`)
+    }
+  }
+
+  for (const { table, column, definition } of NULLABLE_COLUMNS) {
+    const { rows } = await rawQuery(
+      `SELECT IS_NULLABLE FROM information_schema.columns
+       WHERE table_schema = ? AND table_name = ? AND column_name = ?`,
+      [databaseName, table, column],
+    )
+    const alreadyNullable = rows[0]?.IS_NULLABLE === 'YES'
+    if (!alreadyNullable) {
+      await rawQuery(`ALTER TABLE ${table} MODIFY COLUMN ${column} ${definition}`)
+      console.log(`[db] Migration: made ${table}.${column} nullable`)
     }
   }
 }
