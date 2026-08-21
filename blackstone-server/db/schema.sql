@@ -11,11 +11,18 @@ CREATE TABLE IF NOT EXISTS users (
   phone VARCHAR(50),
   role VARCHAR(20) NOT NULL DEFAULT 'customer'
     CHECK (role IN ('customer', 'driver', 'provider', 'second_admin', 'admin')),
-  status VARCHAR(20) NOT NULL DEFAULT 'active'
-    CHECK (status IN ('pending', 'active')),
+  -- 'pending' = driver signup awaiting admin approval, 'active' = normal
+  -- login-enabled account, 'inactive' = admin-disabled (login rejected, see
+  -- POST /api/auth/login) without deleting the account or its booking
+  -- history. The CHECK below is given its own named, table-level line
+  -- (rather than attached inline to this column) so it works identically on
+  -- both MySQL and MariaDB, and so db/migrations.js can find and update it
+  -- by name (chk_users_status) on a database that predates 'inactive'.
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
   reset_token VARCHAR(255),
   reset_token_expires DATETIME,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_users_status CHECK (status IN ('pending', 'active', 'inactive'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS vehicles (

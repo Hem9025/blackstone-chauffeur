@@ -96,6 +96,82 @@ router.patch('/users/:id/approve', requirePermission('can_manage_users'), async 
   }
 })
 
+// PATCH /api/admin/users/:id/status — deactivate ('inactive') or reactivate
+// ('active') an account without deleting it or its booking history. A
+// deactivated user is rejected at login (see routes/auth.js POST /login);
+// this is the reversible alternative to DELETE below for a user whose
+// account should stop working but whose past bookings/records need to stay
+// intact and attributed to them.
+router.patch('/users/:id/status', requirePermission('can_manage_users'), async (req, res) => {
+  const { status } = req.body || {}
+  if (!['active', 'inactive'].includes(status)) {
+    return res.status(400).json({ message: "status must be 'active' or 'inactive'" })
+  }
+  if (Number(req.params.id) === req.user.id) {
+    return res.status(400).json({ message: "You can't deactivate your own account." })
+  }
+
+  try {
+    const { rows: targetRows } = await query('SELECT role FROM users WHERE id = ?', [req.params.id])
+    if (!targetRows.length) return res.status(404).json({ message: 'User not found' })
+
+    // Same tier restriction as the role-change route below — a second_admin
+    // granted can_manage_users could otherwise deactivate the actual admin
+    // (or another second_admin) and lock them out.
+    if (req.user.role === 'second_admin' && ['admin', 'second_admin'].includes(targetRows[0].role)) {
+      return res.status(403).json({ message: 'Only admin can deactivate an admin or second_admin account' })
+    }
+
+    await query('UPDATE users SET status = ? WHERE id = ?', [status, req.params.id])
+    const { rows } = await query(
+      'SELECT id, name, email, phone, role, status, created_at FROM users WHERE id = ?',
+      [req.params.id],
+    )
+    res.json(rows[0])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to update account status' })
+  }
+})
+
+// DELETE /api/admin/users/:id — permanently removes an account. Only
+// actually possible when nothing else in the database still points at it
+// (bookings.customer_id/driver_id and provider_payments.provider_id are all
+// plain foreign keys with no ON DELETE clause, i.e. RESTRICT) — anyone with
+// booking history can't be hard-deleted, by design, so that history never
+// goes orphaned or silently vanishes. PATCH /users/:id/status (above) is the
+// way to shut off access for that far more common case; this DELETE route
+// is really only useful for a stray/unused account that never did anything.
+router.delete('/users/:id', requirePermission('can_manage_users'), async (req, res) => {
+  if (Number(req.params.id) === req.user.id) {
+    return res.status(400).json({ message: "You can't delete your own account." })
+  }
+
+  try {
+    const { rows: targetRows } = await query('SELECT role FROM users WHERE id = ?', [req.params.id])
+    if (!targetRows.length) return res.status(404).json({ message: 'User not found' })
+
+    if (req.user.role === 'second_admin' && ['admin', 'second_admin'].includes(targetRows[0].role)) {
+      return res.status(403).json({ message: 'Only admin can delete an admin or second_admin account' })
+    }
+
+    await query('DELETE FROM users WHERE id = ?', [req.params.id])
+    res.json({ success: true })
+  } catch (err) {
+    // MySQL's FK-violation code when something still references this row
+    // (RESTRICT, not CASCADE) — surfaced as a clear, actionable message
+    // rather than a generic 500, since this is an expected outcome for any
+    // user with booking history, not a bug.
+    if (err.code === 'ER_ROW_IS_REFERENCED_2' || err.code === 'ER_ROW_IS_REFERENCED') {
+      return res.status(409).json({
+        message: 'This account has booking or payment history and can\'t be deleted. Deactivate it instead.',
+      })
+    }
+    console.error(err)
+    res.status(500).json({ message: 'Failed to delete user' })
+  }
+})
+
 // PATCH /api/admin/users/:id/role
 router.patch('/users/:id/role', requirePermission('can_manage_users'), async (req, res) => {
   const { role } = req.body || {}

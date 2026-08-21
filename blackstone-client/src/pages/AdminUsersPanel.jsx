@@ -3,6 +3,7 @@ import { Plus, X } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
 import { admin as adminApi } from '../utils/api'
+import { useAuth } from '../context/AuthContext'
 
 const ROLES = ['customer', 'driver', 'provider', 'second_admin', 'admin']
 const CREATABLE_ROLES = ['customer', 'driver', 'provider']
@@ -10,9 +11,14 @@ const CREATABLE_ROLES = ['customer', 'driver', 'provider']
 const BLANK_FORM = { name: '', email: '', phone: '', password: '', role: 'provider' }
 
 export default function AdminUsersPanel() {
+  const { user: currentUser } = useAuth()
   const [list, setList] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  // Separate from `error` (which gates whether the table renders at all —
+  // see below) so a failed action on an already-loaded list surfaces as a
+  // message next to the table instead of hiding it entirely.
+  const [actionError, setActionError] = useState('')
   const [busyId, setBusyId] = useState(null)
 
   const [showCreate, setShowCreate] = useState(false)
@@ -33,11 +39,12 @@ export default function AdminUsersPanel() {
 
   async function approve(id) {
     setBusyId(id)
+    setActionError('')
     try {
       await adminApi.approveUser(id)
       load()
     } catch (err) {
-      setError(err.message || 'Failed to approve user')
+      setActionError(err.message || 'Failed to approve user')
     } finally {
       setBusyId(null)
     }
@@ -45,11 +52,43 @@ export default function AdminUsersPanel() {
 
   async function changeRole(id, role) {
     setBusyId(id)
+    setActionError('')
     try {
       await adminApi.changeRole(id, role)
       load()
     } catch (err) {
-      setError(err.message || 'Failed to change role')
+      setActionError(err.message || 'Failed to change role')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function toggleStatus(u) {
+    const nextStatus = u.status === 'inactive' ? 'active' : 'inactive'
+    if (nextStatus === 'inactive' && !window.confirm(`Deactivate ${u.name}? They won't be able to log in until reactivated.`)) {
+      return
+    }
+    setBusyId(u.id)
+    setActionError('')
+    try {
+      await adminApi.setUserStatus(u.id, nextStatus)
+      load()
+    } catch (err) {
+      setActionError(err.message || 'Failed to update account status')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function remove(u) {
+    if (!window.confirm(`Permanently delete ${u.name}'s account? This can't be undone.`)) return
+    setBusyId(u.id)
+    setActionError('')
+    try {
+      await adminApi.deleteUser(u.id)
+      load()
+    } catch (err) {
+      setActionError(err.message || 'Failed to delete user')
     } finally {
       setBusyId(null)
     }
@@ -98,6 +137,7 @@ export default function AdminUsersPanel() {
 
         {loading && <p className="mt-8 text-brand-black/50">Loading…</p>}
         {error && <p className="mt-8 text-red-500">{error}</p>}
+        {actionError && <p className="mt-8 text-red-500">{actionError}</p>}
 
         {!loading && !error && (
           <div className="mt-8 overflow-x-auto">
@@ -113,7 +153,7 @@ export default function AdminUsersPanel() {
               </thead>
               <tbody>
                 {list.map((u) => (
-                  <tr key={u.id} className="border-b border-brand-black/5">
+                  <tr key={u.id} className={`border-b border-brand-black/5 ${u.status === 'inactive' ? 'opacity-50' : ''}`}>
                     <td className="py-2 pr-4">{u.name}</td>
                     <td className="py-2 pr-4">{u.email}</td>
                     <td className="py-2 pr-4">
@@ -130,15 +170,37 @@ export default function AdminUsersPanel() {
                     </td>
                     <td className="py-2 pr-4 capitalize">{u.status}</td>
                     <td className="py-2 pr-4">
-                      {u.status === 'pending' && (
-                        <button
-                          disabled={busyId === u.id}
-                          onClick={() => approve(u.id)}
-                          className="border border-brand-gold px-3 py-1 text-xs text-brand-gold hover:bg-brand-gold hover:text-brand-black disabled:opacity-40"
-                        >
-                          Approve
-                        </button>
-                      )}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {u.status === 'pending' && (
+                          <button
+                            disabled={busyId === u.id}
+                            onClick={() => approve(u.id)}
+                            className="border border-brand-gold px-3 py-1 text-xs text-brand-gold hover:bg-brand-gold hover:text-brand-black disabled:opacity-40"
+                          >
+                            Approve
+                          </button>
+                        )}
+                        {currentUser?.id !== u.id && (
+                          <>
+                            {u.status !== 'pending' && (
+                              <button
+                                disabled={busyId === u.id}
+                                onClick={() => toggleStatus(u)}
+                                className="border border-brand-black/20 px-3 py-1 text-xs text-brand-black/70 hover:border-brand-black/40 disabled:opacity-40"
+                              >
+                                {u.status === 'inactive' ? 'Reactivate' : 'Deactivate'}
+                              </button>
+                            )}
+                            <button
+                              disabled={busyId === u.id}
+                              onClick={() => remove(u)}
+                              className="border border-red-400 px-3 py-1 text-xs text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-40"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

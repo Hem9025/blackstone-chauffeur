@@ -92,6 +92,17 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' })
     }
 
+    // 'inactive' = admin has deactivated this account (see PATCH
+    // /admin/users/:id/status) without deleting it or its booking history —
+    // rejected here rather than just in the client, so a deactivated user
+    // can't call the API directly with a still-valid password. 'pending'
+    // (driver awaiting approval) still logs in — the client sends them to a
+    // waiting page instead of blocking here, since that's an expected,
+    // temporary state rather than a lockout.
+    if (user.status === 'inactive') {
+      return res.status(403).json({ message: 'This account has been deactivated. Contact an admin for access.' })
+    }
+
     const token = signToken(user)
     const { password_hash, ...safeUser } = user
 

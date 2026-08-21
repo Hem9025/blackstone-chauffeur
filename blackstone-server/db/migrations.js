@@ -37,6 +37,45 @@ const NULLABLE_COLUMNS = [
   { table: 'bookings', column: 'time', definition: 'TIME NULL' },
 ]
 
+// Widens the users.status CHECK constraint to allow 'inactive' (admin
+// account deactivation — see routes/admin.js PATCH /users/:id/status) on a
+// database that was provisioned before that value existed. schema.sql names
+// this constraint explicitly (chk_users_status) for new databases, but an
+// older database may still have MySQL's auto-generated name from before it
+// was given one (e.g. users_chk_1) — so this looks up whatever check
+// constraint currently covers the status column by inspecting its clause,
+// rather than assuming a specific name, then drops and recreates it under
+// the canonical name. Safe to re-run: once the clause already mentions
+// 'inactive' there's nothing left to do.
+async function ensureUserStatusAllowsInactive(rawQuery, databaseName) {
+  try {
+    const { rows: checks } = await rawQuery(
+      `SELECT tc.CONSTRAINT_NAME AS name, cc.CHECK_CLAUSE AS clause
+       FROM information_schema.TABLE_CONSTRAINTS tc
+       JOIN information_schema.CHECK_CONSTRAINTS cc
+         ON cc.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA AND cc.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+       WHERE tc.TABLE_SCHEMA = ? AND tc.TABLE_NAME = 'users' AND tc.CONSTRAINT_TYPE = 'CHECK'`,
+      [databaseName],
+    )
+    const statusChecks = checks.filter((c) => /status/i.test(c.clause) && /pending/i.test(c.clause))
+    const alreadyAllowsInactive = statusChecks.some((c) => /inactive/i.test(c.clause))
+    if (alreadyAllowsInactive || !statusChecks.length) return
+
+    for (const { name } of statusChecks) {
+      await rawQuery(`ALTER TABLE users DROP CHECK \`${name}\``)
+    }
+    await rawQuery(
+      `ALTER TABLE users ADD CONSTRAINT chk_users_status CHECK (status IN ('pending', 'active', 'inactive'))`,
+    )
+    console.log(`[db] Migration: users.status now allows 'inactive'`)
+  } catch (err) {
+    // Non-fatal — worst case, deactivating a user still works at the
+    // application layer but a stale CHECK constraint rejects the UPDATE
+    // until this is investigated. Logged loudly rather than left silent.
+    console.error('[db] Migration: failed to update users.status check constraint', err)
+  }
+}
+
 export async function runMigrations(rawQuery, databaseName) {
   for (const { table, column, definition } of COLUMN_ADDITIONS) {
     const { rows } = await rawQuery(
@@ -63,4 +102,6 @@ export async function runMigrations(rawQuery, databaseName) {
       console.log(`[db] Migration: made ${table}.${column} nullable`)
     }
   }
+
+  await ensureUserStatusAllowsInactive(rawQuery, databaseName)
 }
