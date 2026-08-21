@@ -59,17 +59,27 @@ export const IMAGES = {
   // Comfort tiles use light/silver-white vehicle shots; Luxury (and the two
   // Sprinter spotlight tiles, which are catalogued under 'luxury') use black
   // vehicle shots — a deliberate light/dark split between the two tiers.
+  // The `?v=2` on the seven re-cropped files below is a cache-buster, not a
+  // real query param the server does anything with — these live in
+  // public/, so Vite never fingerprints their URL the way it does bundled
+  // assets, meaning overwriting the file in place (as happened when they
+  // were re-cropped) keeps the exact same URL. Any cache sitting in front
+  // of the server (browser, CDN, or Hostinger's own) has no way to know the
+  // content changed and can go on serving the old bytes indefinitely — this
+  // is exactly what happened after that crop shipped. Bump this number any
+  // time one of these seven files is replaced again; the two untouched
+  // business-*.png files don't need one since their content hasn't changed.
   homeFleetIcons: {
-    economySedan: '/images/fleet/icons/comfort-sedan.jpg',
-    economySuv: '/images/fleet/icons/comfort-suv.jpg',
-    economyVan: '/images/fleet/icons/comfort-van.jpg',
-    comfort12SeaterVan: '/images/fleet/icons/comfort-12-seater-van.jpg',
-    electric: '/images/fleet/icons/electric.jpg',
+    economySedan: '/images/fleet/icons/comfort-sedan.jpg?v=2',
+    economySuv: '/images/fleet/icons/comfort-suv.jpg?v=2',
+    economyVan: '/images/fleet/icons/comfort-van.jpg?v=2',
+    comfort12SeaterVan: '/images/fleet/icons/comfort-12-seater-van.jpg?v=2',
+    electric: '/images/fleet/icons/electric.jpg?v=2',
     businessSedan: '/images/fleet/icons/business-sedan.png',
     businessSuv: '/images/fleet/icons/business-suv.png',
     businessVan: '/images/fleet/icons/business-van.png',
-    sprinter316: '/images/fleet/icons/sprinter-316.jpg',
-    sprinter519: '/images/fleet/icons/sprinter-519.jpg',
+    sprinter316: '/images/fleet/icons/sprinter-316.jpg?v=2',
+    sprinter519: '/images/fleet/icons/sprinter-519.jpg?v=2',
   },
 
   // Real client-supplied interior photography for specific fleet vehicles
