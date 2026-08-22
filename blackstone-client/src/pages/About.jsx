@@ -8,9 +8,12 @@ import {
   MapPin,
   Heart,
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import PageMeta from '../components/PageMeta'
 import StatsBand from '../components/StatsBand'
+import Button from '../components/Button'
 import { IMAGES } from '../constants/images'
+import { organizationJsonLd, breadcrumbJsonLd, CITIES_SERVED } from '../constants/seo'
 
 // Placeholder photography reused from the existing stock set (see
 // constants/images.js) — swap each `image` for a real per-city photo
@@ -47,16 +50,30 @@ const differences = [
   { icon: Car, title: 'Premium Fleet', desc: 'From luxury sedans to SUVs, our immaculately maintained vehicles provide the ultimate travel experience.', image: IMAGES.services.luxuryFleet },
   { icon: Clock, title: '24/7 Availability', desc: 'We are available around the clock to ensure your transportation needs are always met, day or night.', image: IMAGES.services.airport },
   { icon: BadgeDollarSign, title: 'Competitive Pricing', desc: "Luxury doesn't have to break the bank. We offer transparent, competitive pricing with no hidden fees.", image: IMAGES.services.pointToPoint },
-  { icon: MapPin, title: 'NZ Wide Coverage', desc: 'Servicing Auckland, Hamilton, Tauranga, Wellington and surrounding areas across New Zealand.', image: IMAGES.places.queenstown },
+  // City list kept in sync with CITIES_SERVED (constants/seo.js) — this used
+  // to list a different, shorter set of cities (including one, Tauranga,
+  // that isn't actually one of the eight served) than the Footer and
+  // "Where We Operate" section below, which is exactly the kind of
+  // service-area inconsistency across pages the SEO plan flagged.
+  { icon: MapPin, title: 'NZ Wide Coverage', desc: `Servicing ${CITIES_SERVED.join(', ')} and surrounding areas across New Zealand.`, image: IMAGES.places.queenstown },
   { icon: Heart, title: 'Personalised Service', desc: 'Every client receives our full attention. We tailor each journey to your specific requirements.', image: IMAGES.services.vip },
+]
+
+const ABOUT_JSON_LD = [
+  organizationJsonLd,
+  breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'About', path: '/about' },
+  ]),
 ]
 
 export default function About() {
   return (
     <div>
       <PageMeta
-        title="About Us"
-        description="Learn about BlackStone Chauffeur — New Zealand's premier luxury chauffeur service."
+        title="About Us | New Zealand's Premier Chauffeur Service"
+        description="BlackStone Chauffeur has served clients across Auckland, Wellington, Hamilton, Rotorua, Christchurch and Queenstown for over 3 years — professional chauffeurs, a premium fleet, and 24/7 availability."
+        jsonLd={ABOUT_JSON_LD}
       />
 
       {/* Intro hero — 70% of the viewport on first glance */}
@@ -217,6 +234,19 @@ export default function About() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Closing CTA — links into Services and Booking, since the rest of
+          this page is brand storytelling with no path onward otherwise. */}
+      <section className="border-t border-black/10 bg-black/[0.02] py-14">
+        <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 px-4 text-center md:px-8">
+          <h2 className="font-heading text-2xl text-black">Ready to ride with BlackStone?</h2>
+          <p className="text-black/60">
+            See our full <Link to="/services" className="text-brand-gold underline">range of services</Link> or
+            browse the <Link to="/fleet/luxury" className="text-brand-gold underline">fleet</Link>, then book online in minutes.
+          </p>
+          <Button to="/booking" className="!px-6 !py-3">Book Now</Button>
         </div>
       </section>
     </div>

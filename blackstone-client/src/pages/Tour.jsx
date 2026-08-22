@@ -3,13 +3,28 @@ import EnquiryForm from '../components/EnquiryForm'
 import TourCard from '../components/TourCard'
 import { IMAGES } from '../constants/images'
 import { NORTH_ISLAND_TOURS, SOUTH_ISLAND_TOURS } from '../constants/tours'
+import { breadcrumbJsonLd, serviceJsonLd } from '../constants/seo'
+
+const TOUR_JSON_LD = [
+  breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'Tours', path: '/tour' },
+  ]),
+  serviceJsonLd({
+    name: 'Private Chauffeured Day Tours',
+    description:
+      "Private chauffeured day tours across New Zealand's North and South Islands — Rotorua, Waitomo, Bay of Islands, Queenstown, Milford Sound and more, with a knowledgeable local driver.",
+    path: '/tour',
+  }),
+]
 
 export default function Tour() {
   return (
     <div>
       <PageMeta
-        title="Tour"
-        description="Private chauffeured tours across New Zealand's North and South Islands, with a knowledgeable local driver."
+        title="Private Chauffeured Day Tours | Rotorua, Queenstown & More"
+        description="Private chauffeured tours across New Zealand's North and South Islands — Rotorua, Waitomo, Bay of Islands, Queenstown, Milford Sound and more — with a knowledgeable local driver."
+        jsonLd={TOUR_JSON_LD}
       />
 
       {/* Intro hero — half the viewport, same style as About/Services */}
@@ -21,7 +36,10 @@ export default function Tour() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/45 to-black/20" />
         <div className="relative mx-auto max-w-7xl px-4 md:px-8">
-          <h1 className="font-heading text-5xl leading-tight md:text-6xl">Tour Packages</h1>
+          <h1 className="font-heading text-5xl leading-tight md:text-6xl">Private Chauffeured Day Tours</h1>
+          <p className="mt-4 max-w-2xl text-white/70">
+            Explore New Zealand's must-see destinations in comfort, with a knowledgeable local chauffeur handling the driving.
+          </p>
         </div>
       </section>
 

@@ -12,6 +12,7 @@ import OccasionStrip from '../components/OccasionStrip'
 import { IMAGES } from '../constants/images'
 import { HOME_FLEET_CATEGORIES } from '../constants/fleet'
 import { reviews as reviewsApi } from '../utils/api'
+import { organizationJsonLd, faqJsonLd } from '../constants/seo'
 
 const services = [
   { title: 'Airport Transfers', desc: 'Punctual meet & greet transfers to and from every major terminal.', image: IMAGES.services.airport },
@@ -45,17 +46,6 @@ const faqs = [
   { question: 'What payment methods do you accept?', answer: 'All major credit and debit cards via our secure Stripe checkout.' },
 ]
 
-const localBusinessJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'LocalBusiness',
-  name: 'BlackStone Chauffeur',
-  description: 'Premium chauffeur service offering airport transfers, corporate travel, weddings and private tours across New Zealand.',
-  url: 'https://www.blackstonechauffeur.co.nz',
-  telephone: '+64-20-452-5000',
-  priceRange: '$$$',
-  address: { '@type': 'PostalAddress', addressCountry: 'NZ' },
-}
-
 export default function Home() {
   const [googleReviews, setGoogleReviews] = useState(null)
 
@@ -69,9 +59,9 @@ export default function Home() {
   return (
     <div>
       <PageMeta
-        title="Premium Chauffeur Service"
-        description="BlackStone Chauffeur offers premium airport transfers, corporate travel and event chauffeuring across New Zealand."
-        jsonLd={localBusinessJsonLd}
+        title="Chauffeur Service Auckland & NZ | Airport Transfers, Weddings & Corporate Travel"
+        description="Premium chauffeur service across Auckland, Wellington, Hamilton, Rotorua, Christchurch, Queenstown and more. Airport transfers, corporate travel, wedding cars and private tours — book online with transparent pricing."
+        jsonLd={[organizationJsonLd, faqJsonLd(faqs)]}
       />
 
       {/* Hero — full viewport on first glance, nav floats transparent on top */}

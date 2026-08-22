@@ -5,6 +5,12 @@ import 'yet-another-react-lightbox/styles.css'
 import PageMeta from '../components/PageMeta'
 import Reveal from '../components/Reveal'
 import { IMAGES } from '../constants/images'
+import { breadcrumbJsonLd } from '../constants/seo'
+
+const GALLERY_JSON_LD = breadcrumbJsonLd([
+  { name: 'Home', path: '/' },
+  { name: 'Gallery', path: '/gallery' },
+])
 
 const images = IMAGES.gallery.map((src, i) => ({
   src,
@@ -16,7 +22,11 @@ export default function Gallery() {
 
   return (
     <div>
-      <PageMeta title="Gallery" description="A look at BlackStone Chauffeur's fleet and events." />
+      <PageMeta
+        title="Gallery | Our Fleet & Events"
+        description="A look at BlackStone Chauffeur's fleet, chauffeurs, and events across New Zealand."
+        jsonLd={GALLERY_JSON_LD}
+      />
 
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
         <Reveal>

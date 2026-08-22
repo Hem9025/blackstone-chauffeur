@@ -20,6 +20,12 @@ import {
   minBookingDate, isDateFarEnoughAhead, MIN_ADVANCE_DAYS,
   isWithinServiceRadius,
 } from '../utils/bookingRules'
+import { breadcrumbJsonLd } from '../constants/seo'
+
+const BOOKING_JSON_LD = breadcrumbJsonLd([
+  { name: 'Home', path: '/' },
+  { name: 'Book Now', path: '/booking' },
+])
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
 const GOOGLE_MAPS_LIBRARIES = ['places']
@@ -480,7 +486,11 @@ function BookingContent({ mapsLoaded }) {
 
   return (
     <div className="bg-black/[0.02] pb-16">
-      <PageMeta title="Book Now" description="Book your BlackStone Chauffeur ride online." />
+      <PageMeta
+        title="Book a Chauffeur Online | Instant Pricing"
+        description="Book your BlackStone Chauffeur ride online in minutes — airport transfers, corporate travel, weddings and hourly hire, with transparent pricing confirmed before you pay."
+        jsonLd={BOOKING_JSON_LD}
+      />
 
       {/* Step tracker */}
       <div className="mx-auto max-w-6xl px-4 pt-8 md:px-8">

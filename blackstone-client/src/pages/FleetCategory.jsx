@@ -1,7 +1,9 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import PageMeta from '../components/PageMeta'
+import Button from '../components/Button'
 import FleetCard from '../components/FleetCard'
 import { FLEET_CATEGORIES } from '../constants/fleet'
+import { breadcrumbJsonLd, serviceJsonLd } from '../constants/seo'
 
 const TYPE_LABELS = { sedan: 'Sedan', suv: 'SUV', van: 'Van', sprinter: 'Sprinter', electric: 'Electric' }
 
@@ -29,11 +31,27 @@ export default function FleetCategory({ category }) {
   const vehicles = filtered.length ? filtered : allVehicles
   const showingFallback = Boolean(typeFilter) && filtered.length === 0
 
+  const path = `/fleet/${config.urlSlug}`
+  const jsonLd = [
+    breadcrumbJsonLd([
+      { name: 'Home', path: '/' },
+      { name: 'Fleet', path: '/fleet/luxury' },
+      { name: config.label, path },
+    ]),
+    serviceJsonLd({
+      name: `${config.label} Chauffeur Hire`,
+      description: config.intro,
+      path,
+    }),
+  ]
+
   return (
     <div>
       <PageMeta
-        title={config.label}
+        title={`${config.label} | Chauffeured Vehicle Hire New Zealand`}
         description={`BlackStone Chauffeur's ${config.label.toLowerCase()} — ${config.intro}`}
+        canonicalPath={path}
+        jsonLd={jsonLd}
       />
 
       {/* Intro hero — 70% of the viewport on first glance */}
@@ -81,13 +99,22 @@ export default function FleetCategory({ category }) {
         </div>
       </section>
 
-      {/* Cross-link to the other category */}
+      {/* Cross-link to the other category, plus Services/Booking so a
+          visitor (and a crawler) can move naturally between "what vehicle"
+          and "what occasion" and "book it" without relying only on the
+          navbar/footer to connect these pages. */}
       <section className="border-t border-black/10 bg-black/[0.02] py-10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center gap-2 px-4 text-center md:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 text-center md:px-8">
           <p className="text-sm text-black/50">Looking for something different?</p>
           <Link to={`/fleet/${other.urlSlug}`} className="font-heading text-lg text-brand-gold hover:underline">
             View the {other.label} →
           </Link>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-4 border-t border-black/10 pt-6">
+            <p className="text-sm text-black/60">
+              See our full <Link to="/services" className="text-brand-gold underline">range of services</Link> or
+            </p>
+            <Button to="/booking" className="!px-6 !py-2.5 text-sm">Book Now</Button>
+          </div>
         </div>
       </section>
     </div>

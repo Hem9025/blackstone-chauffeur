@@ -2,7 +2,8 @@ import { useParams, Link } from 'react-router-dom'
 import { Users, Briefcase } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
-import { getVehicleBySlug, categoryPath } from '../constants/fleet'
+import { getVehicleBySlug, categoryPath, FLEET_CATEGORIES } from '../constants/fleet'
+import { breadcrumbJsonLd, serviceJsonLd } from '../constants/seo'
 
 export default function FleetDetail() {
   const { slug } = useParams()
@@ -21,10 +22,30 @@ export default function FleetDetail() {
   }
 
   const backTo = categoryPath(vehicle.category)
+  const categoryConfig = FLEET_CATEGORIES[vehicle.category]
+  const path = `/fleet/${vehicle.slug}`
+  const jsonLd = [
+    breadcrumbJsonLd([
+      { name: 'Home', path: '/' },
+      { name: 'Fleet', path: '/fleet/luxury' },
+      { name: categoryConfig?.label || 'Fleet', path: backTo },
+      { name: vehicle.title, path },
+    ]),
+    serviceJsonLd({
+      name: `${vehicle.title} Chauffeur Hire`,
+      description: vehicle.shortDesc,
+      path,
+    }),
+  ]
 
   return (
     <div>
-      <PageMeta title={vehicle.title} description={vehicle.shortDesc} image={vehicle.heroImage} />
+      <PageMeta
+        title={`${vehicle.title} | Chauffeured Hire`}
+        description={vehicle.shortDesc}
+        image={vehicle.heroImage}
+        jsonLd={jsonLd}
+      />
 
       {/* Framed photo on top with a gold tagline badge, then a dark info
           card that overlaps its bottom edge — a more editorial, "product

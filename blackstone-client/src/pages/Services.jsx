@@ -1,6 +1,9 @@
+import { Link } from 'react-router-dom'
 import { CheckCircle } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
+import Button from '../components/Button'
 import { IMAGES } from '../constants/images'
+import { breadcrumbJsonLd, serviceJsonLd } from '../constants/seo'
 
 const services = [
   { title: 'Airport Transfers', desc: 'Effortless airport transfers, with guaranteed on-time arrivals and departures, ensuring a hassle-free and smooth travel experience every time.', image: IMAGES.services.airport },
@@ -24,12 +27,26 @@ const highlights = [
   'Concierge Services',
 ]
 
+const SERVICES_JSON_LD = [
+  breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'Services', path: '/services' },
+  ]),
+  serviceJsonLd({
+    name: 'Chauffeur Services',
+    description:
+      'Airport transfers, corporate travel, wedding cars, VIP service, city tours and hourly hire, chauffeured across Auckland and New Zealand.',
+    path: '/services',
+  }),
+]
+
 export default function Services() {
   return (
     <div>
       <PageMeta
-        title="Services"
-        description="Airport transfers, corporate travel, weddings, VIP service, city tours and more from BlackStone Chauffeur."
+        title="Chauffeur Services Auckland | Airport Transfers, Weddings & Corporate Travel"
+        description="Airport transfers, corporate travel, wedding cars, VIP service, and city tours from BlackStone Chauffeur — professional chauffeurs across Auckland and New Zealand, booked online with upfront pricing."
+        jsonLd={SERVICES_JSON_LD}
       />
 
       {/* Intro hero — 70% of the viewport, same style as About */}
@@ -41,7 +58,12 @@ export default function Services() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/45 to-black/20" />
         <div className="relative mx-auto max-w-7xl px-4 md:px-8">
-          <h1 className="font-heading text-5xl leading-tight md:text-6xl">Our Services</h1>
+          <p className="text-sm uppercase tracking-[0.25em] text-brand-gold">Chauffeur Services in Auckland &amp; NZ</p>
+          <h1 className="mt-2 font-heading text-5xl leading-tight md:text-6xl">Our Services</h1>
+          <p className="mt-4 max-w-2xl text-white/70">
+            Airport transfers, corporate travel, weddings, and private tours — every ride professionally
+            chauffeured across Auckland, Wellington, Hamilton, Rotorua, Christchurch, and Queenstown.
+          </p>
         </div>
       </section>
 
@@ -49,7 +71,7 @@ export default function Services() {
       <section className="bg-white py-16">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <p className="text-sm uppercase tracking-[0.25em] text-brand-gold">What We Offer</p>
-          <h2 className="mt-2 font-heading text-3xl text-black">Our Premium Services</h2>
+          <h2 className="mt-2 font-heading text-3xl text-black">Our Premium Chauffeur Services</h2>
 
           <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {services.map((s) => (
@@ -66,6 +88,21 @@ export default function Services() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Contextual cross-links to Fleet and Booking — helps visitors
+              (and search engines) move naturally from "what you offer" to
+              "what I'd ride in" to "book it", rather than relying only on
+              the navbar/footer to connect these three pages. */}
+          <div className="mt-12 flex flex-wrap items-center gap-4 rounded-3xl border border-black/10 bg-black/[0.02] p-8">
+            <div className="flex-1">
+              <h3 className="font-heading text-xl text-black">Not sure which vehicle fits your trip?</h3>
+              <p className="mt-1 text-sm text-black/60">
+                Browse our <Link to="/fleet/luxury" className="text-brand-gold underline">Luxury</Link> and{' '}
+                <Link to="/fleet/comfort" className="text-brand-gold underline">Comfort</Link> fleets, or go straight to booking.
+              </p>
+            </div>
+            <Button to="/booking" className="!px-6 !py-3">Book Now</Button>
           </div>
         </div>
       </section>

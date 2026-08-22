@@ -2,13 +2,23 @@ import { Phone, Mail, Clock } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import EnquiryForm from '../components/EnquiryForm'
 import { IMAGES } from '../constants/images'
+import { organizationJsonLd, breadcrumbJsonLd } from '../constants/seo'
+
+const CONTACT_JSON_LD = [
+  organizationJsonLd,
+  breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'Contact', path: '/contact' },
+  ]),
+]
 
 export default function Contact() {
   return (
     <div>
       <PageMeta
-        title="Contact"
-        description="Get in touch with BlackStone Chauffeur for bookings and enquiries."
+        title="Contact Us | Book a Chauffeur in Auckland & NZ"
+        description="Get in touch with BlackStone Chauffeur for bookings and enquiries — call, email, or send a message. 24/7 booking availability across Auckland and New Zealand."
+        jsonLd={CONTACT_JSON_LD}
       />
 
       <section className="relative overflow-hidden bg-brand-black text-brand-white">

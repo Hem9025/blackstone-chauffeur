@@ -3,6 +3,7 @@ import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
 import ItineraryTimeline from '../components/ItineraryTimeline'
 import { getTourBySlug } from '../constants/tours'
+import { breadcrumbJsonLd, touristTripJsonLd } from '../constants/seo'
 
 export default function TourDetail() {
   const { slug } = useParams()
@@ -20,9 +21,25 @@ export default function TourDetail() {
     )
   }
 
+  const path = `/tour/${tour.slug}`
+  const jsonLd = [
+    breadcrumbJsonLd([
+      { name: 'Home', path: '/' },
+      { name: 'Tours', path: '/tour' },
+      { name: tour.title, path },
+    ]),
+    touristTripJsonLd({
+      name: tour.title,
+      description: tour.shortDesc,
+      path,
+      image: tour.heroImage,
+      itinerary: tour.itinerary,
+    }),
+  ]
+
   return (
     <div>
-      <PageMeta title={tour.title} description={tour.shortDesc} image={tour.heroImage} />
+      <PageMeta title={`${tour.title} | Private Chauffeured Day Tour`} description={tour.shortDesc} image={tour.heroImage} jsonLd={jsonLd} />
 
       {/* Hero — half the viewport, same style used across the site */}
       <section className="relative flex h-[50vh] min-h-[420px] w-full items-center overflow-hidden bg-brand-black text-white">

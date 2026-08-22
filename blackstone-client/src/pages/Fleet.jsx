@@ -1,14 +1,31 @@
+import { Link } from 'react-router-dom'
 import PageMeta from '../components/PageMeta'
+import Button from '../components/Button'
 import FleetCard from '../components/FleetCard'
 import { IMAGES } from '../constants/images'
 import { LUXURY_FLEET, ECONOMY_FLEET } from '../constants/fleet'
+import { breadcrumbJsonLd, serviceJsonLd } from '../constants/seo'
+
+const FLEET_JSON_LD = [
+  breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'Fleet', path: '/fleet/luxury' },
+  ]),
+  serviceJsonLd({
+    name: 'Chauffeured Fleet Hire',
+    description:
+      'Luxury sedans, SUVs, vans and executive vehicles, professionally chauffeured for airport transfers, weddings, and corporate travel across New Zealand.',
+    path: '/fleet/luxury',
+  }),
+]
 
 export default function Fleet() {
   return (
     <div>
       <PageMeta
-        title="Our Fleet"
-        description="BlackStone Chauffeur's luxury and premium economy fleet — a vehicle for every occasion, professionally chauffeured across New Zealand."
+        title="Our Fleet | Luxury & Comfort Chauffeured Vehicles"
+        description="BlackStone Chauffeur's luxury and comfort-class fleet — sedans, SUVs, vans and executive vehicles for airport transfers, weddings, and corporate travel, professionally chauffeured across New Zealand."
+        jsonLd={FLEET_JSON_LD}
       />
 
       {/* Intro hero — half the viewport, same style used across the site */}
@@ -50,6 +67,18 @@ export default function Fleet() {
             {ECONOMY_FLEET.map((v) => (
               <FleetCard key={v.slug} vehicle={v} />
             ))}
+          </div>
+
+          {/* Contextual cross-links to Services and Booking. */}
+          <div className="mt-12 flex flex-wrap items-center gap-4 rounded-3xl border border-black/10 bg-white p-8">
+            <div className="flex-1">
+              <h3 className="font-heading text-xl text-black">Wondering what each vehicle is best for?</h3>
+              <p className="mt-1 text-sm text-black/60">
+                See our full <Link to="/services" className="text-brand-gold underline">Services</Link> — airport
+                transfers, weddings, corporate travel and more — then book the vehicle that fits.
+              </p>
+            </div>
+            <Button to="/booking" className="!px-6 !py-3">Book Now</Button>
           </div>
         </div>
       </section>
