@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Phone, Mail, MapPin } from 'lucide-react'
+import { SOCIAL_LINKS } from '../constants/seo'
 
 // lucide-react dropped brand/logo icons (trademark reasons) — simple inline
 // marks are used here instead so the footer doesn't depend on a brand icon set.
@@ -19,18 +20,12 @@ function InstagramMark(props) {
     </svg>
   )
 }
-function XMark(props) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <path d="M18.9 3H22l-7.6 8.7L23 21h-6.6l-5.2-6.6L5.2 21H2l8.1-9.3L2 3h6.7l4.7 6.1L18.9 3Zm-1.2 16.2h1.8L7.4 4.7H5.5l12.2 14.5Z" />
-    </svg>
-  )
-}
 
+// No X/Twitter icon — that account doesn't exist yet. Add it back here
+// (and to SOCIAL_LINKS in constants/seo.js) once one is created.
 const social = [
-  { icon: FacebookMark, href: '#', label: 'Facebook' },
-  { icon: InstagramMark, href: '#', label: 'Instagram' },
-  { icon: XMark, href: '#', label: 'X (Twitter)' },
+  { icon: FacebookMark, href: SOCIAL_LINKS.facebook, label: 'Facebook' },
+  { icon: InstagramMark, href: SOCIAL_LINKS.instagram, label: 'Instagram' },
 ]
 
 // Mirrors the city list on the About page's "Where We Operate" section —
@@ -71,6 +66,8 @@ export default function Footer() {
                 <a
                   key={s.label}
                   href={s.href}
+                  target="_blank"
+                  rel="noreferrer"
                   aria-label={s.label}
                   className="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 hover:border-brand-gold hover:text-brand-gold"
                 >

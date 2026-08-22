@@ -1,8 +1,8 @@
-import { Phone, Mail, Clock } from 'lucide-react'
+import { Phone, Mail, Clock, Star } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import EnquiryForm from '../components/EnquiryForm'
 import { IMAGES } from '../constants/images'
-import { organizationJsonLd, breadcrumbJsonLd } from '../constants/seo'
+import { organizationJsonLd, breadcrumbJsonLd, GOOGLE_REVIEW_URL } from '../constants/seo'
 
 const CONTACT_JSON_LD = [
   organizationJsonLd,
@@ -37,6 +37,14 @@ export default function Contact() {
               <a href="tel:+64204525000" className="flex items-center gap-2 hover:text-brand-gold"><Phone size={16} className="text-brand-gold" /> +64 20 452 5000</a>
               <a href="mailto:info@blackstonechauffeur.co.nz" className="flex items-center gap-2 hover:text-brand-gold"><Mail size={16} className="text-brand-gold" /> info@blackstonechauffeur.co.nz</a>
               <p className="flex items-center gap-2"><Clock size={16} className="text-brand-gold" /> 24/7 booking availability</p>
+              <a
+                href={GOOGLE_REVIEW_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 font-medium text-brand-gold hover:underline"
+              >
+                <Star size={16} className="text-brand-gold" fill="currentColor" strokeWidth={0} /> Leave us a Google review
+              </a>
             </div>
 
             <div className="mt-8 aspect-video w-full overflow-hidden border border-brand-black/10">

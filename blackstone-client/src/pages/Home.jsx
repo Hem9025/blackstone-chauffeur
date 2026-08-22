@@ -12,7 +12,7 @@ import OccasionStrip from '../components/OccasionStrip'
 import { IMAGES } from '../constants/images'
 import { HOME_FLEET_CATEGORIES } from '../constants/fleet'
 import { reviews as reviewsApi } from '../utils/api'
-import { organizationJsonLd, faqJsonLd } from '../constants/seo'
+import { organizationJsonLd, faqJsonLd, GOOGLE_REVIEW_URL } from '../constants/seo'
 
 const services = [
   { title: 'Airport Transfers', desc: 'Punctual meet & greet transfers to and from every major terminal.', image: IMAGES.services.airport },
@@ -289,17 +289,30 @@ export default function Home() {
           <Reveal>
             <div className="flex flex-wrap items-end justify-between gap-2">
               <h2 className="font-heading text-3xl text-black">What Our Clients Say</h2>
-              {googleReviews && (
+              <div className="flex flex-wrap items-center gap-4">
+                {googleReviews && (
+                  <a
+                    href={googleReviews.placeUrl || 'https://www.google.com/maps'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1 text-sm text-black/60 hover:text-brand-gold"
+                  >
+                    <Star size={14} className="text-brand-gold" fill="currentColor" strokeWidth={0} />
+                    {googleReviews.rating} · {googleReviews.totalReviews} Google reviews
+                  </a>
+                )}
+                {/* Works via the Place ID alone (no API key needed), so this
+                    can go live regardless of whether GOOGLE_PLACES_API_KEY
+                    has been set on the server yet. */}
                 <a
-                  href={googleReviews.placeUrl || 'https://www.google.com/maps'}
+                  href={GOOGLE_REVIEW_URL}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1 text-sm text-black/60 hover:text-brand-gold"
+                  className="flex items-center gap-1 text-sm font-medium text-brand-gold hover:underline"
                 >
-                  <Star size={14} className="text-brand-gold" fill="currentColor" strokeWidth={0} />
-                  {googleReviews.rating} · {googleReviews.totalReviews} Google reviews
+                  Leave us a Google review →
                 </a>
-              )}
+              </div>
             </div>
             {!googleReviews && (
               <p className="mt-2 text-sm text-black/50">

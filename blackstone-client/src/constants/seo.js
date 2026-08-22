@@ -14,6 +14,22 @@ export const BUSINESS_NAME = 'BlackStone Chauffeur'
 export const BUSINESS_PHONE = '+64-20-452-5000'
 export const BUSINESS_EMAIL = 'info@blackstonechauffeur.co.nz'
 
+// Real, live social profiles — mirrored in Footer.jsx's social icon row.
+// No X/Twitter account exists yet, so it's intentionally omitted rather
+// than linking a placeholder '#'.
+export const SOCIAL_LINKS = {
+  facebook: 'https://www.facebook.com/profile.php?id=61578486482910',
+  instagram: 'https://www.instagram.com/blackstonechauffeur.nz/',
+}
+
+// Same Place ID the server's /api/reviews endpoint uses (see
+// blackstone-server/.env.example) to pull real Google reviews. The
+// "write a review" link works with just the Place ID — no API key
+// needed — so it can go live immediately, independent of whether
+// GOOGLE_PLACES_API_KEY has been configured yet.
+export const GOOGLE_PLACE_ID = 'ChIJ89UghFtCzAARBXj36cQzsYA'
+export const GOOGLE_REVIEW_URL = `https://search.google.com/local/writereview?placeid=${GOOGLE_PLACE_ID}`
+
 // Mirrors Footer.jsx's CITIES_WE_SERVE and About.jsx's "Where We Operate"
 // section — update all three together if the operating area changes.
 export const CITIES_SERVED = [
@@ -24,10 +40,6 @@ const areaServed = CITIES_SERVED.map((name) => ({ '@type': 'City', name }))
 
 // The core LocalBusiness entity — reused (not duplicated) across Home,
 // About, and Contact, since it's the same real-world business either way.
-// No `sameAs` (social profile links) yet: Footer.jsx's social icons are
-// still placeholder '#' hrefs, and listing fake profile URLs here would be
-// actively wrong rather than just incomplete — add sameAs once real
-// Facebook/Instagram/X URLs exist.
 export const organizationJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
@@ -41,6 +53,9 @@ export const organizationJsonLd = {
   image: `${SITE_URL}/images/brand/logo.png`,
   priceRange: '$$$',
   address: { '@type': 'PostalAddress', addressCountry: 'NZ' },
+  // Real, live profiles only (see SOCIAL_LINKS) — no X/Twitter entry since
+  // that account doesn't exist yet.
+  sameAs: [SOCIAL_LINKS.facebook, SOCIAL_LINKS.instagram],
   areaServed,
   // Matches the "24/7 booking availability" line shown on the Contact page.
   openingHoursSpecification: {
