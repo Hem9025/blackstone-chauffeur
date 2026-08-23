@@ -131,8 +131,8 @@ export default function About() {
 
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl md:aspect-[3/4]">
               <img
-                src={IMAGES.gallery[3]}
-                alt="BlackStone Chauffeur team greeting guests"
+                src={IMAGES.gallery[7]}
+                alt="BlackStone Chauffeur guests boarding at a hotel arrival"
                 className="h-full w-full object-cover"
               />
               <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/10" />
@@ -201,7 +201,7 @@ export default function About() {
             <div className="aspect-[4/3] overflow-hidden md:aspect-auto md:h-full">
               <img
                 src={IMAGES.aboutSecondary}
-                alt="BlackStone Chauffeur BMW 7 Series on the road"
+                alt="BlackStone Chauffeur fleet arriving at Palm Court Luxury Tours"
                 className="h-full w-full object-cover"
               />
             </div>

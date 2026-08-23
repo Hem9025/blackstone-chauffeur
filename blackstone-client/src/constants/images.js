@@ -297,10 +297,10 @@ export const IMAGES = {
   },
 
   about: unsplash('photo-1772631340503-55136169d9ae', 1400),
-  // Real client shot of the fleet actually on the move through the city —
-  // pairs with the "Delivering Excellence in Every Journey" heading next
-  // to it better than a static greeting shot did.
-  aboutSecondary: '/images/gallery/2-bmw-7-series-city.jpg',
+  // Real client shot of the fleet arriving at Palm Court Luxury Tours —
+  // pairs with the "Delivering Excellence in Every Journey" heading better
+  // than the previous city-driving shot.
+  aboutSecondary: '/images/gallery/6-palm-court-arrival.jpg',
 
   // Real client-supplied photography — fleet, weddings, and airport/hotel
   // arrivals. Number plates are blurred for privacy.
