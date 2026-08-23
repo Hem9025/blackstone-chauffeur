@@ -46,10 +46,15 @@ const coreValues = [
 ]
 
 const differences = [
-  { icon: UserCheck, title: 'Expert Chauffeurs', desc: 'All our chauffeurs are professionally trained, background checked, and dedicated to your comfort and safety.', image: IMAGES.services.businessMeeting },
+  // Real chauffeur-in-uniform shot, rather than the generic stock boardroom
+  // photo previously here — actually shows one of our chauffeurs.
+  { icon: UserCheck, title: 'Expert Chauffeurs', desc: 'All our chauffeurs are professionally trained, background checked, and dedicated to your comfort and safety.', image: IMAGES.gallery[3] },
   { icon: Car, title: 'Premium Fleet', desc: 'From luxury sedans to SUVs, our immaculately maintained vehicles provide the ultimate travel experience.', image: IMAGES.services.luxuryFleet },
   { icon: Clock, title: '24/7 Availability', desc: 'We are available around the clock to ensure your transportation needs are always met, day or night.', image: IMAGES.services.airport },
-  { icon: BadgeDollarSign, title: 'Competitive Pricing', desc: "Luxury doesn't have to break the bank. We offer transparent, competitive pricing with no hidden fees.", image: IMAGES.services.pointToPoint },
+  // Real Sprinter fleet shot — a more "practical value" image to pair with
+  // the no-hidden-fees pricing message than the previous mansion/SUV-lineup
+  // photo, which is also already used elsewhere (Services' Point-to-point tile).
+  { icon: BadgeDollarSign, title: 'Competitive Pricing', desc: "Luxury doesn't have to break the bank. We offer transparent, competitive pricing with no hidden fees.", image: IMAGES.gallery[2] },
   // City list kept in sync with CITIES_SERVED (constants/seo.js) — this used
   // to list a different, shorter set of cities (including one, Tauranga,
   // that isn't actually one of the eight served) than the Footer and
