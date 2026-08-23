@@ -23,32 +23,38 @@ export const IMAGES = {
     // otherwise (Mercedes S-Class/E-Class hero stays stock per instruction;
     // Toyota Alphard/Sprinter 519 hero also has no fleet.js listing distinct
     // from these keys, see below).
-    bmw7Series: '/images/fleet/hero/bmw-7-series-new.jpg',
-    mercedesGLS: '/images/fleet/hero/mercedes-gls-new.jpg',
+    // "-v2" files below are the second round of real client photography
+    // (Aug 2026 "FLEETS" folder drop, Main.jpeg per vehicle) — new
+    // filenames rather than overwriting the "-new" files in place, since
+    // these live in public/ and Vite never fingerprints their URL; reusing
+    // a filename would let browser/CDN caches keep serving the old bytes
+    // indefinitely (see the homeFleetIcons comment below for the same issue).
+    bmw7Series: '/images/fleet/hero/bmw-7-series-v2.jpg',
+    mercedesGLS: '/images/fleet/hero/mercedes-gls-v2.jpg',
     bmwI7: '/images/fleet/hero/bmw-i7.jpg',
     mercedesVito: '/images/fleet/hero/mercedes-vito-eqv-new.jpg',
-    rangeRover: '/images/fleet/hero/range-rover-new.jpg',
-    mercedesSClass: '/images/fleet/hero/mercedes-s-class-new.jpg',
-    // No H-1 supplied for the E-Class — keeping the existing hero as instructed.
-    mercedesEClass: unsplash('photo-1625690096555-a0a4d190901c', 1400),
-    toyotaAlphard: '/images/fleet/hero/toyota-alphard-new.jpg',
-    audiQ7: '/images/fleet/hero/audi-q7-new.jpg',
-    mercedesSprinter: '/images/fleet/hero/mercedes-sprinter-519-new.jpg',
-    // No H-1 supplied for the Sprinter 316 — keeping the existing hero as instructed.
+    rangeRover: '/images/fleet/hero/range-rover-v2.jpg',
+    mercedesSClass: '/images/fleet/hero/mercedes-s-class-v2.jpg',
+    // Real client photo supplied this round — replaces the Unsplash stand-in.
+    mercedesEClass: '/images/fleet/hero/mercedes-e-class-v2.jpg',
+    toyotaAlphard: '/images/fleet/hero/toyota-alphard-v2.jpg',
+    audiQ7: '/images/fleet/hero/audi-q7-v2.jpg',
+    mercedesSprinter: '/images/fleet/hero/mercedes-sprinter-519-v2.jpg',
+    // No new photo supplied for the Sprinter 316 this round — keeping the existing hero as instructed.
     mercedesSprinter316: unsplash('photo-1775053392841-7fa6dabdb760', 1400),
-    // Real client photo of the Hiace, supplied in the "Comfort Class/Haice"
+    // Real client photo of the Hiace, supplied in the "Comfort Class/Haice Van"
     // folder — replaces the earlier Unsplash placeholder.
-    toyotaHiace: '/images/fleet/hero/toyota-hiace.jpg',
+    toyotaHiace: '/images/fleet/hero/toyota-hiace-v2.jpg',
 
     // Premium economy fleet
-    teslaModelY: '/images/fleet/hero/tesla-model-y-new.jpg',
-    vwID4: '/images/fleet/hero/volkswagen-id4-new.jpg',
-    skodaSuperb: '/images/fleet/hero/skoda-superb-new.jpg',
-    havalH6: '/images/fleet/hero/haval-h6-new.jpg',
-    toyotaRAV4: '/images/fleet/hero/toyota-rav4.jpg',
-    bydAtto3: '/images/fleet/hero/byd-atto-3-new.jpg',
-    // No H-1 supplied for the Camry — keeping the existing hero as instructed.
-    toyotaCamry: unsplash('photo-1621007947382-bb3c3994e3fb', 1400),
+    teslaModelY: '/images/fleet/hero/tesla-model-y-v2.jpg',
+    vwID4: '/images/fleet/hero/volkswagen-id4-v2.jpg',
+    skodaSuperb: '/images/fleet/hero/skoda-superb-v2.jpg',
+    havalH6: '/images/fleet/hero/haval-h6-v2.jpg',
+    toyotaRAV4: '/images/fleet/hero/toyota-rav4-v2.jpg',
+    bydAtto3: '/images/fleet/hero/byd-atto-3-v2.jpg',
+    // Real client photo supplied this round — replaces the Unsplash stand-in.
+    toyotaCamry: '/images/fleet/hero/toyota-camry-v2.jpg',
     havalJolion: '/images/fleet/hero/haval-jolion.jpg',
     toyotaPrius: unsplash('photo-1551952237-954a0e68786c', 1400),
   },
@@ -208,6 +214,32 @@ export const IMAGES = {
     ],
   },
 
+  // Second round of real interior photography (Aug 2026 "FLEETS" drop):
+  // each vehicle's "Interior" file is a single client-designed collage
+  // (several interior shots composited into one image), not a set of
+  // separate photos — so it replaces that vehicle's old 3-4-shot
+  // fleetInterior array with just one image. Vehicles not in this round
+  // (Vito/EQV, Sprinter 316, Haval Jolion) keep their existing fleetInterior
+  // multi-shot arrays above, untouched.
+  fleetInteriorCollage: {
+    bmw7Series: '/images/fleet/interior/bmw-7-series/collage.jpg',
+    mercedesGLS: '/images/fleet/interior/mercedes-gls/collage.jpg',
+    rangeRover: '/images/fleet/interior/range-rover/collage.jpg',
+    mercedesSClass: '/images/fleet/interior/mercedes-s-class/collage.jpg',
+    mercedesEClass: '/images/fleet/interior/mercedes-e-class/collage.jpg',
+    audiQ7: '/images/fleet/interior/audi-q7/collage.jpg',
+    mercedesSprinter: '/images/fleet/interior/mercedes-sprinter-519/collage.jpg',
+    toyotaCamry: '/images/fleet/interior/toyota-camry/collage.jpg',
+    skodaSuperb: '/images/fleet/interior/skoda-superb/collage.jpg',
+    teslaModelY: '/images/fleet/interior/tesla-model-y/collage.jpg',
+    toyotaAlphard: '/images/fleet/interior/toyota-alphard/collage.jpg',
+    havalH6: '/images/fleet/interior/haval-h6/collage.jpg',
+    vwID4: '/images/fleet/interior/volkswagen-id4/collage.jpg',
+    toyotaRAV4: '/images/fleet/interior/toyota-rav4/collage.jpg',
+    bydAtto3: '/images/fleet/interior/byd-atto-3/collage.jpg',
+    toyotaHiace: '/images/fleet/interior/toyota-hiace/collage.jpg',
+  },
+
   // Shared detail-shot gallery reused across vehicle detail pages
   // (interior, dashboard, sunroof, boot space).
   fleetGallery: {
@@ -225,14 +257,17 @@ export const IMAGES = {
   // nightclub and tour keep the stock placeholder since no matching photo
   // was supplied for those specific services.
   services: {
-    airport: '/images/services/airport.jpg',
-    corporate: '/images/services/corporate.jpg',
-    wedding: '/images/home/wedding-evening-arrival.jpg',
+    // "-v2" = second round of real client photos (Aug 2026 "All SERVICES"
+    // drop) — new filenames rather than overwriting in place, same
+    // cache-busting reasoning as the fleet hero images above.
+    airport: '/images/services/airport-v2.jpg',
+    corporate: '/images/services/corporate-v2.jpg',
+    wedding: '/images/services/wedding-v2.jpg',
     tour: unsplash('photo-1500632907344-a073709b2448'),
     hourly: '/images/services/hourly.jpg',
-    special: '/images/services/special.jpg',
+    special: '/images/services/special-v2.jpg',
     nightclub: unsplash('photo-1566737236500-c8ac43014a67'),
-    vip: '/images/services/vip.jpg',
+    vip: '/images/services/vip-v2.jpg',
     businessMeeting: '/images/services/business-meeting.jpg',
     pointToPoint: '/images/services/point-to-point.jpg',
     sightseeing: '/images/services/sightseeing.jpg',

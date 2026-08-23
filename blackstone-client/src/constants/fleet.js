@@ -1,5 +1,18 @@
 import { IMAGES } from './images'
 
+// Round-2 client photography (Aug 2026): each vehicle's "Interior" file is a
+// single designed collage (several interior shots composited into one
+// image), not a set of separate photos to lay out in a grid — so its
+// gallery becomes just this one image with a short, keyword-relevant
+// caption, replacing the old 3-4-shot arrays below for these vehicles.
+const interiorCollage = (model, src) => [
+  {
+    src,
+    title: `${model} Interior`,
+    desc: `A closer look inside the ${model} — chauffeured comfort for airport transfers, corporate travel and special occasions across Auckland and New Zealand.`,
+  },
+]
+
 // Two alternating detail-shot sets so neighbouring vehicles in a category
 // don't show the exact same four gallery photos.
 const galleryA = (model) => [
@@ -12,66 +25,23 @@ const galleryA = (model) => [
 // Real client-supplied interior photography for specific vehicles — paired
 // titles/descriptions match what's actually in each photo (see
 // IMAGES.fleetInterior). Hero images for these vehicles are untouched.
-const bmw7SeriesGallery = [
-  { src: IMAGES.fleetInterior.bmw7Series[0], title: 'Rear Cabin', desc: 'Executive rear seating in rich burgundy leather, finished with a soft cushion for long, relaxed journeys.' },
-  { src: IMAGES.fleetInterior.bmw7Series[1], title: 'Front Cabin', desc: 'Driver console and controls, finished to the same premium standard throughout.' },
-  { src: IMAGES.fleetInterior.bmw7Series[2], title: 'Panoramic Roof', desc: 'Open sunroof over the rear headrests, letting in light and air on the go.' },
-  { src: IMAGES.fleetInterior.bmw7Series[3], title: 'Dashboard', desc: 'A close-up of the centre console and BMW-badged wheel — a clean, driver-focused cockpit.' },
-]
+const bmw7SeriesGallery = interiorCollage('BMW 7 Series', IMAGES.fleetInteriorCollage.bmw7Series)
 
-const audiQ7Gallery = [
-  { src: IMAGES.fleetInterior.audiQ7[0], title: 'Dashboard', desc: 'Audi\'s virtual cockpit and reversing camera display, precise and driver-focused.' },
-  { src: IMAGES.fleetInterior.audiQ7[1], title: 'Rear Seats', desc: 'Spacious rear seating under a full panoramic roof.' },
-  { src: IMAGES.fleetInterior.audiQ7[2], title: 'Exterior', desc: 'The Q7 parked outside a city building at dusk — bold and understated, sized for a smooth, commanding ride.' },
-]
+const audiQ7Gallery = interiorCollage('Audi Q7', IMAGES.fleetInteriorCollage.audiQ7)
 
-const mercedesSClassGallery = [
-  { src: IMAGES.fleetInterior.mercedesSClass[0], title: 'Dashboard', desc: 'The latest Mercedes-Benz cockpit, with a large portrait touchscreen front and centre.' },
-  { src: IMAGES.fleetInterior.mercedesSClass[1], title: 'Rear Entertainment', desc: 'Dual rear-seat screens under red ambient lighting, for a first-class arrival.' },
-  { src: IMAGES.fleetInterior.mercedesSClass[2], title: 'Rear Cabin', desc: 'Two-tone brown and black leather rear seating with dual individual displays.' },
-  { src: IMAGES.fleetInterior.mercedesSClass[3], title: 'Exterior', desc: 'A studio profile of the S-Class in black — understated presence for any occasion.' },
-]
+const mercedesSClassGallery = interiorCollage('Mercedes-Benz S-Class', IMAGES.fleetInteriorCollage.mercedesSClass)
 
-const mercedesEClassGallery = [
-  { src: IMAGES.fleetInterior.mercedesEClass[0], title: 'Dashboard', desc: 'A refined, driver-focused cockpit overlooking a park setting.' },
-  { src: IMAGES.fleetInterior.mercedesEClass[1], title: 'Rear Seat', desc: 'Close-up of the AMG-badged rear seat, finished in fine leather.' },
-  { src: IMAGES.fleetInterior.mercedesEClass[2], title: 'Front Cabin', desc: 'Wide view of the dashboard and front seats.' },
-  { src: IMAGES.fleetInterior.mercedesEClass[3], title: 'Rear Cabin', desc: 'Both rear seats shown wide, comfortable seating finished in fine leather.' },
-]
+const mercedesEClassGallery = interiorCollage('Mercedes-Benz E-Class', IMAGES.fleetInteriorCollage.mercedesEClass)
 
-const skodaSuperbGallery = [
-  { src: IMAGES.fleetInterior.skodaSuperb[0], title: 'Dashboard', desc: 'A clean, well-equipped cockpit with an intuitive touchscreen and diamond-stitched seats.' },
-  { src: IMAGES.fleetInterior.skodaSuperb[1], title: 'Rear Cabin', desc: 'Class-leading rear legroom beneath a full panoramic sunroof.' },
-  { src: IMAGES.fleetInterior.skodaSuperb[2], title: 'Luggage Space', desc: 'Generous boot space, sized for airport runs and multi-stop days.' },
-  { src: IMAGES.fleetInterior.skodaSuperb[3], title: 'Exterior', desc: 'A sharp, understated exterior finished for smart, low-key transfers.' },
-]
+const skodaSuperbGallery = interiorCollage('Škoda Superb', IMAGES.fleetInteriorCollage.skodaSuperb)
 
-const toyotaCamryGallery = [
-  { src: IMAGES.fleetInterior.toyotaCamry[0], title: 'Dashboard', desc: 'A driver-focused cockpit with the Toyota-badged wheel.' },
-  { src: IMAGES.fleetInterior.toyotaCamry[1], title: 'Rear Seat', desc: 'A comfortable, well-cushioned rear seat for passengers.' },
-  { src: IMAGES.fleetInterior.toyotaCamry[2], title: 'Luggage Space', desc: 'A practical, generously sized boot for airport runs and day trips.' },
-  { src: IMAGES.fleetInterior.toyotaCamry[3], title: 'Exterior', desc: 'A sharp, reliable sedan finished for smart, everyday transfers.' },
-]
+const toyotaCamryGallery = interiorCollage('Toyota Camry', IMAGES.fleetInteriorCollage.toyotaCamry)
 
-const toyotaAlphardGallery = [
-  { src: IMAGES.fleetInterior.toyotaAlphard[0], title: 'Dashboard', desc: 'A driver-focused cockpit with a clear view of the Alphard badge through the windscreen.' },
-  { src: IMAGES.fleetInterior.toyotaAlphard[1], title: 'Captain Seats', desc: 'Individually adjustable rear captain\'s chairs beneath the panoramic sunroof, for VIP comfort.' },
-  { src: IMAGES.fleetInterior.toyotaAlphard[2], title: 'Luggage Space', desc: 'A wide, flat boot with room for multiple large suitcases.' },
-  { src: IMAGES.fleetInterior.toyotaAlphard[3], title: 'Exterior', desc: 'On assignment in the city, framed by glass office towers.' },
-]
+const toyotaAlphardGallery = interiorCollage('Toyota Alphard', IMAGES.fleetInteriorCollage.toyotaAlphard)
 
-const vwID4Gallery = [
-  { src: IMAGES.fleetInterior.vwID4[0], title: 'Dashboard', desc: 'A clean, tech-forward cockpit finished in brown leather trim.' },
-  { src: IMAGES.fleetInterior.vwID4[1], title: 'Front Seating', desc: 'Comfortable, two-tone brown and black leather front seats.' },
-  { src: IMAGES.fleetInterior.vwID4[2], title: 'Rear Cabin', desc: 'A spacious, well-appointed rear seat in matching two-tone leather.' },
-  { src: IMAGES.fleetInterior.vwID4[3], title: 'Luggage Space', desc: 'A practical boot suited to airport runs and everyday trips.' },
-]
+const vwID4Gallery = interiorCollage('Volkswagen ID.4', IMAGES.fleetInteriorCollage.vwID4)
 
-const mercedesGLSGallery = [
-  { src: IMAGES.fleetInterior.mercedesGLS[0], title: 'Dashboard', desc: 'A modern cockpit with the vehicle settings display and road scenery outside.' },
-  { src: IMAGES.fleetInterior.mercedesGLS[1], title: 'Rear Cabin', desc: 'Richly upholstered black leather rear seating for equal comfort across every row.' },
-  { src: IMAGES.fleetInterior.mercedesGLS[2], title: 'Luggage Space', desc: 'A wide, tow-ready boot with room for multiple large suitcases.' },
-]
+const mercedesGLSGallery = interiorCollage('Mercedes-Benz GLS', IMAGES.fleetInteriorCollage.mercedesGLS)
 
 const mercedesVitoGallery = [
   { src: IMAGES.fleetInterior.mercedesVito[0], title: 'Captain Seats', desc: 'Second-row captain\'s chairs with the sliding door open to palm trees outside.' },
@@ -80,12 +50,7 @@ const mercedesVitoGallery = [
   { src: IMAGES.fleetInterior.mercedesVito[3], title: 'Exterior', desc: 'Parked at an Auckland waterfront location with the tailgate open — a discreet, professional exterior for group and executive transfers.' },
 ]
 
-const mercedesSprinterGallery = [
-  { src: IMAGES.fleetInterior.mercedesSprinter[0], title: 'Dashboard', desc: 'The driver cab touchscreen, with park scenery outside.' },
-  { src: IMAGES.fleetInterior.mercedesSprinter[1], title: 'Driver Cab', desc: 'A wide dashboard and driver\'s seat view, clean and well-equipped.' },
-  { src: IMAGES.fleetInterior.mercedesSprinter[2], title: 'Executive Seating', desc: 'Facing, reclining seats with fold-down armrests for longer group journeys.' },
-  { src: IMAGES.fleetInterior.mercedesSprinter[3], title: 'Exterior', desc: 'Parked beneath the awning of a grand hotel entrance — a spacious, professional-grade van built for larger group transfers.' },
-]
+const mercedesSprinterGallery = interiorCollage('Mercedes-Benz Sprinter 519', IMAGES.fleetInteriorCollage.mercedesSprinter)
 
 const mercedesSprinter316Gallery = [
   { src: IMAGES.fleetInterior.mercedesSprinter316[0], title: 'Driver Cab', desc: 'Front seat view with a glass office building reflected in the windows.' },
@@ -94,47 +59,17 @@ const mercedesSprinter316Gallery = [
   { src: IMAGES.fleetInterior.mercedesSprinter316[3], title: 'Luggage Space', desc: 'A dedicated rear cargo area, sized for group luggage.' },
 ]
 
-const rangeRoverGallery = [
-  { src: IMAGES.fleetInterior.rangeRover[0], title: 'Rear Seats', desc: 'Black leather rear seating with a red trim accent, city road visible outside.' },
-  { src: IMAGES.fleetInterior.rangeRover[1], title: 'Dashboard', desc: 'Cockpit view with rolling green hills outside and the Range Rover badge on the wheel.' },
-  { src: IMAGES.fleetInterior.rangeRover[2], title: 'Panoramic Roof', desc: 'Rear seating beneath a full panoramic glass roof.' },
-  { src: IMAGES.fleetInterior.rangeRover[3], title: 'Luggage Space', desc: 'Open boot with a retractable cargo cover, ready to load.' },
-]
+const rangeRoverGallery = interiorCollage('Range Rover', IMAGES.fleetInteriorCollage.rangeRover)
 
-const teslaModelYGallery = [
-  { src: IMAGES.fleetInterior.teslaModelY[0], title: 'Dashboard', desc: 'A minimalist, tech-forward cabin with a central touchscreen.' },
-  { src: IMAGES.fleetInterior.teslaModelY[1], title: 'Front Cabin', desc: 'A wide view of the front seats and dashboard, framed by the city street outside.' },
-  { src: IMAGES.fleetInterior.teslaModelY[2], title: 'Rear Seats', desc: 'Rear seating beneath the glass roof, with the city skyline outside.' },
-  { src: IMAGES.fleetInterior.teslaModelY[3], title: 'Exterior', desc: 'Arriving at a hotel entrance, greeted by a waiting chauffeur — a sleek, all-electric ride.' },
-]
+const teslaModelYGallery = interiorCollage('Tesla Model Y', IMAGES.fleetInteriorCollage.teslaModelY)
 
-const havalH6Gallery = [
-  { src: IMAGES.fleetInterior.havalH6[0], title: 'Dashboard', desc: 'A modern cockpit with a large portrait touchscreen and Haval-badged wheel.' },
-  { src: IMAGES.fleetInterior.havalH6[1], title: 'Rear Seat', desc: 'A comfortable, well-cushioned rear seat for passengers.' },
-  { src: IMAGES.fleetInterior.havalH6[2], title: 'Luggage Space', desc: 'A generous, flexible boot for airport runs and day trips.' },
-  { src: IMAGES.fleetInterior.havalH6[3], title: 'Exterior', desc: 'Parked on a city street beside glass office buildings.' },
-]
+const havalH6Gallery = interiorCollage('Haval H6', IMAGES.fleetInteriorCollage.havalH6)
 
-const bydAtto3Gallery = [
-  { src: IMAGES.fleetInterior.bydAtto3[0], title: 'Dashboard', desc: 'A distinctive, tech-forward cockpit with twin touchscreens and a BYD-badged wheel.' },
-  { src: IMAGES.fleetInterior.bydAtto3[1], title: 'Rear Cabin', desc: 'A comfortable rear seat finished in two-tone blue and white leather with red piping.' },
-  { src: IMAGES.fleetInterior.bydAtto3[2], title: 'Luggage Space', desc: 'A practical boot suited to shorter city and airport transfers.' },
-  { src: IMAGES.fleetInterior.bydAtto3[3], title: 'Exterior', desc: 'Parked outside a hotel entrance — a distinctive, all-electric SUV for a quiet, modern ride.' },
-]
+const bydAtto3Gallery = interiorCollage('BYD Atto 3', IMAGES.fleetInteriorCollage.bydAtto3)
 
-const toyotaHiaceGallery = [
-  { src: IMAGES.fleetInterior.toyotaHiace[0], title: 'Driver Cab', desc: 'A straightforward, driver-focused cockpit with rural scenery outside, built for long, reliable shifts.' },
-  { src: IMAGES.fleetInterior.toyotaHiace[1], title: 'Second-Row Seating', desc: 'Looking back through the cabin from the front — a practical, well-kept layout for the full group.' },
-  { src: IMAGES.fleetInterior.toyotaHiace[2], title: 'Passenger Seating', desc: 'Multiple rows of comfortable cloth seating for group travel.' },
-  { src: IMAGES.fleetInterior.toyotaHiace[3], title: 'Exterior', desc: 'A dependable, road-ready shuttle built for group transfers.' },
-]
+const toyotaHiaceGallery = interiorCollage('Toyota Hiace', IMAGES.fleetInteriorCollage.toyotaHiace)
 
-const toyotaRAV4Gallery = [
-  { src: IMAGES.fleetInterior.toyotaRAV4[0], title: 'Dashboard', desc: 'A driver-focused cockpit with the Toyota-badged wheel.' },
-  { src: IMAGES.fleetInterior.toyotaRAV4[1], title: 'Rear Seat', desc: 'A comfortable rear seat with a fold-down armrest and cupholders.' },
-  { src: IMAGES.fleetInterior.toyotaRAV4[2], title: 'Luggage Space', desc: 'A boot with a retractable cargo cover, sized for airport runs and day trips.' },
-  { src: IMAGES.fleetInterior.toyotaRAV4[3], title: 'Exterior', desc: 'Parked on a grass verge with palm trees under an overcast sky.' },
-]
+const toyotaRAV4Gallery = interiorCollage('Toyota RAV4', IMAGES.fleetInteriorCollage.toyotaRAV4)
 
 const havalJolionGallery = [
   { src: IMAGES.fleetInterior.havalJolion[0], title: 'Dashboard', desc: 'A modern cockpit with a large touchscreen and Haval-badged wheel.' },

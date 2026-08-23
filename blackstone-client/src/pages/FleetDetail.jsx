@@ -108,23 +108,43 @@ export default function FleetDetail() {
           <p className="text-sm uppercase tracking-[0.2em] text-brand-gold">A Closer Look</p>
           <h2 className="mt-2 font-heading text-2xl text-black">{vehicle.title} Details</h2>
 
-          <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-            {vehicle.gallery.map((shot) => (
-              <figure key={shot.title + shot.src} className="overflow-hidden rounded-2xl bg-white">
-                <div className="aspect-square overflow-hidden">
-                  <img
-                    src={shot.src}
-                    alt={shot.title}
-                    className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
-                  />
-                </div>
-                <figcaption className="p-3">
-                  <p className="font-heading text-sm text-black">{shot.title}</p>
-                  <p className="mt-1 text-xs text-black/50">{shot.desc}</p>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
+          {/* Vehicles with a single client-supplied interior collage (one
+              designed image, not separate shots) get one large photo
+              instead of being squeezed into a 4-up thumbnail grid meant
+              for 3-4 individual shots. */}
+          {vehicle.gallery.length === 1 ? (
+            <figure className="mt-8 overflow-hidden rounded-2xl bg-white">
+              <div className="aspect-[16/9] overflow-hidden">
+                <img
+                  src={vehicle.gallery[0].src}
+                  alt={vehicle.gallery[0].title}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <figcaption className="p-4">
+                <p className="font-heading text-base text-black">{vehicle.gallery[0].title}</p>
+                <p className="mt-1 text-sm text-black/50">{vehicle.gallery[0].desc}</p>
+              </figcaption>
+            </figure>
+          ) : (
+            <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+              {vehicle.gallery.map((shot) => (
+                <figure key={shot.title + shot.src} className="overflow-hidden rounded-2xl bg-white">
+                  <div className="aspect-square overflow-hidden">
+                    <img
+                      src={shot.src}
+                      alt={shot.title}
+                      className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                    />
+                  </div>
+                  <figcaption className="p-3">
+                    <p className="font-heading text-sm text-black">{shot.title}</p>
+                    <p className="mt-1 text-xs text-black/50">{shot.desc}</p>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>
