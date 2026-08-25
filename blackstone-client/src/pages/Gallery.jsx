@@ -24,7 +24,7 @@ export default function Gallery() {
     <div>
       <PageMeta
         title="Gallery | Our Fleet & Events"
-        description="A look at BlackStone Chauffeur's fleet, chauffeurs, and events across New Zealand."
+        description="A look at BlackStone Chauffeur's luxury fleet, professional chauffeurs, and events across Auckland and New Zealand."
         jsonLd={GALLERY_JSON_LD}
       />
 

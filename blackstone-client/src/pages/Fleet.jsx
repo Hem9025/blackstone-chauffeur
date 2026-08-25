@@ -23,8 +23,8 @@ export default function Fleet() {
   return (
     <div>
       <PageMeta
-        title="Our Fleet | Luxury & Comfort Chauffeured Vehicles"
-        description="BlackStone Chauffeur's luxury and comfort-class fleet — sedans, SUVs, vans and executive vehicles for airport transfers, weddings, and corporate travel, professionally chauffeured across New Zealand."
+        title="Our Luxury & Comfort Fleet"
+        description="Browse our luxury and comfort-class fleet — sedans, SUVs and vans for airport transfers, weddings and corporate travel, chauffeured across New Zealand."
         jsonLd={FLEET_JSON_LD}
       />
 

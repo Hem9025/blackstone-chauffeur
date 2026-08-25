@@ -59,8 +59,8 @@ export default function Home() {
   return (
     <div>
       <PageMeta
-        title="Chauffeur Service Auckland & NZ | Airport Transfers, Weddings & Corporate Travel"
-        description="Premium chauffeur service across Auckland, Wellington, Hamilton, Rotorua, Christchurch, Queenstown and more. Airport transfers, corporate travel, wedding cars and private tours — book online with transparent pricing."
+        title="Chauffeur Service Auckland & NZ"
+        description="Premium airport transfers, corporate travel, wedding cars and private tours across Auckland, NZ. Book your chauffeur online with transparent, upfront pricing."
         jsonLd={[organizationJsonLd, faqJsonLd(faqs)]}
       />
 

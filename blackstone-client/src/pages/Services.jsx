@@ -44,8 +44,8 @@ export default function Services() {
   return (
     <div>
       <PageMeta
-        title="Chauffeur Services Auckland | Airport Transfers, Weddings & Corporate Travel"
-        description="Airport transfers, corporate travel, wedding cars, VIP service, and city tours from BlackStone Chauffeur — professional chauffeurs across Auckland and New Zealand, booked online with upfront pricing."
+        title="Chauffeur Services | Auckland & NZ"
+        description="Airport transfers, corporate travel, wedding cars, VIP service and city tours — professionally chauffeured across Auckland and New Zealand with upfront pricing."
         jsonLd={SERVICES_JSON_LD}
       />
 

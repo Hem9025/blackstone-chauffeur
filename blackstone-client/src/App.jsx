@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -6,6 +7,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 import AdminLayout from './components/AdminLayout'
 import AdminPermissionGate from './components/AdminPermissionGate'
 
+// Public marketing pages load eagerly — this is the content real visitors
+// and search engines land on first, so it stays in the main bundle.
 import Home from './pages/Home'
 import About from './pages/About'
 import Services from './pages/Services'
@@ -20,27 +23,42 @@ import BookingSuccess from './pages/BookingSuccess'
 import PrivacyPolicy from './pages/Privacy'
 import TermsConditions from './pages/TermsConditions'
 
-import Login from './pages/Login'
-import Register from './pages/Register'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
-import DriverApply from './pages/DriverApply'
-import Pending from './pages/Pending'
+// Everything below is behind a login (or is the login flow itself) — the
+// vast majority of visitors never touch it, so it's split into its own
+// chunk(s) and only fetched when someone actually navigates there. This
+// keeps the initial JS payload for the marketing site (what PageSpeed and
+// most visitors see) meaningfully smaller.
+const Login = lazy(() => import('./pages/Login'))
+const Register = lazy(() => import('./pages/Register'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+const DriverApply = lazy(() => import('./pages/DriverApply'))
+const Pending = lazy(() => import('./pages/Pending'))
 
-import CustomerDashboard from './pages/CustomerDashboard'
-import DriverDashboard from './pages/DriverDashboard'
-import ProviderDashboard from './pages/ProviderDashboard'
-import SecondAdminDashboard from './pages/SecondAdminDashboard'
-import AdminUsersPanel from './pages/AdminUsersPanel'
-import AdminVehiclesPanel from './pages/AdminVehiclesPanel'
-import AdminDriversPanel from './pages/AdminDriversPanel'
-import AdminProvidersPanel from './pages/AdminProvidersPanel'
-import AdminPersonDetail from './pages/AdminPersonDetail'
-import AdminDashboardPanel from './pages/AdminDashboardPanel'
-import AdminSettingsPanel from './pages/AdminSettingsPanel'
-import Profile from './pages/Profile'
+const CustomerDashboard = lazy(() => import('./pages/CustomerDashboard'))
+const DriverDashboard = lazy(() => import('./pages/DriverDashboard'))
+const ProviderDashboard = lazy(() => import('./pages/ProviderDashboard'))
+const SecondAdminDashboard = lazy(() => import('./pages/SecondAdminDashboard'))
+const AdminUsersPanel = lazy(() => import('./pages/AdminUsersPanel'))
+const AdminVehiclesPanel = lazy(() => import('./pages/AdminVehiclesPanel'))
+const AdminDriversPanel = lazy(() => import('./pages/AdminDriversPanel'))
+const AdminProvidersPanel = lazy(() => import('./pages/AdminProvidersPanel'))
+const AdminPersonDetail = lazy(() => import('./pages/AdminPersonDetail'))
+const AdminDashboardPanel = lazy(() => import('./pages/AdminDashboardPanel'))
+const AdminSettingsPanel = lazy(() => import('./pages/AdminSettingsPanel'))
+const Profile = lazy(() => import('./pages/Profile'))
 
 import NotFound from './pages/NotFound'
+
+// Minimal, brand-neutral loading state for the lazy-loaded routes above —
+// shown only for the brief moment their chunk is being fetched.
+function RouteFallback() {
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-black/10 border-t-brand-gold" />
+    </div>
+  )
+}
 
 // Signed-in account areas (customer/driver/provider/admin dashboards +
 // profile) run as an "app" rather than the marketing site, so they don't
@@ -58,6 +76,7 @@ function App() {
       <Navbar />
 
       <main className="flex-1">
+        <Suspense fallback={<RouteFallback />}>
         <Routes>
           {/* Public */}
           <Route path="/" element={<Home />} />
@@ -186,6 +205,7 @@ function App() {
           {/* 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
       </main>
 
       {!isAccountRoute && <Footer />}

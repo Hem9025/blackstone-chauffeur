@@ -76,8 +76,8 @@ export default function About() {
   return (
     <div>
       <PageMeta
-        title="About Us | New Zealand's Premier Chauffeur Service"
-        description="BlackStone Chauffeur has served clients across Auckland, Wellington, Hamilton, Rotorua, Christchurch and Queenstown for over 3 years — professional chauffeurs, a premium fleet, and 24/7 availability."
+        title="About Our Chauffeur Service"
+        description="Serving Auckland, Wellington, Hamilton, Rotorua, Christchurch and Queenstown for 3+ years — professional chauffeurs, a premium fleet, and 24/7 availability."
         jsonLd={ABOUT_JSON_LD}
       />
 

@@ -16,8 +16,8 @@ export default function Contact() {
   return (
     <div>
       <PageMeta
-        title="Contact Us | Book a Chauffeur in Auckland & NZ"
-        description="Get in touch with BlackStone Chauffeur for bookings and enquiries — call, email, or send a message. 24/7 booking availability across Auckland and New Zealand."
+        title="Contact & Book a Chauffeur"
+        description="Get in touch with BlackStone Chauffeur for bookings and enquiries — call, email or message us. 24/7 availability across Auckland and New Zealand."
         jsonLd={CONTACT_JSON_LD}
       />
 

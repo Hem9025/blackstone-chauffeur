@@ -22,8 +22,8 @@ export default function Tour() {
   return (
     <div>
       <PageMeta
-        title="Private Chauffeured Day Tours | Rotorua, Queenstown & More"
-        description="Private chauffeured tours across New Zealand's North and South Islands — Rotorua, Waitomo, Bay of Islands, Queenstown, Milford Sound and more — with a knowledgeable local driver."
+        title="Private Chauffeured Day Tours NZ"
+        description="Private chauffeured day tours across New Zealand — Rotorua, Waitomo, Bay of Islands, Queenstown, Milford Sound and more, with a knowledgeable local driver."
         jsonLd={TOUR_JSON_LD}
       />
 
