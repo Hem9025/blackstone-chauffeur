@@ -13,7 +13,11 @@ export const IMAGES = {
 
   fleet: {
     sedan1: unsplash('photo-1609521233053-345bfa8b6f17'),
-    sedan2: unsplash('photo-1655827763440-7905302b75ff'),
+    // Real Mercedes GLS hero photo — used on Services.jsx's "Superb
+    // Vehicles" section, replacing an Unsplash stock car whose number plate
+    // the client wanted hidden. No plate visible in this shot (pure side
+    // profile), so nothing to blur.
+    sedan2: '/images/fleet/hero/mercedes-gls-v2.jpg',
     suv1: unsplash('photo-1673166105764-a6aa7e0e73a7'),
     suv2: unsplash('photo-1678305961875-14e14986e514'),
     van1: unsplash('photo-1710343491609-0cbc6c14b92d'),
@@ -269,7 +273,10 @@ export const IMAGES = {
     nightclub: unsplash('photo-1566737236500-c8ac43014a67'),
     vip: '/images/services/vip-v2.jpg',
     businessMeeting: '/images/services/business-meeting.jpg',
-    pointToPoint: '/images/services/point-to-point.jpg',
+    // Real BMW 7 Series shot outside an Auckland hotel (SuperShuttle trailer
+    // and .co.nz signage visible) — replaces the mansion/SUV-lineup photo,
+    // which is also already used on the About page's Competitive Pricing card.
+    pointToPoint: '/images/gallery/2-bmw-7-series-city.jpg',
     sightseeing: '/images/services/sightseeing.jpg',
     luxuryFleet: '/images/services/luxury-fleet.jpg',
   },
