@@ -13,11 +13,12 @@ export const IMAGES = {
 
   fleet: {
     sedan1: unsplash('photo-1609521233053-345bfa8b6f17'),
-    // Real Mercedes GLS hero photo — used on Services.jsx's "Superb
-    // Vehicles" section, replacing an Unsplash stock car whose number plate
-    // the client wanted hidden. No plate visible in this shot (pure side
-    // profile), so nothing to blur.
-    sedan2: '/images/fleet/hero/mercedes-gls-v2.jpg',
+    // Reverted to the original placeholder — sedan2 is also reused by
+    // demoVehicles.js and tours.js (Rotorua tour's "Skyline Gondola" gallery
+    // slot, a pre-existing image/caption mismatch worth fixing separately),
+    // so it shouldn't be repointed just for the Services page's "Superb
+    // Vehicles" section. See IMAGES.services.superbVehicles for that.
+    sedan2: unsplash('photo-1655827763440-7905302b75ff'),
     suv1: unsplash('photo-1673166105764-a6aa7e0e73a7'),
     suv2: unsplash('photo-1678305961875-14e14986e514'),
     van1: unsplash('photo-1710343491609-0cbc6c14b92d'),
@@ -261,6 +262,13 @@ export const IMAGES = {
   // nightclub and tour keep the stock placeholder since no matching photo
   // was supplied for those specific services.
   services: {
+    // Client-supplied, explicitly named "Service Superb Vehicle.jpeg" for
+    // this exact section — a marketing/stock shot (BMW i7, not one of our
+    // own vehicles) rather than an on-location BlackStone photo, same
+    // category as the 3 "Background Photos" not used on About. Used here
+    // per the client's direct choice, since this section is a generic
+    // "how nice are our cars" visual rather than a specific brand/location claim.
+    superbVehicles: '/images/services/superb-vehicles.jpg',
     // "-v2" = second round of real client photos (Aug 2026 "All SERVICES"
     // drop) — new filenames rather than overwriting in place, same
     // cache-busting reasoning as the fleet hero images above.

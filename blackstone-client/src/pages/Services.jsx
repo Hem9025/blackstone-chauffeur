@@ -129,7 +129,7 @@ export default function Services() {
             </div>
             <div className="aspect-[4/3] overflow-hidden md:aspect-auto md:h-full">
               <img
-                src={IMAGES.fleet.sedan2}
+                src={IMAGES.services.superbVehicles}
                 alt="BlackStone Chauffeur luxury fleet"
                 className="h-full w-full object-cover"
               />
