@@ -26,6 +26,11 @@ const COLUMN_ADDITIONS = [
   // whatever pre-existing bookings table doesn't have them yet.
   { table: 'bookings', column: 'coupon_id', definition: 'INT' },
   { table: 'bookings', column: 'discount_amount', definition: 'DECIMAL(10, 2) NOT NULL DEFAULT 0' },
+  // Referral program — coupons.kind/owner_user_id (see schema.sql for what
+  // each value means) on a database that already has the coupons table
+  // from before the referral feature existed.
+  { table: 'coupons', column: 'kind', definition: "VARCHAR(20) NOT NULL DEFAULT 'promo'" },
+  { table: 'coupons', column: 'owner_user_id', definition: 'INT' },
 ]
 
 // Loosens NOT NULL columns on a database that was already provisioned before

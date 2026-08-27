@@ -22,7 +22,7 @@ router.post('/validate', authCheck, requireRole('customer'), async (req, res) =>
   const { code, fare } = req.body || {}
   try {
     const coupon = await findCouponByCode(code)
-    const result = evaluateCoupon(coupon, fare)
+    const result = evaluateCoupon(coupon, fare, req.user.id)
     if (!result.ok) return res.status(400).json({ message: result.message })
     res.json({
       code: result.coupon.code,
@@ -42,9 +42,15 @@ router.post('/validate', authCheck, requireRole('customer'), async (req, res) =>
 // area of the app can_manage_bookings already governs (assigning drivers,
 // editing prices on existing bookings), so this reuses that flag rather
 // than introducing a new one.
+//
+// Only ever returns kind='promo' — every customer's personal referral code
+// and every reward code issued to a referrer also lives in this same table,
+// but those are system-generated and would just be noise here (imagine one
+// row per customer). See routes/referrals.js for the referral program's own
+// (much narrower) view of the coupons table.
 router.get('/', authCheck, requirePermission('can_manage_bookings'), async (req, res) => {
   try {
-    const { rows } = await query('SELECT * FROM coupons ORDER BY created_at DESC')
+    const { rows } = await query(`SELECT * FROM coupons WHERE kind = 'promo' ORDER BY created_at DESC`)
     res.json(rows)
   } catch (err) {
     console.error(err)

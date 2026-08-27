@@ -165,6 +165,10 @@ export const subscribers = {
   downloadCsv: () => downloadFile('/subscribers/csv', 'subscribers.csv'),
 }
 
+export const referrals = {
+  me: () => api.get('/referrals/me'),
+}
+
 export const banner = {
   get: () => api.get('/banner', { auth: false }),
   update: (payload) => api.patch('/banner', payload),

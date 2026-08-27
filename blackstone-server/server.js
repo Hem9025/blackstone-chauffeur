@@ -14,6 +14,7 @@ import stripeWebhookRoutes from './routes/stripeWebhook.js'
 import couponRoutes from './routes/coupons.js'
 import bannerRoutes from './routes/banner.js'
 import subscriberRoutes from './routes/subscribers.js'
+import referralRoutes from './routes/referrals.js'
 
 dotenv.config()
 
@@ -65,6 +66,7 @@ app.use('/api/notifications', notificationRoutes)
 app.use('/api/coupons', couponRoutes)
 app.use('/api/banner', bannerRoutes)
 app.use('/api/subscribers', subscriberRoutes)
+app.use('/api/referrals', referralRoutes)
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Not found' })

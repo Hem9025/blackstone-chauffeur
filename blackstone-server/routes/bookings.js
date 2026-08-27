@@ -13,7 +13,7 @@ import { newBookingAdminTemplate } from '../emails/templates/newBookingAdmin.js'
 import { bookingCancelledTemplate } from '../emails/templates/bookingCancelled.js'
 import { bookingUpdatedTemplate } from '../emails/templates/bookingUpdated.js'
 import { calculateFare, resolveExtraWaitCharge } from '../utils/pricing.js'
-import { findCouponByCode, evaluateCoupon, incrementCouponUses } from '../utils/coupons.js'
+import { findCouponByCode, evaluateCoupon, incrementCouponUses, issueReferralReward } from '../utils/coupons.js'
 import { streamInvoice } from '../utils/invoice.js'
 import { streamBookingsReport } from '../utils/bookingsReport.js'
 import { streamBookingsCsv } from '../utils/bookingsCsv.js'
@@ -192,16 +192,26 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
     let resolvedCouponId = null
     let discountAmount = 0
     let total_price = fareBeforeDiscount
+    let appliedCoupon = null
     if (coupon_code) {
       const coupon = await findCouponByCode(coupon_code)
-      const result = evaluateCoupon(coupon, fareBeforeDiscount)
+      const result = evaluateCoupon(coupon, fareBeforeDiscount, req.user.id)
       if (!result.ok) {
         return res.status(400).json({ message: result.message })
       }
       resolvedCouponId = coupon.id
       discountAmount = result.discountAmount
       total_price = result.finalTotal
+      appliedCoupon = coupon
     }
+
+    // A referral reward only makes sense for a genuinely new customer — not
+    // someone who's already booked before and just found a friend's code
+    // for a repeat trip. Checked before the insert below so it reflects the
+    // count *before* this booking, i.e. whether this is their very first.
+    const isFirstBooking = appliedCoupon?.kind === 'referral'
+      ? (await query('SELECT COUNT(*) AS count FROM bookings WHERE customer_id = ?', [req.user.id])).rows[0].count === 0
+      : false
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(total_price * 100),
@@ -246,6 +256,24 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
     // call never consumes a redemption.
     if (resolvedCouponId) {
       await incrementCouponUses(resolvedCouponId)
+    }
+
+    // Referral reward — a one-time thank-you coupon for whoever referred
+    // this customer, issued only once (their referral code has no
+    // per-referee tracking of its own, so "first booking" above is what
+    // stands in for "this is a genuinely new referral, not a repeat use").
+    // Never blocks the booking itself: a failure here is logged, not thrown.
+    if (appliedCoupon?.kind === 'referral' && isFirstBooking) {
+      issueReferralReward(appliedCoupon.owner_user_id)
+        .then(({ amount }) => {
+          notify(appliedCoupon.owner_user_id, {
+            type: 'referral_reward',
+            title: 'You earned a referral reward!',
+            message: `A friend you referred just completed their first booking — enjoy $${amount} off your next ride.`,
+            link: '/dashboard',
+          })
+        })
+        .catch((err) => console.error('Failed to issue referral reward', err))
     }
 
     const { rows } = await query('SELECT * FROM bookings WHERE id = ?', [inserted.insertId])

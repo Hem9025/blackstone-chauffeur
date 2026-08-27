@@ -69,7 +69,22 @@ CREATE TABLE IF NOT EXISTS coupons (
   uses_count INT NOT NULL DEFAULT 0,
   expires_at DATETIME,
   active BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  -- 'promo' = a normal code admin creates from Admin > Coupons, usable by
+  -- anyone (owner_user_id is always NULL for these — see routes/coupons.js).
+  -- 'referral' = a customer's own shareable code, auto-generated the first
+  -- time they open Refer a Friend (see utils/coupons.js
+  -- getOrCreateReferralCode) — usable by anyone EXCEPT its owner (no
+  -- self-referral). 'reward' = a one-time thank-you code auto-issued to a
+  -- referrer once someone they referred completes their first booking —
+  -- usable ONLY by its owner. See evaluateCoupon() in utils/coupons.js for
+  -- where these three rules are actually enforced.
+  kind VARCHAR(20) NOT NULL DEFAULT 'promo'
+    CHECK (kind IN ('promo', 'referral', 'reward')),
+  -- NULL for 'promo' coupons. Set for 'referral'/'reward' coupons to the
+  -- customer this personal code belongs to.
+  owner_user_id INT,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_coupons_owner FOREIGN KEY (owner_user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS bookings (

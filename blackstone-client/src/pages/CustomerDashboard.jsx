@@ -1,9 +1,56 @@
 import { useEffect, useState } from 'react'
+import { Copy, Check, Gift } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
 import StatusBadge from '../components/StatusBadge'
-import { bookings as bookingsApi } from '../utils/api'
+import { bookings as bookingsApi, referrals as referralsApi } from '../utils/api'
 import { formatCurrency, formatDate } from '../utils/helpers'
+
+function ReferFriendCard() {
+  const [referral, setReferral] = useState(null)
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    referralsApi.me().then(setReferral).catch(() => setReferral(null))
+  }, [])
+
+  if (!referral) return null
+
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(referral.code)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard API unavailable (e.g. non-HTTPS or blocked permission) —
+      // the code is still shown on screen for a manual copy either way.
+    }
+  }
+
+  return (
+    <div className="mt-8 flex flex-col gap-4 border border-brand-gold/30 bg-brand-gold/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-start gap-3">
+        <Gift size={20} className="mt-0.5 shrink-0 text-brand-gold" />
+        <div>
+          <p className="font-heading text-base text-black">Refer a Friend</p>
+          <p className="mt-1 text-sm text-black/60">
+            Share your code — they get {referral.discount_value}% off their first ride
+            {referral.max_discount ? ` (up to ${formatCurrency(referral.max_discount)})` : ''}, and once they book,
+            you get {formatCurrency(referral.reward_amount)} off your next trip.
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={copyCode}
+        className="flex shrink-0 items-center gap-2 self-start border border-brand-gold bg-white px-4 py-2.5 font-heading text-lg tracking-wide text-brand-black transition-colors hover:bg-brand-gold sm:self-center"
+      >
+        {referral.code}
+        {copied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
+      </button>
+    </div>
+  )
+}
 
 export default function CustomerDashboard() {
   const [list, setList] = useState([])
@@ -46,6 +93,8 @@ export default function CustomerDashboard() {
           <h1 className="font-heading text-3xl text-brand-black">My Bookings</h1>
           <Button to="/booking">New Booking</Button>
         </div>
+
+        <ReferFriendCard />
 
         {loading && <p className="mt-8 text-brand-black/50">Loading…</p>}
         {error && <p className="mt-8 text-red-500">{error}</p>}
