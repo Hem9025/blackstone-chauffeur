@@ -169,6 +169,16 @@ export const referrals = {
   me: () => api.get('/referrals/me'),
 }
 
+export const blog = {
+  list: () => api.get('/blog', { auth: false }),
+  get: (slug) => api.get(`/blog/${slug}`, { auth: false }),
+  adminList: () => api.get('/blog/admin'),
+  adminGet: (id) => api.get(`/blog/admin/${id}`),
+  create: (payload) => api.post('/blog', payload),
+  update: (id, payload) => api.patch(`/blog/${id}`, payload),
+  remove: (id) => api.delete(`/blog/${id}`),
+}
+
 export const banner = {
   get: () => api.get('/banner', { auth: false }),
   update: (payload) => api.patch('/banner', payload),

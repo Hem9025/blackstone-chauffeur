@@ -17,6 +17,8 @@ import FleetDetail from './pages/FleetDetail'
 import Tour from './pages/Tour'
 import TourDetail from './pages/TourDetail'
 import Gallery from './pages/Gallery'
+import Blog from './pages/Blog'
+import BlogPost from './pages/BlogPost'
 import Contact from './pages/Contact'
 import Booking from './pages/Booking'
 import BookingSuccess from './pages/BookingSuccess'
@@ -48,6 +50,7 @@ const AdminDashboardPanel = lazy(() => import('./pages/AdminDashboardPanel'))
 const AdminSettingsPanel = lazy(() => import('./pages/AdminSettingsPanel'))
 const AdminCouponsPanel = lazy(() => import('./pages/AdminCouponsPanel'))
 const AdminSubscribersPanel = lazy(() => import('./pages/AdminSubscribersPanel'))
+const AdminBlogPanel = lazy(() => import('./pages/AdminBlogPanel'))
 const Profile = lazy(() => import('./pages/Profile'))
 
 import NotFound from './pages/NotFound'
@@ -91,6 +94,8 @@ function App() {
           <Route path="/tour" element={<Tour />} />
           <Route path="/tour/:slug" element={<TourDetail />} />
           <Route path="/gallery" element={<Gallery />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/booking" element={<Booking />} />
           <Route path="/booking/success" element={<BookingSuccess />} />
@@ -211,6 +216,14 @@ function App() {
                 element={
                   <AdminPermissionGate flag="can_manage_bookings">
                     <AdminSubscribersPanel />
+                  </AdminPermissionGate>
+                }
+              />
+              <Route
+                path="/admin/blog"
+                element={
+                  <AdminPermissionGate flag="can_manage_bookings">
+                    <AdminBlogPanel />
                   </AdminPermissionGate>
                 }
               />

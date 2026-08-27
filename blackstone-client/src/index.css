@@ -84,3 +84,57 @@ body {
     transform: none;
   }
 }
+
+/* Styles the HTML rendered from a blog post's Markdown body (see
+   utils/markdown.js) — used identically by AdminBlogPanel's live preview
+   and the public BlogPost page, so what an editor sees while writing is
+   exactly what a visitor sees. No Tailwind typography plugin in this
+   project, so these are written out directly rather than via a `prose`
+   utility class. */
+.prose-blog {
+  color: color-mix(in srgb, var(--color-brand-black) 80%, transparent);
+  line-height: 1.75;
+}
+.prose-blog > * + * {
+  margin-top: 1.1em;
+}
+.prose-blog h1, .prose-blog h2, .prose-blog h3, .prose-blog h4 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-brand-black);
+  line-height: 1.25;
+}
+.prose-blog h1 { font-size: 1.9em; margin-top: 1.4em; }
+.prose-blog h2 { font-size: 1.5em; margin-top: 1.4em; }
+.prose-blog h3 { font-size: 1.25em; margin-top: 1.2em; }
+.prose-blog h4 { font-size: 1.1em; margin-top: 1.2em; }
+.prose-blog ul, .prose-blog ol {
+  padding-left: 1.4em;
+}
+.prose-blog ul { list-style: disc; }
+.prose-blog ol { list-style: decimal; }
+.prose-blog li + li {
+  margin-top: 0.4em;
+}
+.prose-blog blockquote {
+  border-left: 3px solid var(--color-brand-gold);
+  padding-left: 1em;
+  font-style: italic;
+  color: color-mix(in srgb, var(--color-brand-black) 65%, transparent);
+}
+.prose-blog a {
+  color: var(--color-brand-gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-blog code {
+  background: color-mix(in srgb, var(--color-brand-black) 6%, transparent);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+.prose-blog img {
+  max-width: 100%;
+  border-radius: 4px;
+}

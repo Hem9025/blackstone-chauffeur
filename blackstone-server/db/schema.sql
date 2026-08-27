@@ -289,6 +289,35 @@ CREATE TABLE IF NOT EXISTS subscribers (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Blog posts (see routes/blog.js). Body is stored as Markdown, rendered to
+-- HTML client-side (see blackstone-client/src/utils/markdown.js) rather
+-- than storing pre-rendered HTML — so both the admin panel's live preview
+-- and the public post page always render from the exact same source.
+CREATE TABLE IF NOT EXISTS blog_posts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  slug VARCHAR(255) NOT NULL UNIQUE,
+  excerpt VARCHAR(500),
+  body MEDIUMTEXT NOT NULL,
+  cover_image TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'draft'
+    CHECK (status IN ('draft', 'published')),
+  -- Falls back to title/excerpt on the public page when blank — only worth
+  -- filling in when the ideal search-result title/snippet differs from the
+  -- on-page heading/excerpt.
+  meta_title VARCHAR(255),
+  meta_description VARCHAR(500),
+  author_id INT,
+  -- Set automatically the first time a post's status becomes 'published'
+  -- (see routes/blog.js) and never overwritten by later edits — this is
+  -- what the public blog list sorts by, so re-saving a typo fix doesn't
+  -- bump an old post back to the top.
+  published_at DATETIME,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_blog_posts_author FOREIGN KEY (author_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS enquiries (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,

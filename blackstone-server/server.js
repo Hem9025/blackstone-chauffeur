@@ -15,6 +15,7 @@ import couponRoutes from './routes/coupons.js'
 import bannerRoutes from './routes/banner.js'
 import subscriberRoutes from './routes/subscribers.js'
 import referralRoutes from './routes/referrals.js'
+import blogRoutes from './routes/blog.js'
 
 dotenv.config()
 
@@ -67,6 +68,7 @@ app.use('/api/coupons', couponRoutes)
 app.use('/api/banner', bannerRoutes)
 app.use('/api/subscribers', subscriberRoutes)
 app.use('/api/referrals', referralRoutes)
+app.use('/api/blog', blogRoutes)
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Not found' })

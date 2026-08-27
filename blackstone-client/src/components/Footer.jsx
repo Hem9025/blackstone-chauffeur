@@ -134,6 +134,7 @@ export default function Footer() {
             <Link to="/fleet/luxury" className="hover:text-brand-gold">Luxury Fleet</Link>
             <Link to="/fleet/comfort" className="hover:text-brand-gold">Comfort Fleet</Link>
             <Link to="/gallery" className="hover:text-brand-gold">Gallery</Link>
+            <Link to="/blog" className="hover:text-brand-gold">Blog</Link>
           </div>
 
           <div className="flex flex-col gap-2 text-sm">

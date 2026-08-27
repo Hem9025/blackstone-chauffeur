@@ -20,6 +20,7 @@ const fleetLinks = [
 const trailingLinks = [
   { to: '/tour', label: 'Tour' },
   { to: '/gallery', label: 'Gallery' },
+  { to: '/blog', label: 'Blog' },
   { to: '/contact', label: 'Contact' },
 ]
 

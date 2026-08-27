@@ -111,6 +111,25 @@ export function serviceJsonLd({ name, description, path }) {
   }
 }
 
+// A blog post — schema.org's BlogPosting, so a published post can surface
+// as a proper article result (author, publish date) rather than a plain
+// page link. `image` and `description` are optional since a post might not
+// have a cover image or an explicit excerpt.
+export function blogPostingJsonLd({ title, description, path, image, publishedAt }) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: title,
+    ...(description ? { description } : {}),
+    ...(image ? { image } : {}),
+    ...(publishedAt ? { datePublished: publishedAt } : {}),
+    url: `${SITE_URL}${path}`,
+    author: { '@type': 'Organization', name: BUSINESS_NAME },
+    publisher: { '@type': 'Organization', name: BUSINESS_NAME, logo: { '@type': 'ImageObject', url: `${SITE_URL}/images/brand/logo.png` } },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}${path}` },
+  }
+}
+
 // A guided day tour — schema.org's TouristTrip type, which is built
 // specifically for this (an itinerary of places, run by a named provider).
 export function touristTripJsonLd({ name, description, path, image, itinerary = [] }) {
