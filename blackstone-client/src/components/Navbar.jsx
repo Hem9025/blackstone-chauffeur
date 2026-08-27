@@ -4,6 +4,7 @@ import { Menu, X, ChevronDown } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Button from './Button'
 import NotificationBell from './NotificationBell'
+import PromoBanner from './PromoBanner'
 
 const links = [
   { to: '/', label: 'Home' },
@@ -59,6 +60,15 @@ export default function Navbar() {
         isHeroRoute ? 'fixed' : 'sticky'
       } ${isTinted ? 'bg-black/20' : 'bg-brand-black'}`}
     >
+      {/* Rendered as part of this same fixed header block (not a separate
+          element above it) specifically so it grows the header's own
+          measured height automatically — see AdminLayout.jsx's
+          ResizeObserver on `header.offsetHeight` — rather than needing a
+          second piece of layout math to keep the two in sync. Homepage
+          only, per its own `active` flag and content, set from Admin >
+          Second Admin Management. */}
+      {pathname === '/' && <PromoBanner />}
+
       {/* Single nav row — no separate utility bar, kept short. No max-w
           cap: on wide screens a centered max-w-7xl box leaves hundreds of
           px of empty space on both sides, which is what kept showing up

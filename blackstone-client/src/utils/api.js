@@ -158,6 +158,11 @@ export const coupons = {
   remove: (id) => api.delete(`/coupons/${id}`),
 }
 
+export const banner = {
+  get: () => api.get('/banner', { auth: false }),
+  update: (payload) => api.patch('/banner', payload),
+}
+
 export const permissions = {
   get: () => api.get('/permissions'),
   update: (payload) => api.patch('/permissions', payload),

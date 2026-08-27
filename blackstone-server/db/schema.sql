@@ -243,6 +243,23 @@ CREATE TABLE IF NOT EXISTS user_permissions (
   CONSTRAINT fk_user_permissions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Single-row (always id = 1) site-wide promo strip, edited from Admin >
+-- Second Admin Management (see routes/banner.js) and rendered at the top of
+-- the homepage (see PromoBanner.jsx) whenever active is true and message
+-- isn't blank. Same singleton pattern as admin_permissions above.
+CREATE TABLE IF NOT EXISTS site_banner (
+  id INT PRIMARY KEY DEFAULT 1,
+  message VARCHAR(255) NOT NULL DEFAULT '',
+  link_url VARCHAR(255),
+  link_label VARCHAR(100),
+  active BOOLEAN NOT NULL DEFAULT FALSE,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO site_banner (id)
+SELECT * FROM (SELECT 1 AS id) AS tmp
+WHERE NOT EXISTS (SELECT 1 FROM site_banner WHERE id = 1);
+
 CREATE TABLE IF NOT EXISTS enquiries (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
