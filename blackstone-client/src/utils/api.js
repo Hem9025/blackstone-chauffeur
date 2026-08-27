@@ -158,6 +158,13 @@ export const coupons = {
   remove: (id) => api.delete(`/coupons/${id}`),
 }
 
+export const subscribers = {
+  subscribe: (payload) => api.post('/subscribers', payload, { auth: false }),
+  list: () => api.get('/subscribers'),
+  remove: (id) => api.delete(`/subscribers/${id}`),
+  downloadCsv: () => downloadFile('/subscribers/csv', 'subscribers.csv'),
+}
+
 export const banner = {
   get: () => api.get('/banner', { auth: false }),
   update: (payload) => api.patch('/banner', payload),

@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Phone, Mail, MapPin } from 'lucide-react'
+import { Phone, Mail, MapPin, ArrowRight } from 'lucide-react'
 import { SOCIAL_LINKS } from '../constants/seo'
+import { subscribers as subscribersApi } from '../utils/api'
 
 // lucide-react dropped brand/logo icons (trademark reasons) — simple inline
 // marks are used here instead so the footer doesn't depend on a brand icon set.
@@ -33,6 +35,54 @@ const social = [
 const CITIES_WE_SERVE = [
   'Auckland', 'Hamilton', 'Rotorua', 'Christchurch', 'Wellington', 'Napier', 'Taupō', 'Queenstown',
 ]
+
+function NewsletterForm() {
+  const [email, setEmail] = useState('')
+  const [status, setStatus] = useState('idle') // idle | sending | done | error
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!email.trim()) return
+    setStatus('sending')
+    setError('')
+    try {
+      await subscribersApi.subscribe({ email: email.trim(), source: 'footer' })
+      setStatus('done')
+      setEmail('')
+    } catch (err) {
+      setStatus('error')
+      setError(err.message || 'Failed to subscribe')
+    }
+  }
+
+  if (status === 'done') {
+    return <p className="text-sm text-brand-gold">You're on the list — thanks for subscribing.</p>
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row sm:items-start">
+      <div className="flex-1">
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Your email address"
+          className="w-full max-w-xs border border-white/15 bg-transparent px-4 py-2.5 text-sm text-brand-white placeholder:text-brand-white/40 focus:border-brand-gold focus:outline-none"
+        />
+        {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
+      </div>
+      <button
+        type="submit"
+        disabled={status === 'sending'}
+        className="flex shrink-0 items-center justify-center gap-1.5 bg-brand-gold px-5 py-2.5 text-sm font-medium text-brand-black transition-colors hover:bg-brand-champagne disabled:opacity-50"
+      >
+        {status === 'sending' ? 'Subscribing…' : 'Subscribe'} <ArrowRight size={14} />
+      </button>
+    </form>
+  )
+}
 
 export default function Footer() {
   return (
@@ -109,7 +159,15 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-white/10 pt-6 text-xs">
+        <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-brand-white">Offers &amp; updates in your inbox</p>
+            <p className="mt-0.5 text-xs text-brand-white/50">Occasional news and seasonal offers — no spam, unsubscribe any time.</p>
+          </div>
+          <NewsletterForm />
+        </div>
+
+        <div className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-white/10 pt-6 text-xs">
           <p className="text-xs uppercase tracking-widest text-brand-white/40">Cities We Serve:</p>
           {CITIES_WE_SERVE.map((city, i) => (
             <span key={city} className="text-brand-white/70">

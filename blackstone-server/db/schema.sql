@@ -260,6 +260,20 @@ INSERT INTO site_banner (id)
 SELECT * FROM (SELECT 1 AS id) AS tmp
 WHERE NOT EXISTS (SELECT 1 FROM site_banner WHERE id = 1);
 
+-- Newsletter/lead-capture signups (see routes/subscribers.js) — currently
+-- just a list to export (GET /api/subscribers/csv) and hand to whatever
+-- email tool BlackStone sends from; no automatic email-sending lives here.
+CREATE TABLE IF NOT EXISTS subscribers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  name VARCHAR(255),
+  -- Where the signup came from, e.g. 'footer' — free text, not a CHECK'd
+  -- enum, since new capture points (a popup, a landing page, etc.) are
+  -- expected to be added over time without a migration.
+  source VARCHAR(50),
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS enquiries (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,

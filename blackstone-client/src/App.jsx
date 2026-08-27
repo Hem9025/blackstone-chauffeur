@@ -47,6 +47,7 @@ const AdminPersonDetail = lazy(() => import('./pages/AdminPersonDetail'))
 const AdminDashboardPanel = lazy(() => import('./pages/AdminDashboardPanel'))
 const AdminSettingsPanel = lazy(() => import('./pages/AdminSettingsPanel'))
 const AdminCouponsPanel = lazy(() => import('./pages/AdminCouponsPanel'))
+const AdminSubscribersPanel = lazy(() => import('./pages/AdminSubscribersPanel'))
 const Profile = lazy(() => import('./pages/Profile'))
 
 import NotFound from './pages/NotFound'
@@ -202,6 +203,14 @@ function App() {
                 element={
                   <AdminPermissionGate flag="can_manage_bookings">
                     <AdminCouponsPanel />
+                  </AdminPermissionGate>
+                }
+              />
+              <Route
+                path="/admin/subscribers"
+                element={
+                  <AdminPermissionGate flag="can_manage_bookings">
+                    <AdminSubscribersPanel />
                   </AdminPermissionGate>
                 }
               />
