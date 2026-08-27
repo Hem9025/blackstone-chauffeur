@@ -147,6 +147,17 @@ export const admin = {
   setProviderPayment: (payload) => api.patch('/admin/provider-payments', payload),
 }
 
+export const coupons = {
+  // Live discount preview before booking submission — never trusted as the
+  // final charged amount (see routes/bookings.js), just shown to the
+  // customer so they know what to expect before paying.
+  validate: (code, fare) => api.post('/coupons/validate', { code, fare }),
+  list: () => api.get('/coupons'),
+  create: (payload) => api.post('/coupons', payload),
+  update: (id, payload) => api.patch(`/coupons/${id}`, payload),
+  remove: (id) => api.delete(`/coupons/${id}`),
+}
+
 export const permissions = {
   get: () => api.get('/permissions'),
   update: (payload) => api.patch('/permissions', payload),

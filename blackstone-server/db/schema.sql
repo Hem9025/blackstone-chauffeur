@@ -47,6 +47,31 @@ CREATE TABLE IF NOT EXISTS vehicles (
   features JSON
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Discount codes applied at checkout on the customer-facing booking flow
+-- (POST /api/bookings — see routes/bookings.js and utils/coupons.js).
+-- Provider/admin-created bookings (POST /api/bookings/provider) are
+-- manually priced by whoever creates them and don't go through coupons.
+CREATE TABLE IF NOT EXISTS coupons (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  code VARCHAR(50) NOT NULL UNIQUE,
+  discount_type VARCHAR(10) NOT NULL DEFAULT 'percent'
+    CHECK (discount_type IN ('percent', 'fixed')),
+  discount_value DECIMAL(10, 2) NOT NULL,
+  -- Fare (before discount) must be at least this much for the coupon to
+  -- apply — 0 means no minimum.
+  min_fare DECIMAL(10, 2) NOT NULL DEFAULT 0,
+  -- Caps how much a 'percent' coupon can knock off in dollar terms — e.g.
+  -- "20% off, up to $50". NULL = uncapped. Ignored for 'fixed' coupons.
+  max_discount DECIMAL(10, 2),
+  -- Total number of times this code can ever be redeemed, across all
+  -- customers. NULL = unlimited.
+  max_uses INT,
+  uses_count INT NOT NULL DEFAULT 0,
+  expires_at DATETIME,
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS bookings (
   id INT AUTO_INCREMENT PRIMARY KEY,
   customer_id INT NOT NULL,
@@ -118,10 +143,21 @@ CREATE TABLE IF NOT EXISTS bookings (
   stripe_payment_intent_id VARCHAR(255),
   distance_km DECIMAL(10, 2),
   duration_min INT,
+  -- Set only on customer self-service bookings that applied a coupon (see
+  -- POST /api/bookings in routes/bookings.js) — NULL for every other
+  -- booking, including provider/admin-created ones, which are manually
+  -- priced and don't go through the coupon system. discount_amount is what
+  -- was actually subtracted from the fare (always recomputed server-side
+  -- from the coupon's own rules, never trusted from the client) and is kept
+  -- even if the coupon itself is later edited or deactivated, so past
+  -- invoices/reports still show the real amount charged.
+  coupon_id INT,
+  discount_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_bookings_customer FOREIGN KEY (customer_id) REFERENCES users(id),
   CONSTRAINT fk_bookings_vehicle FOREIGN KEY (vehicle_id) REFERENCES vehicles(id),
-  CONSTRAINT fk_bookings_driver FOREIGN KEY (driver_id) REFERENCES users(id)
+  CONSTRAINT fk_bookings_driver FOREIGN KEY (driver_id) REFERENCES users(id),
+  CONSTRAINT fk_bookings_coupon FOREIGN KEY (coupon_id) REFERENCES coupons(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- In-app notifications — a bell icon in the navbar polls GET

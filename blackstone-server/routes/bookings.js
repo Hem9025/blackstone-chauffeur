@@ -13,6 +13,7 @@ import { newBookingAdminTemplate } from '../emails/templates/newBookingAdmin.js'
 import { bookingCancelledTemplate } from '../emails/templates/bookingCancelled.js'
 import { bookingUpdatedTemplate } from '../emails/templates/bookingUpdated.js'
 import { calculateFare, resolveExtraWaitCharge } from '../utils/pricing.js'
+import { findCouponByCode, evaluateCoupon, incrementCouponUses } from '../utils/coupons.js'
 import { streamInvoice } from '../utils/invoice.js'
 import { streamBookingsReport } from '../utils/bookingsReport.js'
 import { streamBookingsCsv } from '../utils/bookingsCsv.js'
@@ -96,7 +97,7 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
   const {
     vehicle_id, pickup, dropoff, date, time, extras, distance_km, duration_min,
     trip_type, service_type, hours, flight_number, stops, stop_addresses, child_seats, notes,
-    passengers, suitcases, extra_wait_minutes,
+    passengers, suitcases, extra_wait_minutes, coupon_code,
   } = req.body || {}
 
   if (!isDateFarEnoughAhead(date)) {
@@ -172,7 +173,7 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
     const qtyAddOnsTotal = await quantityAddOnsTotal(resolvedChildSeats, resolvedStops)
     const addOnsTotal = flatAddOnsTotal + qtyAddOnsTotal
 
-    const total_price = calculateFare({
+    const fareBeforeDiscount = calculateFare({
       vehicle,
       distanceKm: resolvedDistanceKm,
       durationMin: resolvedDurationMin,
@@ -181,6 +182,26 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
       addOnsTotal,
       time,
     })
+
+    // Coupon is re-validated and re-priced from scratch here — the same
+    // logic POST /api/coupons/validate uses for the live preview — never
+    // trusting a discount amount the client might send. An invalid/expired/
+    // exhausted code fails the whole booking rather than silently charging
+    // full price, so the customer isn't surprised by a bigger charge than
+    // the page just showed them.
+    let resolvedCouponId = null
+    let discountAmount = 0
+    let total_price = fareBeforeDiscount
+    if (coupon_code) {
+      const coupon = await findCouponByCode(coupon_code)
+      const result = evaluateCoupon(coupon, fareBeforeDiscount)
+      if (!result.ok) {
+        return res.status(400).json({ message: result.message })
+      }
+      resolvedCouponId = coupon.id
+      discountAmount = result.discountAmount
+      total_price = result.finalTotal
+    }
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(total_price * 100),
@@ -192,8 +213,9 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
       `INSERT INTO bookings
         (customer_id, vehicle_id, pickup, dropoff, date, time, trip_type, service_type, hours,
          flight_number, stops, stop_addresses, child_seats, notes, extras, total_price,
+         coupon_id, discount_amount,
          distance_km, duration_min, payment_status, booking_status, stripe_payment_intent_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', ?)`,
       [
         req.user.id,
         vehicle_id,
@@ -211,11 +233,21 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
         resolvedNotes,
         JSON.stringify(matchedAddOns),
         total_price,
+        resolvedCouponId,
+        discountAmount,
         resolvedDistanceKm || null,
         resolvedDurationMin || null,
         paymentIntent.id,
       ],
     )
+
+    // Only counted once the booking (and its Stripe PaymentIntent) actually
+    // exists — a customer abandoning checkout after a successful /validate
+    // call never consumes a redemption.
+    if (resolvedCouponId) {
+      await incrementCouponUses(resolvedCouponId)
+    }
+
     const { rows } = await query('SELECT * FROM bookings WHERE id = ?', [inserted.insertId])
 
     res.status(201).json({ booking: rows[0], client_secret: paymentIntent.client_secret, total_price })

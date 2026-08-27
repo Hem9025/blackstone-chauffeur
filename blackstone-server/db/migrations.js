@@ -21,6 +21,11 @@ const COLUMN_ADDITIONS = [
   { table: 'users', column: 'reset_token_expires', definition: 'DATETIME' },
   { table: 'bookings', column: 'provider_price', definition: 'DECIMAL(10, 2)' },
   { table: 'bookings', column: 'reference', definition: 'VARCHAR(100)' },
+  // coupons table itself is created by schema.sql (CREATE TABLE IF NOT
+  // EXISTS, re-run on every boot) — these two columns just need adding to
+  // whatever pre-existing bookings table doesn't have them yet.
+  { table: 'bookings', column: 'coupon_id', definition: 'INT' },
+  { table: 'bookings', column: 'discount_amount', definition: 'DECIMAL(10, 2) NOT NULL DEFAULT 0' },
 ]
 
 // Loosens NOT NULL columns on a database that was already provisioned before

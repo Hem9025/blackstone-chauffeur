@@ -11,6 +11,7 @@ import permissionsRoutes from './routes/permissions.js'
 import reviewRoutes from './routes/reviews.js'
 import notificationRoutes from './routes/notifications.js'
 import stripeWebhookRoutes from './routes/stripeWebhook.js'
+import couponRoutes from './routes/coupons.js'
 
 dotenv.config()
 
@@ -59,6 +60,7 @@ app.use('/api/admin', adminRoutes)
 app.use('/api/permissions', permissionsRoutes)
 app.use('/api/reviews', reviewRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/coupons', couponRoutes)
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Not found' })

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet, Link, NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, ClipboardList, Users, Car, UserCog, Building2, ShieldCheck, Globe, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, Users, Car, UserCog, Building2, ShieldCheck, Globe, LogOut, Menu, X, Tag } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useAdminPermissions } from '../hooks/useAdminPermissions'
 
@@ -21,6 +21,7 @@ const NAV_ITEMS = [
   { to: '/admin', label: 'Bookings', icon: ClipboardList, end: true, flag: 'can_manage_bookings' },
   { to: '/admin/users', label: 'Users', icon: Users, flag: 'can_manage_users' },
   { to: '/admin/vehicles', label: 'Vehicles', icon: Car, flag: 'can_manage_vehicles' },
+  { to: '/admin/coupons', label: 'Coupons', icon: Tag, flag: 'can_manage_bookings' },
   { to: '/admin/drivers', label: 'Drivers', icon: UserCog, flag: 'can_view_stats' },
   { to: '/admin/providers', label: 'Providers', icon: Building2, flag: 'can_view_stats' },
   { to: '/admin/settings', label: 'Second Admin Management', icon: ShieldCheck, adminOnly: true },

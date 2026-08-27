@@ -5,14 +5,14 @@ import { Elements } from '@stripe/react-stripe-js'
 import { useJsApiLoader } from '@react-google-maps/api'
 import {
   Calendar, Clock, Users, Briefcase, Info,
-  Check, ArrowRight, ArrowLeft, ShieldCheck, RotateCcw, Headphones, BadgeDollarSign, Plus, X, Plane, Mail, CheckCircle2,
+  Check, ArrowRight, ArrowLeft, ShieldCheck, RotateCcw, Headphones, BadgeDollarSign, Plus, X, Plane, Mail, CheckCircle2, Tag,
 } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
 import StripePaymentForm from '../components/StripePaymentForm'
 import PlacesAutocompleteInput from '../components/PlacesAutocompleteInput'
 import RouteMap from '../components/RouteMap'
-import { vehicles as vehiclesApi, bookings as bookingsApi, enquiries as enquiriesApi } from '../utils/api'
+import { vehicles as vehiclesApi, bookings as bookingsApi, enquiries as enquiriesApi, coupons as couponsApi } from '../utils/api'
 import { formatCurrency } from '../utils/helpers'
 import { calculateFare, tierPriceForDistance, trafficSurcharge, rideFareSubtotal, nightSurcharge, isNightBooking } from '../utils/pricing'
 import { useAuth } from '../context/AuthContext'
@@ -170,6 +170,15 @@ function BookingContent({ mapsLoaded }) {
   const [submitting, setSubmitting] = useState(false)
   const [enquirySent, setEnquirySent] = useState(false)
 
+  // Coupon is deliberately NOT persisted in the sessionStorage draft — it's
+  // re-validated against the live fare anyway (see the invalidation effect
+  // below), and a refresh mid-booking is rare enough that re-typing a code
+  // isn't worth the added complexity of persisting + re-checking it.
+  const [couponInput, setCouponInput] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState(null) // { code, discount_amount, final_total, appliedAgainstFare }
+  const [couponError, setCouponError] = useState('')
+  const [validatingCoupon, setValidatingCoupon] = useState(false)
+
   // Keeps the draft in sessionStorage in sync with every field above, so a
   // refresh at any point in the flow (including mid-payment on step 3)
   // restores exactly where the user left off.
@@ -287,6 +296,44 @@ function BookingContent({ mapsLoaded }) {
     [selectedVehicle, effectiveDistanceKm, effectiveDurationMin, passengers, luggage, time],
   )
 
+  // Clears an already-applied coupon the moment the underlying fare changes
+  // (a different vehicle, added stop, changed passenger count, etc.) —
+  // otherwise the discount shown would be stale, computed against a fare
+  // that no longer matches what's actually being booked. The server
+  // re-validates from scratch regardless (see routes/bookings.js), but this
+  // keeps what's displayed honest too.
+  useEffect(() => {
+    if (appliedCoupon && appliedCoupon.appliedAgainstFare !== total) {
+      setAppliedCoupon(null)
+      setCouponError('Your total changed, so this code needs to be re-applied.')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total])
+
+  async function applyCoupon() {
+    const code = couponInput.trim()
+    if (!code) return
+    setValidatingCoupon(true)
+    setCouponError('')
+    try {
+      const result = await couponsApi.validate(code, total)
+      setAppliedCoupon({ ...result, appliedAgainstFare: total })
+    } catch (err) {
+      setAppliedCoupon(null)
+      setCouponError(err.message || 'Failed to apply coupon')
+    } finally {
+      setValidatingCoupon(false)
+    }
+  }
+
+  function removeCoupon() {
+    setAppliedCoupon(null)
+    setCouponInput('')
+    setCouponError('')
+  }
+
+  const finalTotal = appliedCoupon ? appliedCoupon.final_total : total
+
   function toggleAddOn(id) {
     setSelectedAddOns((prev) => (prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]))
   }
@@ -390,6 +437,11 @@ function BookingContent({ mapsLoaded }) {
         extras,
         distance_km: effectiveDistanceKm,
         duration_min: effectiveDurationMin,
+        // Only sent when a coupon actually cleared validation against the
+        // current fare — the server re-validates and re-prices it from
+        // scratch either way (see routes/bookings.js), this is never
+        // trusted as the real discount amount.
+        coupon_code: appliedCoupon && appliedCoupon.appliedAgainstFare === total ? appliedCoupon.code : undefined,
       })
       setClientSecret(client_secret)
       setBookingId(booking?.id ?? null)
@@ -1097,10 +1149,58 @@ function BookingContent({ mapsLoaded }) {
                     <dd className="text-black">{formatCurrency(nightSurchargeAmount)}</dd>
                   </div>
                 )}
+                {appliedCoupon && (
+                  <div className="flex justify-between text-green-700">
+                    <dt className="flex items-center gap-1">
+                      <Tag size={12} /> Coupon ({appliedCoupon.code})
+                    </dt>
+                    <dd>−{formatCurrency(appliedCoupon.discount_amount)}</dd>
+                  </div>
+                )}
               </dl>
+
+              {/* Coupon code entry — only offered on instant-booking routes,
+                  since an enquiry has no fixed price yet to discount. */}
+              {!requiresEnquiry && (
+                <div className="mt-3 border-t border-black/10 pt-3">
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-black/60">
+                        Code <span className="font-medium text-black">{appliedCoupon.code}</span> applied
+                      </span>
+                      <button type="button" onClick={removeCoupon} className="text-xs text-black/40 hover:text-red-500">
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponInput}
+                        onChange={(e) => {
+                          setCouponInput(e.target.value)
+                          setCouponError('')
+                        }}
+                        placeholder="Coupon code"
+                        className="min-w-0 flex-1 border border-black/15 px-3 py-2 text-sm uppercase placeholder:normal-case"
+                      />
+                      <button
+                        type="button"
+                        onClick={applyCoupon}
+                        disabled={!couponInput.trim() || validatingCoupon}
+                        className="shrink-0 border border-brand-gold px-4 py-2 text-xs font-medium text-brand-gold transition-colors hover:bg-brand-gold hover:text-brand-black disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {validatingCoupon ? 'Checking…' : 'Apply'}
+                      </button>
+                    </div>
+                  )}
+                  {couponError && <p className="mt-2 text-xs text-red-500">{couponError}</p>}
+                </div>
+              )}
+
               <div className="mt-3 flex items-center justify-between border-t border-black/10 pt-3">
                 <span className="font-heading text-black">Total (Incl. GST)</span>
-                <span className="font-heading text-xl text-brand-gold">{formatCurrency(total)}</span>
+                <span className="font-heading text-xl text-brand-gold">{formatCurrency(finalTotal)}</span>
               </div>
             </div>
           )}
