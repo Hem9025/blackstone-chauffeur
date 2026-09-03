@@ -85,7 +85,13 @@ export const IMAGES = {
     economySuv: '/images/fleet/icons/comfort-suv.jpg?v=2',
     economyVan: '/images/fleet/icons/comfort-van.jpg?v=2',
     comfort12SeaterVan: '/images/fleet/icons/comfort-12-seater-van.jpg?v=2',
-    electric: '/images/fleet/icons/electric.jpg?v=2',
+    // Background removed (transparent PNG) — replaces the old .jpg, which
+    // had a flat studio-grey backdrop like the Comfort tiles rather than a
+    // true cutout like the Luxury (business-*.png) tiles. New filename
+    // rather than overwriting electric.jpg in place, same reasoning as the
+    // "-v2" files above: these live in public/, so Vite never fingerprints
+    // the URL, and a same-name overwrite risks a cache serving stale bytes.
+    electric: '/images/fleet/icons/electric.png',
     businessSedan: '/images/fleet/icons/business-sedan.png',
     businessSuv: '/images/fleet/icons/business-suv.png',
     businessVan: '/images/fleet/icons/business-van.png',
