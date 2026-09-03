@@ -18,7 +18,7 @@ import { calculateFare, tierPriceForDistance, trafficSurcharge, rideFareSubtotal
 import { useAuth } from '../context/AuthContext'
 import {
   minBookingDate, isDateFarEnoughAhead, MIN_ADVANCE_DAYS,
-  isWithinServiceRadius,
+  isWithinServiceRadius, isAucklandMetro,
 } from '../utils/bookingRules'
 import { breadcrumbJsonLd } from '../constants/seo'
 
@@ -361,18 +361,24 @@ function BookingContent({ mapsLoaded }) {
   //  - everything else — a trip not starting in Auckland, two different
   //    non-Auckland cities, or an Auckland trip beyond 200km — needs an
   //    enquiry instead.
-  // City names come straight from Google's address autocomplete (see
-  // PlacesAutocompleteInput). If pickup resolves to Auckland, the radius
-  // check still applies even when dropoff's city couldn't be resolved. If
-  // pickup's city is missing or isn't Auckland, and the two aren't a
-  // confirmed same-city match, this defaults to requiring an enquiry —
-  // safer than silently instant-booking a route we can't classify.
+  // "Pickup is in Auckland" is decided geographically (isAucklandMetro,
+  // straight-line distance from the CBD) rather than by matching Google's
+  // 'locality' string against "Auckland" — outer Auckland Council suburbs
+  // (Beachlands, Kumeu, Pukekohe, etc.) come back with their own locality
+  // name, which used to wrongly force those genuinely-local trips into the
+  // enquiry flow. City names (still string-matched) are only used for the
+  // separate "same city, elsewhere in NZ" rule below, e.g. Hamilton ->
+  // Hamilton. If pickup resolves to Auckland, the radius check still
+  // applies even when dropoff's city couldn't be resolved. If pickup isn't
+  // in Auckland, and the two aren't a confirmed same-city match, this
+  // defaults to requiring an enquiry — safer than silently instant-booking
+  // a route we can't classify.
   function normalizeCity(city) {
     return city ? String(city).trim().toLowerCase() : ''
   }
   const pickupCity = normalizeCity(pickup.city)
   const dropoffCity = normalizeCity(dropoff.city)
-  const pickupIsAuckland = pickupCity === 'auckland'
+  const pickupIsAuckland = isAucklandMetro(pickup.lat, pickup.lng)
 
   const requiresEnquiry = useMemo(() => {
     if (!needsDropoff) {
