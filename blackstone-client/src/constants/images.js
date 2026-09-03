@@ -87,11 +87,15 @@ export const IMAGES = {
     comfort12SeaterVan: '/images/fleet/icons/comfort-12-seater-van.jpg?v=2',
     // Background removed (transparent PNG) — replaces the old .jpg, which
     // had a flat studio-grey backdrop like the Comfort tiles rather than a
-    // true cutout like the Luxury (business-*.png) tiles. New filename
-    // rather than overwriting electric.jpg in place, same reasoning as the
-    // "-v2" files above: these live in public/, so Vite never fingerprints
+    // true cutout like the Luxury (business-*.png) tiles. "-v2": the first
+    // cutout (electric.png) had no ground-contact shadow, so on the pure
+    // white tile the car read as "floating" next to the Comfort tiles
+    // (real photos, with a real studio shadow) — this version adds a
+    // synthesised soft shadow under both wheels so it grounds the same way.
+    // New filename rather than overwriting in place, same reasoning as the
+    // other "-v2" files: these live in public/, so Vite never fingerprints
     // the URL, and a same-name overwrite risks a cache serving stale bytes.
-    electric: '/images/fleet/icons/electric.png',
+    electric: '/images/fleet/icons/electric-v2.png',
     businessSedan: '/images/fleet/icons/business-sedan.png',
     businessSuv: '/images/fleet/icons/business-suv.png',
     businessVan: '/images/fleet/icons/business-van.png',
