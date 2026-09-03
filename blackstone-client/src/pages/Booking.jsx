@@ -18,7 +18,7 @@ import { calculateFare, tierPriceForDistance, trafficSurcharge, rideFareSubtotal
 import { useAuth } from '../context/AuthContext'
 import {
   minBookingDate, isDateFarEnoughAhead, MIN_ADVANCE_DAYS,
-  isWithinServiceRadius, isAucklandMetro,
+  isWithinServiceRadius,
 } from '../utils/bookingRules'
 import { breadcrumbJsonLd } from '../constants/seo'
 
@@ -352,50 +352,28 @@ function BookingContent({ mapsLoaded }) {
   }
 
   // Whether this trip needs a custom-quote enquiry instead of instant online
-  // booking. Auckland is this business's home base, so:
-  //  - a same-city trip is only instantly bookable when that city IS
-  //    Auckland (a same-city trip anywhere else, e.g. Hamilton → Hamilton,
-  //    isn't something dispatch can fix-price the same way)
-  //  - an Auckland-outbound trip (pickup in Auckland, dropping off
-  //    elsewhere) is instantly bookable within the standard 200km radius
-  //  - everything else — a trip not starting in Auckland, two different
-  //    non-Auckland cities, or an Auckland trip beyond 200km — needs an
-  //    enquiry instead.
-  // "Pickup is in Auckland" is decided geographically (isAucklandMetro,
-  // straight-line distance from the CBD) rather than by matching Google's
-  // 'locality' string against "Auckland" — outer Auckland Council suburbs
-  // (Beachlands, Kumeu, Pukekohe, etc.) come back with their own locality
-  // name, which used to wrongly force those genuinely-local trips into the
-  // enquiry flow. City names (still string-matched) are only used for the
-  // separate "same city, elsewhere in NZ" rule below, e.g. Hamilton ->
-  // Hamilton. If pickup resolves to Auckland, the radius check still
-  // applies even when dropoff's city couldn't be resolved. If pickup isn't
-  // in Auckland, and the two aren't a confirmed same-city match, this
-  // defaults to requiring an enquiry — safer than silently instant-booking
-  // a route we can't classify.
-  function normalizeCity(city) {
-    return city ? String(city).trim().toLowerCase() : ''
-  }
-  const pickupCity = normalizeCity(pickup.city)
-  const dropoffCity = normalizeCity(dropoff.city)
-  const pickupIsAuckland = isAucklandMetro(pickup.lat, pickup.lng)
-
+  // booking. Purely geographic, straight-line distance from the Auckland CBD
+  // (see SERVICE_RADIUS_KM / isWithinServiceRadius in bookingRules.js): every
+  // point involved in the trip (pickup, and dropoff for a one-way/return)
+  // must be within the 200km service radius, or it routes to an enquiry
+  // instead. No city-name matching — that used to gate this (requiring the
+  // 'locality' string to literally read "Auckland"), which wrongly forced
+  // genuinely local trips through outer Auckland Council suburbs (Beachlands,
+  // Kumeu, Pukekohe, etc. — they come back from Places Autocomplete with
+  // their own locality name) into the enquiry flow even though they were
+  // well inside the radius. A coordinate that hasn't resolved yet (address
+  // typed but no autocomplete selection) is treated as "ok" so the UI
+  // doesn't block on an incomplete field.
   const requiresEnquiry = useMemo(() => {
     if (!needsDropoff) {
-      // Hourly bookings have no destination to compare cities against —
-      // just gate on how far the pickup itself is from Auckland.
+      // Hourly bookings have no destination — just gate on the pickup.
       return pickup.lat != null && !isWithinServiceRadius(pickup.lat, pickup.lng)
     }
     if (!pickup.address || !dropoff.address) return false
-    if (pickupCity && dropoffCity && pickupCity === dropoffCity) {
-      return !pickupIsAuckland
-    }
-    if (pickupIsAuckland) {
-      return !isWithinServiceRadius(dropoff.lat, dropoff.lng)
-    }
-    return true
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [needsDropoff, pickup.address, pickup.lat, pickup.lng, dropoff.address, dropoff.lat, dropoff.lng, pickupCity, dropoffCity, pickupIsAuckland])
+    const pickupOk = pickup.lat == null || isWithinServiceRadius(pickup.lat, pickup.lng)
+    const dropoffOk = dropoff.lat == null || isWithinServiceRadius(dropoff.lat, dropoff.lng)
+    return !(pickupOk && dropoffOk)
+  }, [needsDropoff, pickup.address, pickup.lat, pickup.lng, dropoff.address, dropoff.lat, dropoff.lng])
 
   function goToStep1Valid() {
     if (!pickup.address || !date || !time || !isDateFarEnoughAhead(date)) return false

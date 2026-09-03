@@ -65,25 +65,3 @@ export function isWithinServiceRadius(lat, lng) {
   const d = distanceFromAucklandKm(lat, lng)
   return d === null || d <= SERVICE_RADIUS_KM
 }
-
-// Radius used to recognise a pickup as "based in Auckland" for trip-
-// eligibility purposes (see Booking.jsx's requiresEnquiry). This used to be
-// decided by matching Google Places' 'locality' string against "Auckland",
-// but plenty of genuinely-Auckland pickups — Beachlands, Whitford, Kumeu,
-// Riverhead, Pukekohe, Wellsford, and other outer Auckland Council suburbs —
-// come back from Places Autocomplete with their own locality name instead of
-// "Auckland", which was wrongly routing short local trips (e.g. Beachlands
-// to Māngere, ~30km) into the enquiry-only flow. Geography is a more
-// reliable signal than the locality string here: 80km from the CBD
-// comfortably covers the whole Auckland Council region (Wellsford in the
-// north and Pukekohe in the south are each roughly 60-70km out) while
-// staying well inside the outer 200km SERVICE_RADIUS_KM.
-export const AUCKLAND_METRO_RADIUS_KM = 80
-
-// True only when a real coordinate is known and it falls within Auckland
-// metro — unlike isWithinServiceRadius, an unresolved coordinate is treated
-// as "not Auckland" (conservative default, same as the old empty-city case).
-export function isAucklandMetro(lat, lng) {
-  const d = distanceFromAucklandKm(lat, lng)
-  return d !== null && d <= AUCKLAND_METRO_RADIUS_KM
-}
