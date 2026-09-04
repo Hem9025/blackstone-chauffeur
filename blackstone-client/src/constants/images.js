@@ -45,8 +45,9 @@ export const IMAGES = {
     toyotaAlphard: '/images/fleet/hero/toyota-alphard-v2.jpg',
     audiQ7: '/images/fleet/hero/audi-q7-v2.jpg',
     mercedesSprinter: '/images/fleet/hero/mercedes-sprinter-519-v2.jpg',
-    // No new photo supplied for the Sprinter 316 this round — keeping the existing hero as instructed.
-    mercedesSprinter316: unsplash('photo-1775053392841-7fa6dabdb760', 1400),
+    // Real client photo supplied in a later round ("Comfort Class/Sprinter
+    // 10 Seater") — replaces the earlier Unsplash placeholder.
+    mercedesSprinter316: '/images/fleet/hero/mercedes-sprinter-316-v2.jpg',
     // Real client photo of the Hiace, supplied in the "Comfort Class/Haice Van"
     // folder — replaces the earlier Unsplash placeholder.
     toyotaHiace: '/images/fleet/hero/toyota-hiace-v2.jpg',
@@ -234,8 +235,10 @@ export const IMAGES = {
   // (several interior shots composited into one image), not a set of
   // separate photos — so it replaces that vehicle's old 3-4-shot
   // fleetInterior array with just one image. Vehicles not in this round
-  // (Vito/EQV, Sprinter 316, Haval Jolion) keep their existing fleetInterior
-  // multi-shot arrays above, untouched.
+  // (Vito/EQV, Haval Jolion) keep their existing fleetInterior multi-shot
+  // arrays above, untouched. Sprinter 316 was added in a later drop (Sep
+  // 2026, "Comfort Class/Sprinter 10 Seater" folder — same vehicle, just the
+  // client's own label for its seating capacity) in the same collage style.
   fleetInteriorCollage: {
     bmw7Series: '/images/fleet/interior/bmw-7-series/collage.jpg',
     mercedesGLS: '/images/fleet/interior/mercedes-gls/collage.jpg',
@@ -244,6 +247,7 @@ export const IMAGES = {
     mercedesEClass: '/images/fleet/interior/mercedes-e-class/collage.jpg',
     audiQ7: '/images/fleet/interior/audi-q7/collage.jpg',
     mercedesSprinter: '/images/fleet/interior/mercedes-sprinter-519/collage.jpg',
+    mercedesSprinter316: '/images/fleet/interior/mercedes-sprinter-316/collage.jpg',
     toyotaCamry: '/images/fleet/interior/toyota-camry/collage.jpg',
     skodaSuperb: '/images/fleet/interior/skoda-superb/collage.jpg',
     teslaModelY: '/images/fleet/interior/tesla-model-y/collage.jpg',

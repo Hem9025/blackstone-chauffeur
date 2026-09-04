@@ -52,12 +52,10 @@ const mercedesVitoGallery = [
 
 const mercedesSprinterGallery = interiorCollage('Mercedes-Benz Sprinter 519', IMAGES.fleetInteriorCollage.mercedesSprinter)
 
-const mercedesSprinter316Gallery = [
-  { src: IMAGES.fleetInterior.mercedesSprinter316[0], title: 'Driver Cab', desc: 'Front seat view with a glass office building reflected in the windows.' },
-  { src: IMAGES.fleetInterior.mercedesSprinter316[1], title: 'Dashboard', desc: 'A clean, well-equipped driver cab with modern infotainment.' },
-  { src: IMAGES.fleetInterior.mercedesSprinter316[2], title: 'Passenger Seating', desc: 'Rows of passenger seating, with clearly marked emergency exit for group transfers.' },
-  { src: IMAGES.fleetInterior.mercedesSprinter316[3], title: 'Luggage Space', desc: 'A dedicated rear cargo area, sized for group luggage.' },
-]
+// Real client photo (Sep 2026 "Comfort Class/Sprinter 10 Seater" drop) —
+// replaces the earlier 4-shot fleetInterior array with a single collage,
+// same pattern as mercedesSprinterGallery (519) above.
+const mercedesSprinter316Gallery = interiorCollage('Mercedes-Benz Sprinter 316', IMAGES.fleetInteriorCollage.mercedesSprinter316)
 
 const rangeRoverGallery = interiorCollage('Range Rover', IMAGES.fleetInteriorCollage.rangeRover)
 
