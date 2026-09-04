@@ -133,18 +133,33 @@ router.patch('/:id', authCheck, requirePermission('can_manage_bookings'), async 
 })
 
 // DELETE /api/coupons/:id — admin, or second_admin with can_manage_bookings.
-// Soft delete via active=false, same reasoning as vehicles: past bookings
-// still reference this coupon by id (bookings.coupon_id), so a real row
-// deletion would either fail on the FK or orphan that history.
+// Tries a real row delete first — a coupon that's never actually been used
+// (no booking references it) can just be removed outright. If it IS
+// referenced (bookings.coupon_id, same reasoning as vehicles), the FK
+// constraint rejects the delete, so this falls back to the previous
+// behaviour: soft-delete via active=false, which preserves that booking
+// history instead of orphaning it. Either way the admin gets a real
+// "removed from the list" result for the common case (an unused coupon),
+// not just a deactivation they'd have to notice separately.
 router.delete('/:id', authCheck, requirePermission('can_manage_bookings'), async (req, res) => {
   try {
     const { rows } = await query('SELECT id FROM coupons WHERE id = ?', [req.params.id])
     if (!rows.length) return res.status(404).json({ message: 'Coupon not found' })
-    await query('UPDATE coupons SET active = false WHERE id = ?', [req.params.id])
-    res.json({ message: 'Coupon deactivated' })
+
+    try {
+      await query('DELETE FROM coupons WHERE id = ?', [req.params.id])
+      return res.json({ message: 'Coupon deleted', deleted: true })
+    } catch (err) {
+      if (err.code !== 'ER_ROW_IS_REFERENCED_2' && err.code !== 'ER_ROW_IS_REFERENCED') throw err
+      await query('UPDATE coupons SET active = false WHERE id = ?', [req.params.id])
+      return res.json({
+        message: "This coupon has already been used in past bookings, so it can't be fully deleted — it's been deactivated instead.",
+        deleted: false,
+      })
+    }
   } catch (err) {
     console.error(err)
-    res.status(500).json({ message: 'Failed to deactivate coupon' })
+    res.status(500).json({ message: 'Failed to delete coupon' })
   }
 })
 

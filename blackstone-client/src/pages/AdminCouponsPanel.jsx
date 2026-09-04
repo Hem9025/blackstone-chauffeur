@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, X } from 'lucide-react'
+import { Plus, X, Trash2 } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
 import { coupons as couponsApi } from '../utils/api'
@@ -43,6 +43,8 @@ export default function AdminCouponsPanel() {
   // editingId === 'new' means the create form; null means the panel is closed.
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(BLANK_FORM)
+  const [removingId, setRemovingId] = useState(null)
+  const [notice, setNotice] = useState('')
 
   function load() {
     setLoading(true)
@@ -119,6 +121,26 @@ export default function AdminCouponsPanel() {
     }
   }
 
+  // Tries a real delete server-side; if the coupon has actually been used in
+  // a past booking, the server can't remove the row (it'd orphan that
+  // booking's history) and deactivates it instead — either way, refresh the
+  // list rather than optimistically removing the row, so a soft-deleted
+  // coupon still shows up (now Inactive) rather than silently vanishing.
+  async function handleDelete(c) {
+    if (!window.confirm(`Delete coupon "${c.code}"?`)) return
+    setRemovingId(c.id)
+    setNotice('')
+    try {
+      const result = await couponsApi.remove(c.id)
+      if (result && result.deleted === false) setNotice(result.message)
+      load()
+    } catch (err) {
+      setError(err.message || 'Failed to delete coupon')
+    } finally {
+      setRemovingId(null)
+    }
+  }
+
   function isExpired(c) {
     return c.expires_at && new Date(c.expires_at) < new Date()
   }
@@ -143,6 +165,7 @@ export default function AdminCouponsPanel() {
 
         {loading && <p className="mt-8 text-brand-black/50">Loading…</p>}
         {error && editingId === null && <p className="mt-8 text-red-500">{error}</p>}
+        {notice && <p className="mt-8 text-amber-600">{notice}</p>}
 
         {!loading && (
           <div className="mt-8 overflow-x-auto">
@@ -189,12 +212,22 @@ export default function AdminCouponsPanel() {
                       </button>
                     </td>
                     <td className="py-2 pr-4">
-                      <button
-                        onClick={() => openEdit(c)}
-                        className="border border-brand-gold px-3 py-1 text-xs text-brand-gold hover:bg-brand-gold hover:text-brand-black"
-                      >
-                        Edit
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => openEdit(c)}
+                          className="border border-brand-gold px-3 py-1 text-xs text-brand-gold hover:bg-brand-gold hover:text-brand-black"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(c)}
+                          disabled={removingId === c.id}
+                          aria-label="Delete coupon"
+                          className="text-brand-black/40 hover:text-red-500 disabled:opacity-40"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
