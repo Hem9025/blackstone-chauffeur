@@ -10,7 +10,7 @@ const router = Router()
 // Every column PATCH /:id is allowed to touch — see routes/vehicles.js for
 // why this is whitelisted rather than built from Object.keys(req.body).
 const EDITABLE_COUPON_COLUMNS = [
-  'code', 'discount_type', 'discount_value', 'min_fare', 'max_discount', 'max_uses', 'expires_at', 'active',
+  'code', 'discount_type', 'discount_value', 'min_fare', 'max_discount', 'max_uses', 'max_uses_per_customer', 'expires_at', 'active',
 ]
 
 // POST /api/coupons/validate — customer, live discount preview on the
@@ -22,7 +22,7 @@ router.post('/validate', authCheck, requireRole('customer'), async (req, res) =>
   const { code, fare } = req.body || {}
   try {
     const coupon = await findCouponByCode(code)
-    const result = evaluateCoupon(coupon, fare, req.user.id)
+    const result = await evaluateCoupon(coupon, fare, req.user.id)
     if (!result.ok) return res.status(400).json({ message: result.message })
     res.json({
       code: result.coupon.code,
@@ -60,7 +60,7 @@ router.get('/', authCheck, requirePermission('can_manage_bookings'), async (req,
 
 // POST /api/coupons — admin, or second_admin with can_manage_bookings
 router.post('/', authCheck, requirePermission('can_manage_bookings'), async (req, res) => {
-  const { code, discount_type, discount_value, min_fare, max_discount, max_uses, expires_at, active } = req.body || {}
+  const { code, discount_type, discount_value, min_fare, max_discount, max_uses, max_uses_per_customer, expires_at, active } = req.body || {}
 
   const resolvedCode = String(code || '').trim().toUpperCase()
   if (!resolvedCode) return res.status(400).json({ message: 'Code is required' })
@@ -77,8 +77,8 @@ router.post('/', authCheck, requirePermission('can_manage_bookings'), async (req
 
   try {
     const inserted = await query(
-      `INSERT INTO coupons (code, discount_type, discount_value, min_fare, max_discount, max_uses, expires_at, active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO coupons (code, discount_type, discount_value, min_fare, max_discount, max_uses, max_uses_per_customer, expires_at, active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         resolvedCode,
         discount_type,
@@ -86,6 +86,7 @@ router.post('/', authCheck, requirePermission('can_manage_bookings'), async (req
         Number(min_fare) || 0,
         max_discount === '' || max_discount == null ? null : Number(max_discount),
         max_uses === '' || max_uses == null ? null : Number(max_uses),
+        max_uses_per_customer === '' || max_uses_per_customer == null ? null : Number(max_uses_per_customer),
         expires_at || null,
         active !== false,
       ],
@@ -112,7 +113,7 @@ router.patch('/:id', authCheck, requirePermission('can_manage_bookings'), async 
   const setClause = keys.map((k) => `${k} = ?`).join(', ')
   const values = keys.map((k) => {
     if (k === 'code') return String(fields.code || '').trim().toUpperCase()
-    if (['max_discount', 'max_uses'].includes(k)) {
+    if (['max_discount', 'max_uses', 'max_uses_per_customer'].includes(k)) {
       return fields[k] === '' || fields[k] == null ? null : Number(fields[k])
     }
     if (k === 'expires_at') return fields[k] || null

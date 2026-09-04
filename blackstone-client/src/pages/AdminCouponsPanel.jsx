@@ -12,6 +12,7 @@ const BLANK_FORM = {
   min_fare: '',
   max_discount: '',
   max_uses: '',
+  max_uses_per_customer: '',
   expires_at: '',
   active: true,
 }
@@ -27,6 +28,7 @@ function couponToForm(c) {
     min_fare: c.min_fare ?? '',
     max_discount: c.max_discount ?? '',
     max_uses: c.max_uses ?? '',
+    max_uses_per_customer: c.max_uses_per_customer ?? '',
     expires_at: c.expires_at ? String(c.expires_at).slice(0, 10) : '',
     active: c.active !== false,
   }
@@ -88,6 +90,7 @@ export default function AdminCouponsPanel() {
       min_fare: form.min_fare === '' ? 0 : Number(form.min_fare),
       max_discount: form.max_discount === '' ? null : Number(form.max_discount),
       max_uses: form.max_uses === '' ? null : Number(form.max_uses),
+      max_uses_per_customer: form.max_uses_per_customer === '' ? null : Number(form.max_uses_per_customer),
       expires_at: form.expires_at || null,
       active: form.active,
     }
@@ -134,7 +137,8 @@ export default function AdminCouponsPanel() {
         <p className="mt-2 text-sm text-brand-black/50">
           Discount codes customers can apply on the Booking page. Only used on the
           instant-online-booking flow — provider/admin-created bookings are priced manually and
-          don't use these.
+          don't use these. "Max uses per customer" limits how many times one signed-in account
+          (one email) can redeem a given code, separate from the total across everyone.
         </p>
 
         {loading && <p className="mt-8 text-brand-black/50">Loading…</p>}
@@ -165,7 +169,12 @@ export default function AdminCouponsPanel() {
                       )}
                     </td>
                     <td className="py-2 pr-4">{Number(c.min_fare) > 0 ? formatCurrency(c.min_fare) : '—'}</td>
-                    <td className="py-2 pr-4">{c.uses_count}{c.max_uses != null ? ` / ${c.max_uses}` : ''}</td>
+                    <td className="py-2 pr-4">
+                      {c.uses_count}{c.max_uses != null ? ` / ${c.max_uses}` : ''}
+                      {c.max_uses_per_customer != null && (
+                        <span className="text-brand-black/40"> (max {c.max_uses_per_customer}/customer)</span>
+                      )}
+                    </td>
                     <td className="py-2 pr-4">
                       {c.expires_at ? (
                         <span className={isExpired(c) ? 'text-red-500' : ''}>{String(c.expires_at).slice(0, 10)}</span>
@@ -288,15 +297,27 @@ export default function AdminCouponsPanel() {
                     />
                   </label>
                   <label className="text-xs text-brand-black/50">
-                    Expires (optional)
+                    Max uses per customer (optional)
                     <input
-                      type="date"
-                      value={form.expires_at}
-                      onChange={update('expires_at')}
+                      type="number"
+                      min="0"
+                      placeholder="Unlimited"
+                      value={form.max_uses_per_customer}
+                      onChange={update('max_uses_per_customer')}
                       className="mt-1 w-full border border-brand-black/15 px-3 py-2"
                     />
                   </label>
                 </div>
+
+                <label className="text-xs text-brand-black/50">
+                  Expires (optional)
+                  <input
+                    type="date"
+                    value={form.expires_at}
+                    onChange={update('expires_at')}
+                    className="mt-1 w-full border border-brand-black/15 px-3 py-2"
+                  />
+                </label>
 
                 <label className="flex items-center gap-2 text-sm text-brand-black">
                   <input type="checkbox" checked={form.active} onChange={update('active')} />

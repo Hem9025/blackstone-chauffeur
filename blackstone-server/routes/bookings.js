@@ -195,7 +195,7 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
     let appliedCoupon = null
     if (coupon_code) {
       const coupon = await findCouponByCode(coupon_code)
-      const result = evaluateCoupon(coupon, fareBeforeDiscount, req.user.id)
+      const result = await evaluateCoupon(coupon, fareBeforeDiscount, req.user.id)
       if (!result.ok) {
         return res.status(400).json({ message: result.message })
       }

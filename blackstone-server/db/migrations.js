@@ -31,6 +31,10 @@ const COLUMN_ADDITIONS = [
   // from before the referral feature existed.
   { table: 'coupons', column: 'kind', definition: "VARCHAR(20) NOT NULL DEFAULT 'promo'" },
   { table: 'coupons', column: 'owner_user_id', definition: 'INT' },
+  // Per-customer redemption cap — see schema.sql. Added after max_uses (the
+  // total/cross-customer cap), so a database from before this existed needs
+  // it added the same way.
+  { table: 'coupons', column: 'max_uses_per_customer', definition: 'INT' },
 ]
 
 // Loosens NOT NULL columns on a database that was already provisioned before

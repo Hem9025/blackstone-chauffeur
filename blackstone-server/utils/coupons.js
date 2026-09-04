@@ -26,12 +26,15 @@ export async function findCouponByCode(codeRaw) {
  * two ownership rules on personal (non-'promo') coupons: a 'referral' code
  * can be used by anyone EXCEPT the customer it belongs to (no
  * self-referral), and a 'reward' code can only be used by the customer it
- * was issued to.
+ * was issued to. It's also used to enforce max_uses_per_customer (below),
+ * which is why this is now async — it needs a DB round-trip to count that
+ * customer's own past redemptions, unlike every other check here which is
+ * pure in-memory logic against the coupon row already in hand.
  *
  * Returns { ok: true, discountAmount, finalTotal, coupon } or
  * { ok: false, message }.
  */
-export function evaluateCoupon(coupon, fare, userId) {
+export async function evaluateCoupon(coupon, fare, userId) {
   if (!coupon) return { ok: false, message: 'Invalid coupon code' }
   if (!coupon.active) return { ok: false, message: 'This coupon is no longer active' }
   if (coupon.kind === 'referral' && coupon.owner_user_id === userId) {
@@ -45,6 +48,21 @@ export function evaluateCoupon(coupon, fare, userId) {
   }
   if (coupon.max_uses != null && coupon.uses_count >= coupon.max_uses) {
     return { ok: false, message: 'This coupon has reached its usage limit' }
+  }
+  // Per-customer cap — separate from max_uses above, which counts
+  // redemptions across every customer. Counts this customer's own past
+  // bookings that used this exact coupon (bookings.coupon_id), the same
+  // "a booking row exists" definition of "used" that incrementCouponUses
+  // below counts against the global max_uses — so a coupon abandoned before
+  // checkout never counts here either.
+  if (coupon.max_uses_per_customer != null && userId) {
+    const { rows } = await query(
+      'SELECT COUNT(*) AS count FROM bookings WHERE coupon_id = ? AND customer_id = ?',
+      [coupon.id, userId],
+    )
+    if (rows[0].count >= coupon.max_uses_per_customer) {
+      return { ok: false, message: "You've already used this coupon the maximum number of times" }
+    }
   }
 
   const fareNum = Number(fare) || 0

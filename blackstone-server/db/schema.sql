@@ -67,6 +67,11 @@ CREATE TABLE IF NOT EXISTS coupons (
   -- customers. NULL = unlimited.
   max_uses INT,
   uses_count INT NOT NULL DEFAULT 0,
+  -- How many times a SINGLE customer may redeem this code (checked against
+  -- their own past bookings that used it — see evaluateCoupon in
+  -- utils/coupons.js). NULL = no per-customer cap, only max_uses applies.
+  -- Separate from max_uses, which caps total redemptions across everyone.
+  max_uses_per_customer INT,
   expires_at DATETIME,
   active BOOLEAN NOT NULL DEFAULT TRUE,
   -- 'promo' = a normal code admin creates from Admin > Coupons, usable by
