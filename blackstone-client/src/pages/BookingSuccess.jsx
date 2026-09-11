@@ -1,7 +1,17 @@
+import { useEffect } from 'react'
 import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
 
 export default function BookingSuccess() {
+  // Fires once when a booking actually completes — this is what gets marked
+  // as a Key Event in GA4, then imported into Google Ads as a conversion.
+  // Guarded in case an ad blocker stripped window.gtag.
+  useEffect(() => {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'booking_completed')
+    }
+  }, [])
+
   return (
     <div>
       <PageMeta title="Booking Confirmed" description="Your BlackStone Chauffeur booking is confirmed." />
