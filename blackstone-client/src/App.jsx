@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -74,6 +74,27 @@ const ACCOUNT_ROUTE_PREFIXES = ['/dashboard', '/driver', '/provider', '/admin', 
 function App() {
   const { pathname } = useLocation()
   const isAccountRoute = ACCOUNT_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+
+  // gtag's own config call only fires a page_view once, on the very first
+  // load — client-side route changes after that are invisible to GA4 unless
+  // we tell it explicitly. That's why Realtime only ever showed "/". This
+  // sends one on every route change; the initial load is skipped here since
+  // the config call in index.html already covers it (avoids double-counting
+  // the landing page).
+  const isFirstRender = useRef(true)
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'page_view', {
+        page_path: pathname,
+        page_location: window.location.href,
+        page_title: document.title,
+      })
+    }
+  }, [pathname])
 
   return (
     <div className="flex min-h-screen flex-col">
