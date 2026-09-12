@@ -21,6 +21,13 @@
       gtag('js', new Date());
 
       gtag('config', 'G-NXZJSH5ZR7');
+
+      // Google Ads conversion tag (AW-16604674399) — same base gtag.js loader
+      // above already covers this, so we just add a second config call rather
+      // than loading the script twice. This is what makes the "Booking
+      // Success" conversion action (Page load / Destination URL match on
+      // /booking/success) actually fire for the new Search campaign.
+      gtag('config', 'AW-16604674399');
     </script>
   </head>
   <body>
