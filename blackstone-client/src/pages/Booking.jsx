@@ -590,7 +590,7 @@ function BookingContent({ mapsLoaded }) {
     <div className="bg-black/[0.02] pb-16">
       <PageMeta
         title="Book a Chauffeur Online"
-        description="Book your BlackStone Chauffeur ride online in minutes — airport transfers, corporate travel, weddings and hourly hire, with transparent pricing confirmed before you pay."
+        description="Book your BlackStone Chauffeur ride online in minutes — corporate travel, VIP airport transfers, weddings and hourly hire, with transparent pricing confirmed before you pay."
         jsonLd={BOOKING_JSON_LD}
       />
 

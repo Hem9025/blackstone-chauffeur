@@ -15,8 +15,8 @@ import { reviews as reviewsApi } from '../utils/api'
 import { organizationJsonLd, faqJsonLd, GOOGLE_REVIEW_URL } from '../constants/seo'
 
 const services = [
-  { title: 'Airport Transfers', desc: 'Punctual meet & greet transfers to and from every major terminal.', image: IMAGES.services.airport },
-  { title: 'Corporate Travel', desc: 'Reliable chauffeur service for executives and business events.', image: IMAGES.services.corporate },
+  { title: 'Corporate Travel', desc: 'Discreet, reliable chauffeur service for executives, VVIP guests and international travel partners.', image: IMAGES.services.corporate },
+  { title: 'Airport Transfers', desc: 'Punctual VIP meet & greet transfers to and from every major terminal.', image: IMAGES.services.airport },
   { title: 'Weddings & Events', desc: 'Arrive in style on the most important days.', image: IMAGES.services.wedding },
   { title: 'Private Tours', desc: 'Bespoke sightseeing with a professional local driver.', image: IMAGES.services.tour },
 ]
@@ -59,8 +59,8 @@ export default function Home() {
   return (
     <div>
       <PageMeta
-        title="Chauffeur Service Auckland & NZ"
-        description="Premium airport transfers, corporate travel, wedding cars and private tours across Auckland, NZ. Book your chauffeur online with transparent, upfront pricing."
+        title="VVIP & Corporate Chauffeur Service | Auckland & NZ"
+        description="Trusted VVIP, corporate and international travel partner in Auckland, NZ — plus airport transfers, wedding cars and private tours. Book your chauffeur online with transparent, upfront pricing."
         jsonLd={[organizationJsonLd, faqJsonLd(faqs)]}
       />
 
@@ -89,15 +89,16 @@ export default function Home() {
             <div className="mx-auto w-full max-w-7xl">
               <div className="flex max-w-xl flex-col gap-6">
                 <p className="text-sm uppercase tracking-[0.25em] text-brand-gold">
-                  Premium Chauffeur Service
+                  VVIP & Corporate Chauffeur Service
                 </p>
                 <h1 className="font-hero text-5xl italic leading-[1.05] tracking-tight md:text-7xl">
                   Arrive in style, every time.
                 </h1>
                 <p className="max-w-md text-white/70">
-                  BlackStone Chauffeur delivers black-tie transport for airport transfers,
-                  corporate travel, weddings and private tours — driven by professionals
-                  who put your schedule first.
+                  BlackStone Chauffeur is the trusted partner for VVIP guests, corporate
+                  executives and international travel partners — plus airport transfers,
+                  weddings and private tours, driven by professionals who put your
+                  schedule first.
                 </p>
               </div>
             </div>
@@ -116,7 +117,7 @@ export default function Home() {
       <Reveal variant="fade">
         <StatsBand
           heading="A New Standard of Luxury Travel and Comfort"
-          description="BlackStone Chauffeur has proudly served clients across New Zealand for over 5 years, delivering unmatched luxury transportation with professionalism and care."
+          description="BlackStone Chauffeur has proudly served VVIP guests, corporate travel partners and international visitors across New Zealand for over 5 years, delivering unmatched luxury transportation with professionalism and discretion."
           stats={homeStats}
           dark={false}
         />
@@ -126,7 +127,7 @@ export default function Home() {
       <section className="border-b border-black/10 bg-white py-8">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <p className="text-center text-xs uppercase tracking-[0.2em] text-black/40">
-            Trusted for airport, corporate & wedding transport
+            Trusted by VVIP guests, corporate travel partners & international visitors
           </p>
         </div>
       </section>

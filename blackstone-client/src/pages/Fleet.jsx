@@ -24,7 +24,7 @@ export default function Fleet() {
     <div>
       <PageMeta
         title="Our Luxury & Comfort Fleet"
-        description="Browse our luxury and comfort-class fleet — sedans, SUVs and vans for airport transfers, weddings and corporate travel, chauffeured across New Zealand."
+        description="Browse our luxury and comfort-class fleet — sedans, SUVs and vans for corporate travel, VIP airport transfers and weddings, chauffeured across New Zealand."
         jsonLd={FLEET_JSON_LD}
       />
 

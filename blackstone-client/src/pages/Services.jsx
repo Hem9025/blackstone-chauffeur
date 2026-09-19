@@ -6,17 +6,17 @@ import { IMAGES } from '../constants/images'
 import { breadcrumbJsonLd, serviceJsonLd } from '../constants/seo'
 
 const services = [
-  { title: 'Airport Transfers', desc: 'Effortless airport transfers, with guaranteed on-time arrivals and departures, ensuring a hassle-free and smooth travel experience every time.', image: IMAGES.services.airport },
-  { title: 'Corporate Travel', desc: 'Professional chauffeurs for executive transportation, ensuring a comfortable and perfect experience for business travelers.', image: IMAGES.services.corporate },
-  { title: 'Hourly Hire', desc: 'Flexible options for clients who require chauffeur services on an hourly basis, ideal for events or meetings.', image: IMAGES.services.hourly },
-  { title: 'Wedding Transfers', desc: 'Reliable, stylish, and on-time chauffeur services for your special day. Book now!', image: IMAGES.services.wedding },
-  { title: 'Night Club Transfers', desc: "Ride in style. Party safe. We've got your night out covered.", image: IMAGES.services.nightclub },
-  { title: 'VIP Service', desc: 'Exclusive services tailored for VIP guests, ensuring a luxurious and personalized experience.', image: IMAGES.services.vip },
+  { title: 'Corporate Travel', desc: 'Professional chauffeurs for executive and international business travelers, ensuring a comfortable and perfect experience.', image: IMAGES.services.corporate },
+  { title: 'VIP Service', desc: 'Exclusive services tailored for VVIP guests and international travel partners, ensuring a luxurious, discreet and personalized experience.', image: IMAGES.services.vip },
+  { title: 'Airport Transfers', desc: 'Effortless VIP airport transfers, with guaranteed on-time arrivals and departures, ensuring a hassle-free and smooth travel experience every time.', image: IMAGES.services.airport },
   { title: 'Business Meetings', desc: 'Reliable transportation to and from business meetings, contributing to a professional image and a successful outcome.', image: IMAGES.services.businessMeeting },
-  { title: 'City Tours', desc: "Expert-led tours featuring the city's top attractions, delivering an immersive and educational experience for guests, and a richer understanding of the local culture and landmarks.", image: IMAGES.services.tour },
-  { title: 'Special Events', desc: 'Transportation for weddings, parties, or other special occasions, providing a touch of elegance and sophistication.', image: IMAGES.services.special },
+  { title: 'Hourly Hire', desc: 'Flexible options for clients who require chauffeur services on an hourly basis, ideal for events or meetings.', image: IMAGES.services.hourly },
   { title: 'Point-to-point Transfer', desc: 'Convenient transfers between specific locations, offering a hassle-free experience and saving valuable time.', image: IMAGES.services.pointToPoint },
+  { title: 'City Tours', desc: "Expert-led tours featuring the city's top attractions, delivering an immersive and educational experience for guests, and a richer understanding of the local culture and landmarks.", image: IMAGES.services.tour },
   { title: 'Sightseeing Excursions', desc: "Tailored excursions to local landmarks and attractions, enhancing the guest's exploration and appreciation of the city.", image: IMAGES.services.sightseeing },
+  { title: 'Wedding Transfers', desc: 'Reliable, stylish, and on-time chauffeur services for your special day. Book now!', image: IMAGES.services.wedding },
+  { title: 'Special Events', desc: 'Transportation for weddings, parties, or other special occasions, providing a touch of elegance and sophistication.', image: IMAGES.services.special },
+  { title: 'Night Club Transfers', desc: "Ride in style. Party safe. We've got your night out covered.", image: IMAGES.services.nightclub },
   { title: 'Luxury Fleet Options', desc: 'A diverse fleet of high-end vehicles, providing options based on guest preferences, including luxury sedans, SUVs, and vans.', image: IMAGES.services.luxuryFleet },
 ]
 
@@ -35,7 +35,7 @@ const SERVICES_JSON_LD = [
   serviceJsonLd({
     name: 'Chauffeur Services',
     description:
-      'Airport transfers, corporate travel, wedding cars, VIP service, city tours and hourly hire, chauffeured across Auckland and New Zealand.',
+      'Corporate travel, VIP service and airport transfers for international travel partners, plus wedding cars, city tours and hourly hire, chauffeured across Auckland and New Zealand.',
     path: '/services',
   }),
 ]
@@ -44,8 +44,8 @@ export default function Services() {
   return (
     <div>
       <PageMeta
-        title="Chauffeur Services | Auckland & NZ"
-        description="Airport transfers, corporate travel, wedding cars, VIP service and city tours — professionally chauffeured across Auckland and New Zealand with upfront pricing."
+        title="VVIP & Corporate Chauffeur Services | Auckland & NZ"
+        description="Corporate travel, VIP airport transfers and international travel partnerships — plus wedding cars and city tours — professionally chauffeured across Auckland and New Zealand with upfront pricing."
         jsonLd={SERVICES_JSON_LD}
       />
 
@@ -58,11 +58,12 @@ export default function Services() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/45 to-black/20" />
         <div className="relative mx-auto max-w-7xl px-4 md:px-8">
-          <p className="text-sm uppercase tracking-[0.25em] text-brand-gold">Chauffeur Services in Auckland &amp; NZ</p>
+          <p className="text-sm uppercase tracking-[0.25em] text-brand-gold">VVIP &amp; Corporate Chauffeur Services in Auckland &amp; NZ</p>
           <h1 className="mt-2 font-heading text-5xl leading-tight md:text-6xl">Our Services</h1>
           <p className="mt-4 max-w-2xl text-white/70">
-            Airport transfers, corporate travel, weddings, and private tours — every ride professionally
-            chauffeured across Auckland, Wellington, Hamilton, Rotorua, Christchurch, and Queenstown.
+            Corporate travel, VIP airport transfers, and international travel partnerships — plus weddings
+            and private tours, every ride professionally chauffeured across Auckland, Wellington,
+            Hamilton, Rotorua, Christchurch, and Queenstown.
           </p>
         </div>
       </section>

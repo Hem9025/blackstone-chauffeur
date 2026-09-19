@@ -46,7 +46,7 @@ export const organizationJsonLd = {
   '@id': `${SITE_URL}/#organization`,
   name: BUSINESS_NAME,
   description:
-    'Premium chauffeur service offering airport transfers, corporate travel, weddings and private tours across New Zealand.',
+    'Trusted VVIP, corporate and international travel partner offering chauffeur service across New Zealand — plus airport transfers, weddings and private tours.',
   url: SITE_URL,
   telephone: BUSINESS_PHONE,
   email: BUSINESS_EMAIL,

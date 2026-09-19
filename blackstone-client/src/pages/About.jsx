@@ -40,7 +40,7 @@ const stats = [
 
 const coreValues = [
   { icon: Award, title: 'Professionalism', desc: 'Dedicated to providing the highest standard of chauffeur services across New Zealand.' },
-  { icon: Sparkles, title: 'Tailored Experiences', desc: 'Bespoke services for weddings, corporate events, and sightseeing across New Zealand.' },
+  { icon: Sparkles, title: 'Tailored Experiences', desc: 'Bespoke service for VVIP guests, corporate travel partners and international visitors — plus weddings and sightseeing across New Zealand.' },
   { icon: Car, title: 'Luxurious Fleet', desc: 'Providing a wide selection of premium and economical vehicles for every occasion.' },
   { icon: Clock, title: 'Reliability', desc: 'Count on us for punctual, dependable transportation designed to meet your needs.' },
 ]
@@ -76,8 +76,8 @@ export default function About() {
   return (
     <div>
       <PageMeta
-        title="About Our Chauffeur Service"
-        description="Serving Auckland, Wellington, Hamilton, Rotorua, Christchurch and Queenstown for 5+ years — professional chauffeurs, a premium fleet, and 24/7 availability."
+        title="About Our VVIP & Corporate Chauffeur Service"
+        description="New Zealand's trusted VVIP, corporate and international travel partner — serving Auckland, Wellington, Hamilton, Rotorua, Christchurch and Queenstown for 5+ years with professional chauffeurs, a premium fleet, and 24/7 availability."
         jsonLd={ABOUT_JSON_LD}
       />
 
@@ -91,16 +91,20 @@ export default function About() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/45 to-black/20" />
         <div className="relative mx-auto max-w-7xl px-4 md:px-8">
           <h1 className="font-heading text-5xl leading-tight md:text-6xl">About Us</h1>
+          <p className="mt-4 max-w-xl text-white/70">
+            New Zealand's trusted chauffeur partner for VVIP guests, corporate travel and
+            international visitors.
+          </p>
         </div>
       </section>
 
       {/* Who We Are + numbers — combined horizontal strip */}
       <StatsBand
         eyebrow="Who We Are"
-        heading="New Zealand's Premier Luxury Chauffeur Service"
+        heading="New Zealand's Trusted VVIP & Corporate Chauffeur Partner"
         description={[
-          'Founded with a passion for excellence, BlackStone Chauffeur has been serving clients across New Zealand with the highest standard of luxury transportation.',
-          'From airport transfers to wedding car hire, corporate travel to private tours — we deliver an unmatched experience tailored to your every need.',
+          'Founded with a passion for excellence, BlackStone Chauffeur has been serving VVIP guests, corporate travel partners and international visitors across New Zealand with the highest standard of luxury transportation.',
+          'From corporate travel to VIP airport transfers, wedding car hire to private tours — we deliver an unmatched experience tailored to your every need.',
         ]}
         stats={stats}
         dark={false}
