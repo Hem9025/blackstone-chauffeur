@@ -95,7 +95,10 @@ const DEMO_VEHICLES = [
     price_per_suitcase: 0,
     distance_tiers: ECONOMY_SUV_TIERS,
     features: ['Free Wifi', 'Meet & Greet'],
-    image_url: 'https://images.unsplash.com/photo-1673166105764-a6aa7e0e73a7?auto=format&fit=crop&w=1200&q=80',
+    // Real fleet photo (Toyota RAV4 — closest match to this category) rather
+    // than a generic stock shot — same source as the Comfort Fleet page's
+    // hero image (blackstone-client/src/constants/images.js IMAGES.fleet.toyotaRAV4).
+    image_url: 'https://www.blackstonechauffeur.co.nz/images/fleet/hero/toyota-rav4-v2.jpg',
   },
   {
     name: 'Business Van',
@@ -111,7 +114,8 @@ const DEMO_VEHICLES = [
     price_per_suitcase: 0,
     distance_tiers: BUSINESS_VAN_TIERS,
     features: ['Chocolates / Mint', 'Free Wifi', 'Meet & Greet', 'Phone Charger', 'Water Bottle'],
-    image_url: 'https://images.unsplash.com/photo-1775637483812-fee34cccf8d7?auto=format&fit=crop&w=1200&q=80',
+    // Real fleet photo (Mercedes-Benz Vito/EQV — our actual executive van).
+    image_url: 'https://www.blackstonechauffeur.co.nz/images/fleet/hero/mercedes-vito-eqv-new.jpg',
   },
   {
     name: 'Economy Sedan',
@@ -127,7 +131,8 @@ const DEMO_VEHICLES = [
     price_per_suitcase: 0,
     distance_tiers: ECONOMY_SEDAN_TIERS,
     features: ['Free Wifi', 'Meet & Greet'],
-    image_url: 'https://images.unsplash.com/photo-1609521233053-345bfa8b6f17?auto=format&fit=crop&w=1200&q=80',
+    // Real fleet photo (Toyota Camry — closest match to this category).
+    image_url: 'https://www.blackstonechauffeur.co.nz/images/fleet/hero/toyota-camry-v2.jpg',
   },
   {
     name: 'Economy Van',
@@ -143,7 +148,8 @@ const DEMO_VEHICLES = [
     price_per_suitcase: 0,
     distance_tiers: ECONOMY_VAN_TIERS,
     features: ['Free Wifi', 'Meet & Greet'],
-    image_url: 'https://images.unsplash.com/photo-1710343491609-0cbc6c14b92d?auto=format&fit=crop&w=1200&q=80',
+    // Real fleet photo (Toyota Hiace — our actual shuttle/group van).
+    image_url: 'https://www.blackstonechauffeur.co.nz/images/fleet/hero/toyota-hiace-v2.jpg',
   },
   {
     name: 'Business Sedan',
@@ -159,7 +165,8 @@ const DEMO_VEHICLES = [
     price_per_suitcase: 0,
     distance_tiers: BUSINESS_SEDAN_TIERS,
     features: ['Chocolates / Mint', 'Free Wifi', 'Meet & Greet', 'Phone Charger', 'Water Bottle'],
-    image_url: 'https://images.unsplash.com/photo-1655827763440-7905302b75ff?auto=format&fit=crop&w=1200&q=80',
+    // Real fleet photo (Mercedes-Benz E-Class — closest match to this category).
+    image_url: 'https://www.blackstonechauffeur.co.nz/images/fleet/hero/mercedes-e-class-v2.jpg',
   },
 ]
 
