@@ -28,13 +28,13 @@ const features = [
 ]
 
 const testimonials = [
-  { name: 'Sarah M.', role: 'Corporate Client', quote: 'Immaculate car, and the driver tracked our delayed flight without us even asking. Exactly the reliability we need for client pickups.', avatar: IMAGES.testimonialAvatars[0] },
-  { name: 'James H.', role: 'Wedding Booking', quote: 'Booked the wedding car package — punctual, beautifully presented, and made the whole day feel effortless.', avatar: IMAGES.testimonialAvatars[1] },
+  { name: 'James H.', role: 'Corporate Client', quote: 'Immaculate car, and the driver tracked our delayed flight without us even asking. Exactly the reliability we need for client pickups.', avatar: IMAGES.testimonialAvatars[0] },
+  { name: 'Sarah M.', role: 'Wedding Booking', quote: 'Booked the wedding car package — punctual, beautifully presented, and made the whole day feel effortless.', avatar: IMAGES.testimonialAvatars[1] },
   { name: 'Priya R.', role: 'Airport Transfer', quote: 'Simple online booking, clear pricing upfront, and a genuinely five-star ride. Will be using BlackStone again.', avatar: IMAGES.testimonialAvatars[2] },
 ]
 
 const homeStats = [
-  { value: '3+', label: 'Years' },
+  { value: '5+', label: 'Years' },
   { value: '100+', label: 'Reviews' },
   { value: '700+', label: 'Customers' },
 ]
@@ -116,7 +116,7 @@ export default function Home() {
       <Reveal variant="fade">
         <StatsBand
           heading="A New Standard of Luxury Travel and Comfort"
-          description="BlackStone Chauffeur has proudly served clients across New Zealand for over 3 years, delivering unmatched luxury transportation with professionalism and care."
+          description="BlackStone Chauffeur has proudly served clients across New Zealand for over 5 years, delivering unmatched luxury transportation with professionalism and care."
           stats={homeStats}
           dark={false}
         />

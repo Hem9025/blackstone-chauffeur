@@ -1,5 +1,8 @@
 import { Router } from 'express'
 import Stripe from 'stripe'
+import crypto from 'crypto'
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 import { query } from '../db/index.js'
 import authCheck from '../middleware/authCheck.js'
 import { requireRole } from '../middleware/roleCheck.js'
@@ -12,6 +15,7 @@ import { rideReceiptTemplate } from '../emails/templates/rideReceipt.js'
 import { newBookingAdminTemplate } from '../emails/templates/newBookingAdmin.js'
 import { bookingCancelledTemplate } from '../emails/templates/bookingCancelled.js'
 import { bookingUpdatedTemplate } from '../emails/templates/bookingUpdated.js'
+import { guestBookingWelcomeTemplate } from '../emails/templates/guestBookingWelcome.js'
 import { calculateFare, resolveExtraWaitCharge } from '../utils/pricing.js'
 import { findCouponByCode, evaluateCoupon, incrementCouponUses, issueReferralReward } from '../utils/coupons.js'
 import { streamInvoice } from '../utils/invoice.js'
@@ -279,6 +283,250 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
     const { rows } = await query('SELECT * FROM bookings WHERE id = ?', [inserted.insertId])
 
     res.status(201).json({ booking: rows[0], client_secret: paymentIntent.client_secret, total_price })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to create booking' })
+  }
+})
+
+// POST /api/bookings/guest — public, no login required. Same pricing/Stripe
+// logic as POST / above, but for a visitor who never created an account.
+// Instead of blocking on auth, this resolves (or quietly creates) the
+// account behind the scenes from the name/email/phone they type into the
+// booking form itself — no separate signup screen, no password prompt
+// before paying. A brand-new account gets a random unusable password plus
+// a long-lived reset token (the exact same mechanism as the normal
+// forgot-password flow — see auth.js), and an email with a "Set Your
+// Password" button so they can claim it later if they want to log in and
+// see their ride history; they're never blocked from booking while that's
+// pending. If the email already belongs to an existing account, the
+// booking simply attaches to that account instead (no password touched,
+// no email sent) — same as any returning customer.
+router.post('/guest', async (req, res) => {
+  const {
+    guest_name, guest_email, guest_phone,
+    vehicle_id, pickup, dropoff, date, time, extras, distance_km, duration_min,
+    trip_type, service_type, hours, flight_number, stops, stop_addresses, child_seats, notes,
+    passengers, suitcases, extra_wait_minutes, coupon_code,
+  } = req.body || {}
+
+  const resolvedGuestName = String(guest_name || '').trim()
+  const resolvedGuestEmail = String(guest_email || '').trim().toLowerCase()
+  const resolvedGuestPhone = String(guest_phone || '').trim()
+
+  if (!resolvedGuestName || !resolvedGuestEmail || !resolvedGuestPhone) {
+    return res.status(400).json({ message: 'Name, email, and phone are required' })
+  }
+
+  if (!isDateFarEnoughAhead(date)) {
+    return res.status(400).json({ message: `Bookings must be made at least ${MIN_ADVANCE_DAYS} days in advance.` })
+  }
+  if (!pickup || !date || !time) {
+    return res.status(400).json({ message: 'pickup, date, and time are required' })
+  }
+
+  const resolvedTripType = ['one_way', 'return', 'hourly'].includes(trip_type) ? trip_type : 'one_way'
+  const resolvedServiceType = service_type === 'Airport Transfer' ? 'Airport Transfer' : 'Chauffeur Service'
+  const isHourly = resolvedTripType === 'hourly'
+  const needsDropoff = !isHourly
+
+  if (needsDropoff && !dropoff) {
+    return res.status(400).json({ message: 'Destination is required for this trip type' })
+  }
+  if (isHourly && (!hours || Number(hours) <= 0)) {
+    return res.status(400).json({ message: 'Please select the number of hours for an hourly booking' })
+  }
+
+  const resolvedChildSeats = Math.min(CHILD_SEAT_MAX, Math.max(0, Number(child_seats) || 0))
+  const resolvedStopAddresses = needsDropoff && Array.isArray(stop_addresses)
+    ? stop_addresses.map((a) => String(a || '').trim()).filter(Boolean)
+    : []
+  const resolvedStops = resolvedStopAddresses.length || (needsDropoff ? Math.max(0, Number(stops) || 0) : 0)
+  const resolvedFlightNumber = resolvedServiceType === 'Airport Transfer' ? (flight_number || null) : null
+  const resolvedNotes = String(notes || '').trim().slice(0, 250) || null
+  const resolvedDropoff = needsDropoff ? dropoff : 'As directed (Hourly)'
+  const resolvedDistanceKm = needsDropoff ? distance_km : null
+  const resolvedDurationMin = isHourly ? Number(hours) * 60 : needsDropoff ? duration_min : 0
+  const resolvedHours = isHourly ? Number(hours) : null
+
+  try {
+    const { rows: vehicleRows } = await query('SELECT * FROM vehicles WHERE id = ? AND active = true', [vehicle_id])
+    if (!vehicleRows.length) return res.status(400).json({ message: 'Invalid vehicle selected' })
+    const vehicle = vehicleRows[0]
+
+    const resolvedPassengers = Math.min(Math.max(1, Number(passengers) || 1), Number(vehicle.passengers) || 1)
+    const resolvedSuitcases = Math.min(Math.max(0, Number(suitcases) || 0), Number(vehicle.suitcases) || 0)
+
+    const requestedNames = (extras || []).map((e) => e?.name).filter(Boolean)
+    let matchedAddOns = []
+    if (requestedNames.length) {
+      const { rows } = await query('SELECT name, price FROM add_ons WHERE name IN (?)', [requestedNames])
+      matchedAddOns = rows
+    }
+    const { minutes: resolvedExtraWaitMinutes, price: extraWaitCharge } = resolveExtraWaitCharge(extra_wait_minutes)
+    if (extraWaitCharge > 0) {
+      matchedAddOns = [...matchedAddOns, { name: `Extra Wait Time (${resolvedExtraWaitMinutes} min)`, price: extraWaitCharge }]
+    }
+    const flatAddOnsTotal = matchedAddOns.reduce((sum, a) => sum + Number(a.price), 0)
+    const qtyAddOnsTotal = await quantityAddOnsTotal(resolvedChildSeats, resolvedStops)
+    const addOnsTotal = flatAddOnsTotal + qtyAddOnsTotal
+
+    const fareBeforeDiscount = calculateFare({
+      vehicle,
+      distanceKm: resolvedDistanceKm,
+      durationMin: resolvedDurationMin,
+      passengers: resolvedPassengers,
+      suitcases: resolvedSuitcases,
+      addOnsTotal,
+      time,
+    })
+
+    // Resolve the account this booking attaches to — reuse an existing one
+    // by email (nothing about their password/login is touched), or quietly
+    // create a new one. Either way there's a real customer_id by the time
+    // we reach fare/coupon logic below, so every downstream query (coupon
+    // usage, referral first-booking check, admin views, the customer
+    // dashboard if they ever log in) works exactly like a normal booking —
+    // no schema changes, no nullable customer_id anywhere.
+    const { rows: existingUserRows } = await query('SELECT id, name FROM users WHERE email = ?', [resolvedGuestEmail])
+    let resolvedCustomerId
+    let isNewAccount = false
+    let resetUrl = null
+
+    if (existingUserRows.length) {
+      resolvedCustomerId = existingUserRows[0].id
+    } else {
+      isNewAccount = true
+      // Random, never-communicated password — this account can only be
+      // accessed via the reset-token link below (or a future real
+      // forgot-password request), never by guessing this value.
+      const randomPassword = crypto.randomBytes(24).toString('hex')
+      const passwordHash = await bcrypt.hash(randomPassword, 10)
+      const resetToken = crypto.randomBytes(32).toString('hex')
+      // 30 days, not the normal 1-hour reset window — this isn't a
+      // security-sensitive password reset, it's an optional "claim the
+      // account we made for you" link with no urgency behind it.
+      const resetExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+
+      const insertedUser = await query(
+        `INSERT INTO users (name, email, password_hash, phone, role, status, reset_token, reset_token_expires)
+         VALUES (?, ?, ?, ?, 'customer', 'active', ?, ?)`,
+        [resolvedGuestName, resolvedGuestEmail, passwordHash, resolvedGuestPhone, resetToken, resetExpires],
+      )
+      resolvedCustomerId = insertedUser.insertId
+      resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`
+    }
+
+    let resolvedCouponId = null
+    let discountAmount = 0
+    let total_price = fareBeforeDiscount
+    let appliedCoupon = null
+    if (coupon_code) {
+      const coupon = await findCouponByCode(coupon_code)
+      const result = await evaluateCoupon(coupon, fareBeforeDiscount, resolvedCustomerId)
+      if (!result.ok) {
+        return res.status(400).json({ message: result.message })
+      }
+      resolvedCouponId = coupon.id
+      discountAmount = result.discountAmount
+      total_price = result.finalTotal
+      appliedCoupon = coupon
+    }
+
+    const isFirstBooking = appliedCoupon?.kind === 'referral'
+      ? (await query('SELECT COUNT(*) AS count FROM bookings WHERE customer_id = ?', [resolvedCustomerId])).rows[0].count === 0
+      : false
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(total_price * 100),
+      currency: 'nzd',
+      metadata: { customer_id: String(resolvedCustomerId) },
+    })
+
+    const inserted = await query(
+      `INSERT INTO bookings
+        (customer_id, vehicle_id, pickup, dropoff, date, time, trip_type, service_type, hours,
+         flight_number, stops, stop_addresses, child_seats, notes, extras, total_price,
+         coupon_id, discount_amount, passenger_name, passenger_phone, passenger_email,
+         distance_km, duration_min, payment_status, booking_status, stripe_payment_intent_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', ?)`,
+      [
+        resolvedCustomerId,
+        vehicle_id,
+        pickup,
+        resolvedDropoff,
+        date,
+        time,
+        resolvedTripType,
+        resolvedServiceType,
+        resolvedHours,
+        resolvedFlightNumber,
+        resolvedStops,
+        resolvedStopAddresses.length ? JSON.stringify(resolvedStopAddresses) : null,
+        resolvedChildSeats,
+        resolvedNotes,
+        JSON.stringify(matchedAddOns),
+        total_price,
+        resolvedCouponId,
+        discountAmount,
+        resolvedGuestName,
+        resolvedGuestPhone,
+        resolvedGuestEmail,
+        resolvedDistanceKm || null,
+        resolvedDurationMin || null,
+        paymentIntent.id,
+      ],
+    )
+
+    if (resolvedCouponId) {
+      await incrementCouponUses(resolvedCouponId)
+    }
+
+    if (appliedCoupon?.kind === 'referral' && isFirstBooking) {
+      issueReferralReward(appliedCoupon.owner_user_id)
+        .then(({ amount }) => {
+          notify(appliedCoupon.owner_user_id, {
+            type: 'referral_reward',
+            title: 'You earned a referral reward!',
+            message: `A friend you referred just completed their first booking — enjoy $${amount} off your next ride.`,
+            link: '/dashboard',
+          })
+        })
+        .catch((err) => console.error('Failed to issue referral reward', err))
+    }
+
+    // Only for a genuinely new account — an email matched to an existing
+    // customer never gets this (they already know their own login).
+    if (isNewAccount) {
+      sendMail({
+        to: resolvedGuestEmail,
+        subject: "You're booked! Set a password to manage your ride — BlackStone Chauffeur",
+        html: guestBookingWelcomeTemplate({
+          name: resolvedGuestName,
+          pickup,
+          dropoff: resolvedDropoff,
+          date,
+          time,
+          resetUrl,
+        }),
+      }).catch((err) => console.error('Failed to send guest-booking-welcome email', err))
+    }
+
+    const { rows } = await query('SELECT * FROM bookings WHERE id = ?', [inserted.insertId])
+
+    // Only for a brand-new account — quietly signs them in the same way
+    // register/login do, so the rest of the checkout (Stripe confirm,
+    // viewing the booking on /dashboard afterward) just works like any
+    // normal logged-in session, with no visible signup step. Never issued
+    // for the existing-account-matched case: a guest typing someone else's
+    // real email must never come away logged into that person's account —
+    // that booking still goes through fine, it just calls the separate
+    // public /guest/confirm route instead (see below) rather than this token.
+    const token = isNewAccount
+      ? jwt.sign({ id: resolvedCustomerId, role: 'customer', email: resolvedGuestEmail }, process.env.JWT_SECRET, { expiresIn: '7d' })
+      : null
+
+    res.status(201).json({ booking: rows[0], client_secret: paymentIntent.client_secret, total_price, isNewAccount, token })
   } catch (err) {
     console.error(err)
     res.status(500).json({ message: 'Failed to create booking' })
@@ -678,6 +926,96 @@ router.post('/confirm', authCheck, async (req, res) => {
       type: 'booking_created',
       title: 'New Booking',
       message: `${booking.passenger_name || booking.customer_name} — ${booking.pickup} → ${booking.dropoff || 'Hourly'}, ${booking.date}`,
+      link: '/admin',
+    })
+
+    res.json(rows[0])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to confirm booking' })
+  }
+})
+
+// POST /api/bookings/guest/confirm — public, no login required. Same job as
+// POST /confirm above (mark paid + send confirmation email once Stripe
+// reports success), for a guest-checkout booking whose email matched an
+// existing account (so POST /guest didn't issue them a session token to
+// call the authenticated route with). Security still rests on the same
+// foundation as the authenticated version: this never trusts the client's
+// claim that payment succeeded, it re-checks the booking's own
+// PaymentIntent directly with Stripe before marking anything paid — a
+// booking_id alone can't be used to fake or steal a payment, only to ask
+// "did this real Stripe charge go through," which Stripe itself answers.
+router.post('/guest/confirm', async (req, res) => {
+  const { booking_id } = req.body || {}
+  if (!booking_id) return res.status(400).json({ message: 'booking_id is required' })
+
+  try {
+    const { rows } = await query(
+      `SELECT b.*, u.name AS customer_name, u.email AS customer_email, v.name AS vehicle_name
+       FROM bookings b
+       JOIN users u ON u.id = b.customer_id
+       LEFT JOIN vehicles v ON v.id = b.vehicle_id
+       WHERE b.id = ?`,
+      [booking_id],
+    )
+    if (!rows.length) return res.status(404).json({ message: 'Booking not found' })
+
+    const booking = rows[0]
+
+    if (booking.payment_status === 'paid') {
+      return res.json(booking)
+    }
+    if (!booking.stripe_payment_intent_id) {
+      return res.status(400).json({ message: 'This booking has no payment to confirm' })
+    }
+    const intent = await stripe.paymentIntents.retrieve(booking.stripe_payment_intent_id)
+    if (intent.status !== 'succeeded') {
+      return res.status(400).json({ message: `Payment has not gone through yet (status: ${intent.status})` })
+    }
+
+    await query(`UPDATE bookings SET payment_status = 'paid' WHERE id = ?`, [booking_id])
+    booking.payment_status = 'paid'
+
+    const recipientEmail = booking.passenger_email || booking.customer_email
+    const recipientName = booking.passenger_name || booking.customer_name
+    if (recipientEmail) {
+      sendMail({
+        to: recipientEmail,
+        subject: 'Booking confirmed — BlackStone Chauffeur',
+        html: bookingConfirmationTemplate({
+          customerName: recipientName,
+          pickup: booking.pickup,
+          dropoff: booking.dropoff,
+          date: booking.date,
+          time: booking.time,
+          totalPrice: booking.total_price,
+        }),
+      }).catch((err) => console.error('Failed to send booking-confirmation email (guest)', err))
+    }
+
+    if (process.env.ADMIN_EMAIL) {
+      sendMail({
+        to: process.env.ADMIN_EMAIL,
+        subject: `New booking — ${recipientName}`,
+        html: newBookingAdminTemplate({
+          customerName: recipientName,
+          vehicleName: booking.vehicle_name || 'Unassigned',
+          serviceType: booking.service_type || 'Chauffeur Service',
+          pickup: booking.pickup,
+          dropoff: booking.dropoff,
+          date: booking.date,
+          time: booking.time,
+          hours: booking.hours,
+          totalPrice: booking.total_price,
+        }),
+      }).catch((err) => console.error('Failed to send new-booking-admin email (guest)', err))
+    }
+
+    notifyAdmins({
+      type: 'booking_created',
+      title: 'New Booking',
+      message: `${recipientName} — ${booking.pickup} → ${booking.dropoff || 'Hourly'}, ${booking.date}`,
       link: '/admin',
     })
 

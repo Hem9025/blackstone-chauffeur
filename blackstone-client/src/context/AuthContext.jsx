@@ -72,8 +72,20 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  // Used by guest checkout (POST /api/bookings/guest) — that route quietly
+  // creates an account and signs a token for it exactly like register()
+  // does, but returns it as part of the booking response rather than a
+  // dedicated auth call. This just persists that token and re-derives
+  // `user` from it the same way loadUser does on page refresh, so the rest
+  // of checkout (Stripe confirm, later viewing the ride on /dashboard) sees
+  // a normal logged-in session with no separate login step ever shown.
+  async function loginWithToken(token) {
+    localStorage.setItem(TOKEN_KEY, token)
+    await loadUser()
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refresh: loadUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, loginWithToken, refresh: loadUser }}>
       {children}
     </AuthContext.Provider>
   )

@@ -6,6 +6,7 @@ import { useJsApiLoader } from '@react-google-maps/api'
 import {
   Calendar, Clock, Users, Briefcase, Info,
   Check, ArrowRight, ArrowLeft, ShieldCheck, RotateCcw, Headphones, BadgeDollarSign, Plus, X, Plane, Mail, CheckCircle2, Tag,
+  Phone, MessageCircle,
 } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
@@ -122,7 +123,7 @@ export default function Booking() {
 }
 
 function BookingContent({ mapsLoaded }) {
-  const { user } = useAuth()
+  const { user, loginWithToken } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
@@ -169,6 +170,19 @@ function BookingContent({ mapsLoaded }) {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [enquirySent, setEnquirySent] = useState(false)
+
+  // Guest checkout — collected inline instead of gating the whole flow
+  // behind /login. Only rendered/used when there's no logged-in user; see
+  // handleCreateBooking/handleSubmitEnquiry below. Not persisted to the
+  // sessionStorage draft (contact details, not trip details).
+  const [guestName, setGuestName] = useState('')
+  const [guestEmail, setGuestEmail] = useState('')
+  const [guestPhone, setGuestPhone] = useState('')
+  // True when a guest booking was created against an email that already has
+  // an account — the server deliberately does NOT auto-login in that case
+  // (see routes/bookings.js POST /guest), so payment confirmation has to go
+  // through the unauthenticated /guest/confirm route instead of /confirm.
+  const [guestNoToken, setGuestNoToken] = useState(false)
 
   // Coupon is deliberately NOT persisted in the sessionStorage draft — it's
   // re-validated against the live fare anyway (see the invalidation effect
@@ -383,11 +397,17 @@ function BookingContent({ mapsLoaded }) {
     return true
   }
 
+  // Gates the step-2 Continue button for guests only — a logged-in user
+  // already has these on file. Kept deliberately light (matches the fields
+  // the server itself validates in POST /bookings/guest) rather than a full
+  // form-validation library for three inputs.
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  function guestContactValid() {
+    if (user) return true
+    return guestName.trim().length > 1 && EMAIL_RE.test(guestEmail.trim()) && guestPhone.trim().length > 5
+  }
+
   async function handleCreateBooking() {
-    if (!user) {
-      navigate('/login')
-      return
-    }
     // Belt-and-braces alongside the Continue button's disabled state below —
     // a booking must never reach payment without a real, matched vehicle
     // (otherwise the vehicle's fare is silently $0 and only add-ons like a
@@ -396,11 +416,15 @@ function BookingContent({ mapsLoaded }) {
       setError('Please select a vehicle before continuing to payment.')
       return
     }
+    if (!user && !guestContactValid()) {
+      setError('Please enter your name, email and phone number to continue.')
+      return
+    }
     setSubmitting(true)
     setError('')
     try {
       const extras = selectedAddOns.map((id) => ADD_ONS.find((a) => a.id === id))
-      const { booking, client_secret } = await bookingsApi.create({
+      const payload = {
         vehicle_id: vehicleId,
         pickup: pickup.address,
         dropoff: needsDropoff ? dropoff.address : undefined,
@@ -426,7 +450,37 @@ function BookingContent({ mapsLoaded }) {
         // scratch either way (see routes/bookings.js), this is never
         // trusted as the real discount amount.
         coupon_code: appliedCoupon && appliedCoupon.appliedAgainstFare === total ? appliedCoupon.code : undefined,
-      })
+      }
+
+      // Guest checkout — no login required. The server silently
+      // resolves-or-creates an account from these contact details (see
+      // routes/bookings.js POST /guest) rather than forcing a signup screen
+      // before payment.
+      const { booking, client_secret, token } = user
+        ? await bookingsApi.create(payload)
+        : await bookingsApi.createGuest({
+            ...payload,
+            guest_name: guestName.trim(),
+            guest_email: guestEmail.trim(),
+            guest_phone: guestPhone.trim(),
+          })
+
+      if (!user) {
+        if (token) {
+          // Brand-new account — sign the customer in silently so the rest of
+          // checkout (Stripe confirm, later viewing the ride on /dashboard)
+          // behaves exactly like a normal logged-in session.
+          await loginWithToken(token)
+          setGuestNoToken(false)
+        } else {
+          // Guest's email matched an existing account — deliberately NOT
+          // auto-logged in (would let anyone log into someone else's
+          // account just by typing their email). Payment confirmation for
+          // this booking goes through the public /guest/confirm route instead.
+          setGuestNoToken(true)
+        }
+      }
+
       setClientSecret(client_secret)
       setBookingId(booking?.id ?? null)
       setStep(3)
@@ -442,8 +496,11 @@ function BookingContent({ mapsLoaded }) {
   // to charge, so this sends everything the customer already filled in as
   // a regular enquiry instead, the same one the Contact page submits to.
   async function handleSubmitEnquiry() {
-    if (!user) {
-      navigate('/login')
+    // /api/enquiries is fully public (see routes/enquiries.js) — this only
+    // ever needed contact details, not a session, so a guest sends theirs
+    // directly instead of being redirected to log in.
+    if (!user && !guestContactValid()) {
+      setError('Please enter your name, email and phone number to continue.')
       return
     }
     setSubmitting(true)
@@ -462,9 +519,9 @@ function BookingContent({ mapsLoaded }) {
       ].filter(Boolean).join('\n')
 
       await enquiriesApi.submit({
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
+        name: user ? user.name : guestName.trim(),
+        email: user ? user.email : guestEmail.trim(),
+        phone: user ? user.phone : guestPhone.trim(),
         type: 'booking-enquiry',
         message: `Booking enquiry — this route is outside our standard instant-booking area and needs a custom quote.\n\n${details}`,
       })
@@ -487,7 +544,16 @@ function BookingContent({ mapsLoaded }) {
     // for a payment that actually went through.
     if (bookingId) {
       try {
-        await bookingsApi.confirm({ booking_id: bookingId })
+        // guestNoToken bookings never got a session (the guest's email
+        // matched an existing account, so no auto-login happened — see
+        // handleCreateBooking) — confirm via the public guest route instead,
+        // which re-verifies the PaymentIntent with Stripe directly rather
+        // than relying on request auth.
+        if (guestNoToken) {
+          await bookingsApi.confirmGuest({ booking_id: bookingId })
+        } else {
+          await bookingsApi.confirm({ booking_id: bookingId })
+        }
       } catch (err) {
         console.error('Failed to confirm booking after payment', err)
       }
@@ -702,6 +768,24 @@ function BookingContent({ mapsLoaded }) {
                       Please choose a date at least {MIN_ADVANCE_DAYS} days from today.
                     </p>
                   )}
+                  {/* Short-notice fallback — instant online booking needs MIN_ADVANCE_DAYS
+                      lead time for dispatch, but same-day/next-day trips aren't turned
+                      away outright: they're routed to a direct call/WhatsApp instead of
+                      leaving the customer stuck at a disabled form. */}
+                  <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-black/50">
+                    <span>Need a chauffeur within 72 hours?</span>
+                    <a href="tel:+64204525000" className="inline-flex items-center gap-1 font-medium text-brand-gold hover:underline">
+                      <Phone size={12} /> Call us
+                    </a>
+                    <a
+                      href="https://wa.me/64204525000"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 font-medium text-brand-gold hover:underline"
+                    >
+                      <MessageCircle size={12} /> WhatsApp us
+                    </a>
+                  </p>
                 </div>
 
                 <div>
@@ -931,6 +1015,55 @@ function BookingContent({ mapsLoaded }) {
                   </div>
                 </div>
               </div>
+
+              {/* Guest checkout — no account needed to book. Only shown when
+                  no one's logged in; the server quietly creates a real
+                  account from these details behind the scenes (see
+                  routes/bookings.js POST /guest), no separate signup screen. */}
+              {!user && (
+                <div className="mt-6 border border-black/10 p-5">
+                  <p className="text-sm font-medium text-black">Your Details</p>
+                  <p className="mt-1 text-xs text-black/50">
+                    No account needed — just enter your contact details to book. Already have an account?{' '}
+                    <button type="button" onClick={() => navigate('/login')} className="text-brand-gold hover:underline">
+                      Log in
+                    </button>{' '}
+                    for faster checkout.
+                  </p>
+                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm text-black/60">Full Name</label>
+                      <input
+                        type="text"
+                        value={guestName}
+                        onChange={(e) => setGuestName(e.target.value)}
+                        placeholder="Your name"
+                        className="w-full border border-black/15 px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm text-black/60">Phone</label>
+                      <input
+                        type="tel"
+                        value={guestPhone}
+                        onChange={(e) => setGuestPhone(e.target.value)}
+                        placeholder="Your phone number"
+                        className="w-full border border-black/15 px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="mb-2 block text-sm text-black/60">Email</label>
+                      <input
+                        type="email"
+                        value={guestEmail}
+                        onChange={(e) => setGuestEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        className="w-full border border-black/15 px-3 py-2 text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -1217,7 +1350,7 @@ function BookingContent({ mapsLoaded }) {
               )}
               <button
                 type="button"
-                disabled={(step === 1 && !goToStep1Valid()) || (step === 2 && (!selectedVehicle || submitting))}
+                disabled={(step === 1 && !goToStep1Valid()) || (step === 2 && (!selectedVehicle || submitting || !guestContactValid()))}
                 onClick={() => {
                   if (step === 1) setStep(2)
                   else if (requiresEnquiry) handleSubmitEnquiry()
@@ -1250,9 +1383,6 @@ function BookingContent({ mapsLoaded }) {
             </button>
           )}
 
-          {!user && step < 3 && (
-            <p className="text-center text-xs text-black/40">You'll need to log in or register to complete your booking.</p>
-          )}
         </div>
       </div>
     </div>

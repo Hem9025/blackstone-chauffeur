@@ -33,7 +33,7 @@ const CITIES = [
 ]
 
 const stats = [
-  { value: '3+', label: 'Years' },
+  { value: '5+', label: 'Years' },
   { value: '100+', label: 'Reviews' },
   { value: '700+', label: 'Customers' },
 ]
@@ -77,7 +77,7 @@ export default function About() {
     <div>
       <PageMeta
         title="About Our Chauffeur Service"
-        description="Serving Auckland, Wellington, Hamilton, Rotorua, Christchurch and Queenstown for 3+ years — professional chauffeurs, a premium fleet, and 24/7 availability."
+        description="Serving Auckland, Wellington, Hamilton, Rotorua, Christchurch and Queenstown for 5+ years — professional chauffeurs, a premium fleet, and 24/7 availability."
         jsonLd={ABOUT_JSON_LD}
       />
 

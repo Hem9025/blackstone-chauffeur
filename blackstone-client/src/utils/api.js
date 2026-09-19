@@ -68,8 +68,16 @@ export const vehicles = {
 export const bookings = {
   create: (payload) => api.post('/bookings', payload),
   createProvider: (payload) => api.post('/bookings/provider', payload),
+  // Guest checkout — no login required. Server quietly resolves/creates the
+  // account from the name/email/phone in the payload (see routes/bookings.js
+  // POST /guest) and returns a token when it's a brand-new account.
+  createGuest: (payload) => api.post('/bookings/guest', payload),
   parseWhatsapp: (text) => api.post('/bookings/parse-whatsapp', { text }),
   confirm: (payload) => api.post('/bookings/confirm', payload),
+  // Guest counterpart to confirm() — used when createGuest() didn't return a
+  // token (the guest's email matched an existing account, so no auto-login
+  // happened; see routes/bookings.js POST /guest/confirm).
+  confirmGuest: (payload) => api.post('/bookings/guest/confirm', payload),
   my: (query = '') => api.get(`/bookings/my${query}`),
   all: (query = '') => api.get(`/bookings/all${query}`),
   updateDetails: (id, payload) => api.patch(`/bookings/${id}`, payload),
