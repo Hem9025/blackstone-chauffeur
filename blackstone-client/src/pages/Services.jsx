@@ -5,16 +5,19 @@ import Button from '../components/Button'
 import { IMAGES } from '../constants/images'
 import { breadcrumbJsonLd, serviceJsonLd } from '../constants/seo'
 
+// A `slug` links a tile through to its own deeper landing page (see
+// pages/ServiceDetail.jsx + constants/servicePages.js) — only the 5 core
+// services worth a standalone page get one; the rest stay plain tiles.
 const services = [
-  { title: 'Corporate Travel', desc: 'Professional chauffeurs for executive and international business travelers, ensuring a comfortable and perfect experience.', image: IMAGES.services.corporate },
-  { title: 'VIP Service', desc: 'Exclusive services tailored for VVIP guests and international travel partners, ensuring a luxurious, discreet and personalized experience.', image: IMAGES.services.vip },
-  { title: 'Airport Transfers', desc: 'Effortless VIP airport transfers, with guaranteed on-time arrivals and departures, ensuring a hassle-free and smooth travel experience every time.', image: IMAGES.services.airport },
+  { title: 'Corporate Travel', slug: 'corporate-travel', desc: 'Professional chauffeurs for executive and international business travelers, ensuring a comfortable and perfect experience.', image: IMAGES.services.corporate },
+  { title: 'VIP Service', slug: 'vip-service', desc: 'Exclusive services tailored for VVIP guests and international travel partners, ensuring a luxurious, discreet and personalized experience.', image: IMAGES.services.vip },
+  { title: 'Airport Transfers', slug: 'airport-transfers', desc: 'Effortless VIP airport transfers, with guaranteed on-time arrivals and departures, ensuring a hassle-free and smooth travel experience every time.', image: IMAGES.services.airport },
   { title: 'Business Meetings', desc: 'Reliable transportation to and from business meetings, contributing to a professional image and a successful outcome.', image: IMAGES.services.businessMeeting },
   { title: 'Hourly Hire', desc: 'Flexible options for clients who require chauffeur services on an hourly basis, ideal for events or meetings.', image: IMAGES.services.hourly },
   { title: 'Point-to-point Transfer', desc: 'Convenient transfers between specific locations, offering a hassle-free experience and saving valuable time.', image: IMAGES.services.pointToPoint },
-  { title: 'City Tours', desc: "Expert-led tours featuring the city's top attractions, delivering an immersive and educational experience for guests, and a richer understanding of the local culture and landmarks.", image: IMAGES.services.tour },
+  { title: 'City Tours', slug: 'private-tours', desc: "Expert-led tours featuring the city's top attractions, delivering an immersive and educational experience for guests, and a richer understanding of the local culture and landmarks.", image: IMAGES.services.tour },
   { title: 'Sightseeing Excursions', desc: "Tailored excursions to local landmarks and attractions, enhancing the guest's exploration and appreciation of the city.", image: IMAGES.services.sightseeing },
-  { title: 'Wedding Transfers', desc: 'Reliable, stylish, and on-time chauffeur services for your special day. Book now!', image: IMAGES.services.wedding },
+  { title: 'Wedding Transfers', slug: 'weddings', desc: 'Reliable, stylish, and on-time chauffeur services for your special day. Book now!', image: IMAGES.services.wedding },
   { title: 'Special Events', desc: 'Transportation for weddings, parties, or other special occasions, providing a touch of elegance and sophistication.', image: IMAGES.services.special },
   { title: 'Night Club Transfers', desc: "Ride in style. Party safe. We've got your night out covered.", image: IMAGES.services.nightclub },
   { title: 'Luxury Fleet Options', desc: 'A diverse fleet of high-end vehicles, providing options based on guest preferences, including luxury sedans, SUVs, and vans.', image: IMAGES.services.luxuryFleet },
@@ -75,20 +78,30 @@ export default function Services() {
           <h2 className="mt-2 font-heading text-3xl text-black">Our Premium Chauffeur Services</h2>
 
           <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-            {services.map((s) => (
-              <div key={s.title} className="flex flex-col overflow-hidden rounded-3xl border border-black/10">
-                {/* Fills the box edge-to-edge on every side, no letterboxing
-                    or padding gaps — a taller box than before so it still
-                    doesn't feel over-cropped. */}
-                <div className="h-60 overflow-hidden">
-                  <img src={s.image} alt={s.title} className="h-full w-full object-cover" />
-                </div>
-                <div className="flex flex-1 flex-col p-6">
-                  <h3 className="font-heading text-lg text-black">{s.title}</h3>
-                  <p className="mt-2 text-sm text-black/60">{s.desc}</p>
-                </div>
-              </div>
-            ))}
+            {services.map((s) => {
+              // Only tiles with a matching deeper landing page (see
+              // constants/servicePages.js) render as a link — the rest stay
+              // plain, non-clickable info cards.
+              const Wrapper = s.slug ? Link : 'div'
+              const wrapperProps = s.slug
+                ? { to: `/services/${s.slug}`, className: 'group flex flex-col overflow-hidden rounded-3xl border border-black/10 transition-colors hover:border-brand-gold' }
+                : { className: 'flex flex-col overflow-hidden rounded-3xl border border-black/10' }
+              return (
+                <Wrapper key={s.title} {...wrapperProps}>
+                  {/* Fills the box edge-to-edge on every side, no letterboxing
+                      or padding gaps — a taller box than before so it still
+                      doesn't feel over-cropped. */}
+                  <div className="h-60 overflow-hidden">
+                    <img src={s.image} alt={s.title} className="h-full w-full object-cover" />
+                  </div>
+                  <div className="flex flex-1 flex-col p-6">
+                    <h3 className="font-heading text-lg text-black">{s.title}</h3>
+                    <p className="mt-2 text-sm text-black/60">{s.desc}</p>
+                    {s.slug && <p className="mt-3 text-xs font-medium uppercase tracking-widest text-brand-gold">Learn more →</p>}
+                  </div>
+                </Wrapper>
+              )
+            })}
           </div>
 
           {/* Contextual cross-links to Fleet and Booking — helps visitors

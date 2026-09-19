@@ -12,6 +12,9 @@ import AdminPermissionGate from './components/AdminPermissionGate'
 import Home from './pages/Home'
 import About from './pages/About'
 import Services from './pages/Services'
+import ServiceDetail from './pages/ServiceDetail'
+import Locations from './pages/Locations'
+import LocationDetail from './pages/LocationDetail'
 import FleetCategory from './pages/FleetCategory'
 import FleetDetail from './pages/FleetDetail'
 import Tour from './pages/Tour'
@@ -108,6 +111,9 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/services/:slug" element={<ServiceDetail />} />
+          <Route path="/locations" element={<Locations />} />
+          <Route path="/locations/:slug" element={<LocationDetail />} />
           <Route path="/fleet" element={<Navigate to="/fleet/luxury" replace />} />
           <Route path="/fleet/luxury" element={<FleetCategory category="luxury" />} />
           <Route path="/fleet/comfort" element={<FleetCategory category="economy" />} />

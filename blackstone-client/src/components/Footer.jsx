@@ -30,10 +30,18 @@ const social = [
   { icon: InstagramMark, href: SOCIAL_LINKS.instagram, label: 'Instagram' },
 ]
 
-// Mirrors the city list on the About page's "Where We Operate" section —
-// update both together if the operating area changes.
+// Mirrors the city list on the About page's "Where We Operate" section and
+// constants/locations.js — update all three together if the operating area
+// changes. Each links through to its dedicated location landing page.
 const CITIES_WE_SERVE = [
-  'Auckland', 'Hamilton', 'Rotorua', 'Christchurch', 'Wellington', 'Napier', 'Taupō', 'Queenstown',
+  { name: 'Auckland', slug: 'auckland' },
+  { name: 'Hamilton', slug: 'hamilton' },
+  { name: 'Rotorua', slug: 'rotorua' },
+  { name: 'Christchurch', slug: 'christchurch' },
+  { name: 'Wellington', slug: 'wellington' },
+  { name: 'Napier', slug: 'napier' },
+  { name: 'Taupō', slug: 'taupo' },
+  { name: 'Queenstown', slug: 'queenstown' },
 ]
 
 function NewsletterForm() {
@@ -171,8 +179,9 @@ export default function Footer() {
         <div className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-white/10 pt-6 text-xs">
           <p className="text-xs uppercase tracking-widest text-brand-white/40">Cities We Serve:</p>
           {CITIES_WE_SERVE.map((city, i) => (
-            <span key={city} className="text-brand-white/70">
-              {city}{i < CITIES_WE_SERVE.length - 1 ? ' ·' : ''}
+            <span key={city.slug} className="text-brand-white/70">
+              <Link to={`/locations/${city.slug}`} className="hover:text-brand-gold">{city.name}</Link>
+              {i < CITIES_WE_SERVE.length - 1 ? ' ·' : ''}
             </span>
           ))}
         </div>

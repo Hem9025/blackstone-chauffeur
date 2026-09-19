@@ -4,6 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 import sitemap from 'vite-plugin-sitemap'
 import { FLEET } from './src/constants/fleet.js'
 import { TOURS } from './src/constants/tours.js'
+import { LOCATIONS } from './src/constants/locations.js'
+import { SERVICE_PAGES } from './src/constants/servicePages.js'
 
 // Static marketing routes, plus every individual fleet vehicle and tour page
 // generated from the same data the app itself renders from — so a new
@@ -18,6 +20,9 @@ const routes = [
   '/',
   '/about',
   '/services',
+  ...SERVICE_PAGES.map((s) => `/services/${s.slug}`),
+  '/locations',
+  ...LOCATIONS.map((l) => `/locations/${l.slug}`),
   '/fleet/luxury',
   '/fleet/comfort',
   ...FLEET.map((v) => `/fleet/${v.slug}`),

@@ -21,15 +21,18 @@ import { organizationJsonLd, breadcrumbJsonLd, CITIES_SERVED } from '../constant
 // stand-ins rather than the city itself (no exact match existed yet):
 // Hamilton uses a Waikato-region shot, and Wellington/Napier/Taupō use
 // generic scenic placeholders.
+// `slug` links each city through to its dedicated landing page (see
+// pages/LocationDetail.jsx + constants/locations.js) — kept in sync with
+// that file's slugs.
 const CITIES = [
-  { name: 'Queenstown', image: IMAGES.places.queenstown },
-  { name: 'Auckland', image: IMAGES.places.skyTower },
-  { name: 'Hamilton', image: IMAGES.places.waitomoCaves },
-  { name: 'Rotorua', image: IMAGES.places.rotoruaGeothermal },
-  { name: 'Christchurch', image: IMAGES.places.christchurch },
-  { name: 'Wellington', image: IMAGES.places.milfordSoundAlt },
-  { name: 'Napier', image: IMAGES.places.pihaBeachAlt },
-  { name: 'Taupō', image: IMAGES.places.bayOfIslands },
+  { name: 'Queenstown', slug: 'queenstown', image: IMAGES.places.queenstown },
+  { name: 'Auckland', slug: 'auckland', image: IMAGES.places.skyTower },
+  { name: 'Hamilton', slug: 'hamilton', image: IMAGES.places.waitomoCaves },
+  { name: 'Rotorua', slug: 'rotorua', image: IMAGES.places.rotoruaGeothermal },
+  { name: 'Christchurch', slug: 'christchurch', image: IMAGES.places.christchurch },
+  { name: 'Wellington', slug: 'wellington', image: IMAGES.places.milfordSoundAlt },
+  { name: 'Napier', slug: 'napier', image: IMAGES.places.pihaBeachAlt },
+  { name: 'Taupō', slug: 'taupo', image: IMAGES.places.bayOfIslands },
 ]
 
 const stats = [
@@ -161,7 +164,7 @@ export default function About() {
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-x-8 gap-y-8 sm:flex-nowrap sm:justify-between sm:overflow-x-auto sm:pb-2">
             {CITIES.map((city) => (
-              <div key={city.name} className="flex shrink-0 flex-col items-center gap-3">
+              <Link to={`/locations/${city.slug}`} key={city.name} className="group flex shrink-0 flex-col items-center gap-3">
                 {/* Gold ring is a real border (inside the box, border-box
                     sizing) instead of a ring-offset box-shadow — the
                     shadow-based ring was getting clipped at the top/side by
@@ -181,8 +184,8 @@ export default function About() {
                     />
                   </div>
                 </div>
-                <p className="text-sm font-medium text-black">{city.name}</p>
-              </div>
+                <p className="text-sm font-medium text-black group-hover:text-brand-gold">{city.name}</p>
+              </Link>
             ))}
           </div>
         </div>
