@@ -184,6 +184,24 @@ export default function AdminVehiclesPanel() {
     }
   }
 
+  // DELETE /api/vehicles/:id is a soft delete server-side (sets active =
+  // false, same effect as the Active/Inactive toggle above) rather than
+  // erasing the row — past bookings still reference this vehicle by id, so
+  // a hard delete would break their pricing history. The confirm text below
+  // says "remove from booking" rather than "delete permanently" so it isn't
+  // misleading about what actually happens.
+  async function handleRemove(v) {
+    if (!window.confirm(`Remove "${v.name}" from Select Vehicle? It'll stop showing up for new bookings — this doesn't affect existing bookings that already used it.`)) {
+      return
+    }
+    try {
+      await vehiclesApi.remove(v.id)
+      load()
+    } catch (err) {
+      setError(err.message || 'Failed to remove vehicle')
+    }
+  }
+
   return (
     <div>
       <PageMeta title="Manage Vehicles" description="Fleet & pricing management — BlackStone Chauffeur admin." />
@@ -240,12 +258,21 @@ export default function AdminVehiclesPanel() {
                       </button>
                     </td>
                     <td className="py-2 pr-4">
-                      <button
-                        onClick={() => openEdit(v)}
-                        className="border border-brand-gold px-3 py-1 text-xs text-brand-gold hover:bg-brand-gold hover:text-brand-black"
-                      >
-                        Edit
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => openEdit(v)}
+                          className="border border-brand-gold px-3 py-1 text-xs text-brand-gold hover:bg-brand-gold hover:text-brand-black"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleRemove(v)}
+                          aria-label={`Remove ${v.name}`}
+                          className="border border-red-200 p-1.5 text-red-500 hover:bg-red-500 hover:text-white"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
