@@ -189,6 +189,10 @@ export default function Footer() {
         <div className="mt-6 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} BlackStone Chauffeur. All rights reserved.</p>
           <p className="text-brand-white/40">Built with care for a five-star ride.</p>
+          {/* Deploy-verification marker — small and low-key on purpose, not
+              meant to be a real feature. Safe to delete once the deploy this
+              was added to check has been confirmed live. */}
+          <p className="text-brand-white/20 text-[10px]">Deploy check: 2026-09-21</p>
         </div>
       </div>
     </footer>
