@@ -6,9 +6,9 @@ const unsplash = (id, w = 1200) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=80`
 
 export const IMAGES = {
-  // Homepage hero — stock Rolls-Royce Ghost Black Badge (Dubai) shot as a
-  // placeholder until a real photo of the client's own vehicle is supplied.
-  hero: unsplash('photo-1728458664282-0d028d4941f5', 1800),
+  // Homepage hero — real client photo (BMW i7, hotel entrance arrival shot),
+  // replaces the earlier Rolls-Royce Ghost Unsplash placeholder.
+  hero: '/images/home/hero-bmw-i7.jpg',
   heroAlt: unsplash('photo-1500632907344-a073709b2448', 1800),
 
   fleet: {
