@@ -59,10 +59,17 @@ router.get('/', async (req, res) => {
 // the literal path "admin" is never swallowed by that route's :slug param.
 router.get('/admin', authCheck, requirePermission('can_manage_bookings'), async (req, res) => {
   try {
+    // total_views / views_30d come from the daily counts table (see
+    // POST /:slug/view below). COALESCE so a post with no views yet shows 0
+    // instead of null.
     const { rows } = await query(
-      `SELECT id, title, slug, status, published_at, updated_at FROM blog_posts ORDER BY updated_at DESC`,
+      `SELECT p.id, p.title, p.slug, p.status, p.published_at, p.updated_at,
+              COALESCE((SELECT SUM(v.views) FROM blog_post_views v WHERE v.post_id = p.id), 0) AS total_views,
+              COALESCE((SELECT SUM(v.views) FROM blog_post_views v
+                        WHERE v.post_id = p.id AND v.view_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)), 0) AS views_30d
+       FROM blog_posts p ORDER BY p.updated_at DESC`,
     )
-    res.json(rows)
+    res.json(rows.map((r) => ({ ...r, total_views: Number(r.total_views), views_30d: Number(r.views_30d) })))
   } catch (err) {
     console.error(err)
     res.status(500).json({ message: 'Failed to load blog posts' })
@@ -95,8 +102,34 @@ router.get('/:slug', async (req, res) => {
   }
 })
 
+// Obvious crawlers/previewers — not counted as views. This isn't bot-proof
+// (nothing client-side is), it just keeps Googlebot, link previews and
+// uptime checkers from inflating the numbers.
+const BOT_UA = /bot|crawl|spider|slurp|facebookexternalhit|preview|headless|lighthouse|pingdom|uptime|monitor|curl|wget|python-requests/i
+
+// POST /api/blog/:slug/view — public, no auth. Called once per visitor
+// session by the public post page (see BlogPost.jsx). Only counts published
+// posts, and always answers 204 so a tracking hiccup can never break
+// reading a post.
+router.post('/:slug/view', async (req, res) => {
+  try {
+    if (BOT_UA.test(req.get('user-agent') || '')) return res.status(204).end()
+    const { rows } = await query(`SELECT id FROM blog_posts WHERE slug = ? AND status = 'published'`, [req.params.slug])
+    if (rows.length) {
+      await query(
+        `INSERT INTO blog_post_views (post_id, view_date, views) VALUES (?, CURDATE(), 1)
+         ON DUPLICATE KEY UPDATE views = views + 1`,
+        [rows[0].id],
+      )
+    }
+  } catch (err) {
+    console.error(err)
+  }
+  res.status(204).end()
+})
+
 // POST /api/blog — admin, or second_admin with can_manage_bookings
-router.post('/', authCheck, requirePermission('can_manage_bookings'), async (req, res) => {
+router.post('/',authCheck, requirePermission('can_manage_bookings'), async (req, res) => {
   const { title, slug, excerpt, body, cover_image, status, meta_title, meta_description } = req.body || {}
   const resolvedTitle = String(title || '').trim()
   const resolvedBody = String(body || '').trim()

@@ -180,6 +180,7 @@ export const referrals = {
 export const blog = {
   list: () => api.get('/blog', { auth: false }),
   get: (slug) => api.get(`/blog/${slug}`, { auth: false }),
+  trackView: (slug) => api.post(`/blog/${slug}/view`, {}, { auth: false }),
   adminList: () => api.get('/blog/admin'),
   adminGet: (id) => api.get(`/blog/admin/${id}`),
   create: (payload) => api.post('/blog', payload),

@@ -24,6 +24,22 @@ export default function BlogPost() {
       .finally(() => setLoading(false))
   }, [slug])
 
+  // Counts one view per post per browser tab session (sessionStorage, same
+  // convention as the booking draft elsewhere in the app) — a refresh or
+  // re-open of the same post in the same tab doesn't inflate the number.
+  // Fire-and-forget: a failed tracking call must never affect reading.
+  useEffect(() => {
+    if (!post) return
+    const key = `bc_blog_viewed_${post.slug}`
+    try {
+      if (sessionStorage.getItem(key)) return
+      sessionStorage.setItem(key, '1')
+    } catch {
+      // sessionStorage unavailable — fall through and count the view.
+    }
+    blogApi.trackView(post.slug).catch(() => {})
+  }, [post])
+
   if (loading) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-24 text-center md:px-8">

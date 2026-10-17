@@ -323,6 +323,19 @@ CREATE TABLE IF NOT EXISTS blog_posts (
   CONSTRAINT fk_blog_posts_author FOREIGN KEY (author_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Daily view counts per blog post (see POST /api/blog/:slug/view in
+-- routes/blog.js and the Views columns in the admin Blog panel). One row per
+-- post per day, incremented in place — so total views and "last 30 days" are
+-- both a cheap SUM, with no row per visit. Cascades on delete so removing a
+-- post never leaves orphaned counts behind.
+CREATE TABLE IF NOT EXISTS blog_post_views (
+  post_id INT NOT NULL,
+  view_date DATE NOT NULL,
+  views INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (post_id, view_date),
+  CONSTRAINT fk_blog_post_views_post FOREIGN KEY (post_id) REFERENCES blog_posts(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS enquiries (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,

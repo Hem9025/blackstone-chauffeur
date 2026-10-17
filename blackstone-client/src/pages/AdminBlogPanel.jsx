@@ -149,7 +149,8 @@ export default function AdminBlogPanel() {
         </div>
         <p className="mt-2 text-sm text-brand-black/50">
           Written in Markdown — save as a draft any time, and only Published posts appear on the
-          public /blog page.
+          public /blog page. Views count one visit per person per browser session and ignore known
+          search-engine crawlers; counting starts from when this feature went live.
         </p>
 
         {loading && <p className="mt-8 text-brand-black/50">Loading…</p>}
@@ -162,6 +163,8 @@ export default function AdminBlogPanel() {
                 <tr className="border-b border-brand-black/10 text-left text-brand-black/50">
                   <th className="py-2 pr-4">Title</th>
                   <th className="py-2 pr-4">Status</th>
+                  <th className="py-2 pr-4">Views</th>
+                  <th className="py-2 pr-4">Last 30 days</th>
                   <th className="py-2 pr-4">Published</th>
                   <th className="py-2 pr-4">Updated</th>
                   <th className="py-2 pr-4">Actions</th>
@@ -176,6 +179,8 @@ export default function AdminBlogPanel() {
                         {p.status === 'published' ? 'Published' : 'Draft'}
                       </span>
                     </td>
+                    <td className="py-2 pr-4 font-medium">{(p.total_views ?? 0).toLocaleString('en-NZ')}</td>
+                    <td className="py-2 pr-4">{(p.views_30d ?? 0).toLocaleString('en-NZ')}</td>
                     <td className="py-2 pr-4">{p.published_at ? new Date(p.published_at).toLocaleDateString('en-NZ') : '—'}</td>
                     <td className="py-2 pr-4">{p.updated_at ? new Date(p.updated_at).toLocaleDateString('en-NZ') : '—'}</td>
                     <td className="py-2 pr-4">
