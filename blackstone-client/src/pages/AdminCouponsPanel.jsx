@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Plus, X, Trash2 } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
+import AdminPromoBannerSection from '../components/AdminPromoBannerSection'
 import { coupons as couponsApi } from '../utils/api'
 import { formatCurrency } from '../utils/helpers'
 
@@ -236,6 +237,8 @@ export default function AdminCouponsPanel() {
             {!list.length && <p className="py-8 text-brand-black/50">No coupons yet.</p>}
           </div>
         )}
+
+        <AdminPromoBannerSection />
 
         {editingId !== null && (
           <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-10">

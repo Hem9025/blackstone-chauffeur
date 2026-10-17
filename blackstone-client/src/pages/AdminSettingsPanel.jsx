@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronDown, RotateCcw } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
-import Button from '../components/Button'
-import { permissions as permissionsApi, banner as bannerApi } from '../utils/api'
-
-const BLANK_BANNER = { message: '', link_url: '', link_label: '', active: false }
+import { permissions as permissionsApi } from '../utils/api'
 
 const TOGGLES = [
   {
@@ -61,15 +58,6 @@ export default function AdminSettingsPanel() {
   const [expandedId, setExpandedId] = useState(null)
   const [savingUserFlag, setSavingUserFlag] = useState(null)
 
-  // Promo banner — separate load/save state from the permissions toggles
-  // above, since it's a different resource (site_banner, not
-  // admin_permissions) that just happens to live on the same settings page.
-  const [bannerForm, setBannerForm] = useState(BLANK_BANNER)
-  const [bannerLoading, setBannerLoading] = useState(true)
-  const [bannerSaving, setBannerSaving] = useState(false)
-  const [bannerError, setBannerError] = useState('')
-  const [bannerSaved, setBannerSaved] = useState(false)
-
   useEffect(() => {
     permissionsApi
       .get()
@@ -77,53 +65,7 @@ export default function AdminSettingsPanel() {
       .catch((err) => setError(err.message || 'Failed to load settings'))
       .finally(() => setLoading(false))
     loadUsers()
-    bannerApi
-      .get()
-      .then((b) =>
-        setBannerForm({
-          message: b.message || '',
-          link_url: b.link_url || '',
-          link_label: b.link_label || '',
-          active: Boolean(b.active),
-        }),
-      )
-      .catch(() => {})
-      .finally(() => setBannerLoading(false))
   }, [])
-
-  function updateBanner(field) {
-    return (e) => {
-      const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value
-      setBannerForm((f) => ({ ...f, [field]: value }))
-      setBannerSaved(false)
-    }
-  }
-
-  async function saveBanner(e) {
-    e.preventDefault()
-    setBannerSaving(true)
-    setBannerError('')
-    setBannerSaved(false)
-    try {
-      const updated = await bannerApi.update({
-        message: bannerForm.message.trim(),
-        link_url: bannerForm.link_url.trim() || null,
-        link_label: bannerForm.link_label.trim() || null,
-        active: bannerForm.active,
-      })
-      setBannerForm({
-        message: updated.message || '',
-        link_url: updated.link_url || '',
-        link_label: updated.link_label || '',
-        active: Boolean(updated.active),
-      })
-      setBannerSaved(true)
-    } catch (err) {
-      setBannerError(err.message || 'Failed to save banner')
-    } finally {
-      setBannerSaving(false)
-    }
-  }
 
   function loadUsers() {
     setLoadingUsers(true)
@@ -194,61 +136,6 @@ export default function AdminSettingsPanel() {
           Control what a Second Admin account can see and do. These toggles never affect your own
           access — admin always has full access to everything.
         </p>
-
-        <h2 className="mt-10 font-heading text-lg text-brand-black">Promo Banner</h2>
-        <p className="mt-1 text-sm text-brand-black/50">
-          A dismissible strip shown at the top of the homepage — for announcing a sale, seasonal
-          offer, or anything else worth a visitor's attention. Leave it off when there's nothing to say.
-        </p>
-
-        {bannerLoading ? (
-          <p className="mt-4 text-brand-black/50">Loading…</p>
-        ) : (
-          <form onSubmit={saveBanner} className="mt-4 flex flex-col gap-4 border border-black/10 bg-white p-5">
-            <label className="text-xs text-brand-black/50">
-              Message
-              <input
-                required={bannerForm.active}
-                maxLength={255}
-                placeholder="e.g. 10% off wedding bookings this month — use code WELCOME10"
-                value={bannerForm.message}
-                onChange={updateBanner('message')}
-                className="mt-1 w-full border border-brand-black/15 px-3 py-2 text-sm"
-              />
-            </label>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <label className="text-xs text-brand-black/50">
-                Link URL (optional)
-                <input
-                  placeholder="/services or https://…"
-                  value={bannerForm.link_url}
-                  onChange={updateBanner('link_url')}
-                  className="mt-1 w-full border border-brand-black/15 px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="text-xs text-brand-black/50">
-                Link text (optional)
-                <input
-                  placeholder="Learn more"
-                  value={bannerForm.link_label}
-                  onChange={updateBanner('link_label')}
-                  className="mt-1 w-full border border-brand-black/15 px-3 py-2 text-sm"
-                />
-              </label>
-            </div>
-            <label className="flex items-center gap-2 text-sm text-brand-black">
-              <input type="checkbox" checked={bannerForm.active} onChange={updateBanner('active')} />
-              Show this banner on the homepage
-            </label>
-            {bannerError && <p className="text-sm text-red-500">{bannerError}</p>}
-            <div className="flex items-center gap-3">
-              <Button type="submit" disabled={bannerSaving} className="!px-6 !py-2 text-sm">
-                {bannerSaving ? 'Saving…' : 'Save Banner'}
-              </Button>
-              {bannerSaved && <span className="text-sm text-green-600">Saved</span>}
-            </div>
-          </form>
-        )}
 
         <h2 className="mt-10 font-heading text-lg text-brand-black">Default Access</h2>
         <p className="mt-1 text-sm text-brand-black/50">
