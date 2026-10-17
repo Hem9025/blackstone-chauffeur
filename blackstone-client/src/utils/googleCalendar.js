@@ -27,12 +27,20 @@ export function googleCalendarUrl(booking) {
   const passenger = booking.passenger_name || booking.customer_name || 'Passenger'
   const title = `BlackStone Chauffeur — ${passenger}`
 
+  const phone = booking.passenger_phone || booking.customer_phone
+  const stops = Array.isArray(booking.stop_addresses) ? booking.stop_addresses.filter(Boolean) : []
+
   const detailLines = [
     `Booking #${booking.id}`,
     `Passenger: ${passenger}`,
+    phone ? `Phone: ${phone}` : null,
     booking.vehicle_name ? `Vehicle: ${booking.vehicle_name}` : null,
+    booking.passengers ? `Passengers: ${booking.passengers}` : null,
+    booking.flight_number ? `Flight: ${booking.flight_number}` : null,
     `Pickup: ${booking.pickup}`,
-    `Drop-off: ${booking.dropoff}`,
+    stops.length ? `Stops: ${stops.join(' → ')}` : null,
+    `Drop-off: ${booking.dropoff || 'As directed'}`,
+    booking.notes ? `Notes: ${booking.notes}` : null,
   ].filter(Boolean)
 
   const params = new URLSearchParams({

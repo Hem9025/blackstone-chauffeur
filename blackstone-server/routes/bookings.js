@@ -24,6 +24,7 @@ import { streamBookingsCsv } from '../utils/bookingsCsv.js'
 import { isDateFarEnoughAhead, MIN_ADVANCE_DAYS } from '../utils/bookingRules.js'
 import { notify, notifyAdmins } from '../utils/notify.js'
 import { parseWhatsappBooking } from '../utils/parseWhatsappBooking.js'
+import { loadDriverRides, loadRideForAssignmentEmail, rideEmailProps } from '../utils/driverRide.js'
 
 const router = Router()
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -226,10 +227,10 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
     const inserted = await query(
       `INSERT INTO bookings
         (customer_id, vehicle_id, pickup, dropoff, date, time, trip_type, service_type, hours,
-         flight_number, stops, stop_addresses, child_seats, notes, extras, total_price,
+         flight_number, stops, stop_addresses, child_seats, passengers, suitcases, notes, extras, total_price,
          coupon_id, discount_amount,
          distance_km, duration_min, payment_status, booking_status, stripe_payment_intent_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', ?)`,
       [
         req.user.id,
         vehicle_id,
@@ -244,6 +245,8 @@ router.post('/', authCheck, requireRole('customer'), async (req, res) => {
         resolvedStops,
         resolvedStopAddresses.length ? JSON.stringify(resolvedStopAddresses) : null,
         resolvedChildSeats,
+        resolvedPassengers,
+        resolvedSuitcases,
         resolvedNotes,
         JSON.stringify(matchedAddOns),
         total_price,
@@ -446,10 +449,10 @@ router.post('/guest', async (req, res) => {
     const inserted = await query(
       `INSERT INTO bookings
         (customer_id, vehicle_id, pickup, dropoff, date, time, trip_type, service_type, hours,
-         flight_number, stops, stop_addresses, child_seats, notes, extras, total_price,
+         flight_number, stops, stop_addresses, child_seats, passengers, suitcases, notes, extras, total_price,
          coupon_id, discount_amount, passenger_name, passenger_phone, passenger_email,
          distance_km, duration_min, payment_status, booking_status, stripe_payment_intent_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', ?)`,
       [
         resolvedCustomerId,
         vehicle_id,
@@ -464,6 +467,8 @@ router.post('/guest', async (req, res) => {
         resolvedStops,
         resolvedStopAddresses.length ? JSON.stringify(resolvedStopAddresses) : null,
         resolvedChildSeats,
+        resolvedPassengers,
+        resolvedSuitcases,
         resolvedNotes,
         JSON.stringify(matchedAddOns),
         total_price,
@@ -712,9 +717,9 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
     const inserted = await query(
       `INSERT INTO bookings
         (customer_id, vehicle_id, driver_id, driver_price, pickup, dropoff, date, time, passenger_name, passenger_phone, passenger_email,
-         trip_type, service_type, hours, flight_number, stops, stop_addresses, child_seats, notes, reference,
+         trip_type, service_type, hours, flight_number, stops, stop_addresses, child_seats, passengers, suitcases, notes, reference,
          extras, total_price, distance_km, duration_min, payment_status, booking_status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending')`,
       [
         resolvedCustomerId,
         resolvedVehicleId,
@@ -734,6 +739,8 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
         resolvedStops,
         resolvedStopAddresses.length ? JSON.stringify(resolvedStopAddresses) : null,
         resolvedChildSeats,
+        resolvedPassengers,
+        resolvedSuitcases,
         resolvedNotes,
         resolvedReference,
         JSON.stringify(matchedAddOns),
@@ -821,17 +828,23 @@ router.post('/provider', authCheck, requirePermission('can_manage_bookings', { a
     // Driver was assigned right at creation (rather than via the usual
     // /assign-driver step) — same notification either way.
     if (assignedDriver?.email) {
-      sendMail({
-        to: assignedDriver.email,
-        subject: 'New ride assigned — BlackStone Chauffeur',
-        html: bookingAssignedTemplate({
-          driverName: assignedDriver.name,
-          pickup: displayPickup,
-          dropoff: displayDropoff,
-          date: displayDate,
-          time: displayTime,
-        }),
-      }).catch((err) => console.error('Failed to send booking-assigned email (provider booking)', err))
+      // Re-read the booking with its vehicle/contact joins so the email carries
+      // the full set of ride details (passenger contact, vehicle, party size,
+      // flight, stops, notes) — same data the driver's dashboard shows.
+      loadRideForAssignmentEmail(inserted.insertId)
+        .then((ride) => sendMail({
+          to: assignedDriver.email,
+          subject: 'New ride assigned — BlackStone Chauffeur',
+          html: bookingAssignedTemplate({
+            ...rideEmailProps(ride),
+            driverName: assignedDriver.name,
+            pickup: displayPickup,
+            dropoff: ride.dropoff,
+            date: displayDate,
+            time: displayTime,
+          }),
+        }))
+        .catch((err) => console.error('Failed to send booking-assigned email (provider booking)', err))
     }
 
     res.status(201).json({ booking: rows[0], total_price })
@@ -1592,17 +1605,16 @@ router.patch(
       const tripSummary = `${booking.date} at ${String(booking.time).slice(0, 5)} — ${booking.pickup} → ${booking.dropoff || 'Hourly'}`
 
       if (booking.driver_email) {
-        sendMail({
-          to: booking.driver_email,
-          subject: 'New ride assigned — BlackStone Chauffeur',
-          html: bookingAssignedTemplate({
-            driverName: booking.driver_name,
-            pickup: booking.pickup,
-            dropoff: booking.dropoff,
-            date: booking.date,
-            time: booking.time,
-          }),
-        }).catch((err) => console.error('Failed to send booking-assigned email', err))
+        // Full ride details (passenger contact, vehicle, party size, flight,
+        // stops, notes) — loaded separately because this route's own SELECT
+        // doesn't join the vehicle.
+        loadRideForAssignmentEmail(req.params.id)
+          .then((ride) => sendMail({
+            to: booking.driver_email,
+            subject: 'New ride assigned — BlackStone Chauffeur',
+            html: bookingAssignedTemplate(rideEmailProps(ride)),
+          }))
+          .catch((err) => console.error('Failed to send booking-assigned email', err))
       }
       if (booking.driver_id) {
         notify(booking.driver_id, { type: 'driver_assigned', title: 'New Ride Assigned', message: tripSummary, link: '/driver' })
@@ -1717,10 +1729,10 @@ router.patch('/:id/status', authCheck, requireRole('driver'), async (req, res) =
 // GET /api/bookings/driver — driver, their assigned bookings
 router.get('/driver', authCheck, requireRole('driver'), async (req, res) => {
   try {
-    const { rows } = await query(
-      'SELECT * FROM bookings WHERE driver_id = ? ORDER BY date, time',
-      [req.user.id],
-    )
+    // Explicit column list (see utils/driverRide.js) — adds vehicle and
+    // passenger/customer contact details, and keeps total_price and other
+    // customer-facing money out of what a driver's browser receives.
+    const rows = await loadDriverRides(req.user.id)
     res.json(rows)
   } catch (err) {
     console.error(err)

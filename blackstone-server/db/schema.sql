@@ -137,6 +137,12 @@ CREATE TABLE IF NOT EXISTS bookings (
   -- Number of child seats requested (0-2), priced via the 'Child Seat' row
   -- in add_ons multiplied by this quantity.
   child_seats INT NOT NULL DEFAULT 0,
+  -- Party size and luggage count as entered on the booking form. Previously
+  -- only used to price the fare and then thrown away — stored now so the
+  -- assigned driver (email + dashboard) can see how many people/bags to
+  -- expect. NULL on bookings created before this existed.
+  passengers INT,
+  suitcases INT,
   -- Free-text special requests from whoever created the booking (customer,
   -- provider, or admin) — shown to admin/driver, purely informational.
   notes VARCHAR(250),

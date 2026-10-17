@@ -16,6 +16,9 @@ const COLUMN_ADDITIONS = [
   { table: 'bookings', column: 'stop_addresses', definition: 'JSON' },
   { table: 'bookings', column: 'notes', definition: 'VARCHAR(250)' },
   { table: 'bookings', column: 'child_seats', definition: 'INT NOT NULL DEFAULT 0' },
+  // Party size / luggage count, shown to the assigned driver — see schema.sql.
+  { table: 'bookings', column: 'passengers', definition: 'INT' },
+  { table: 'bookings', column: 'suitcases', definition: 'INT' },
   { table: 'bookings', column: 'driver_price', definition: 'DECIMAL(10, 2)' },
   { table: 'users', column: 'reset_token', definition: 'VARCHAR(255)' },
   { table: 'users', column: 'reset_token_expires', definition: 'DATETIME' },

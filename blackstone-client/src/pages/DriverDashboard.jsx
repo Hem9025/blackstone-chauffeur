@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { List, CalendarDays, CalendarPlus } from 'lucide-react'
+import { List, CalendarDays, CalendarPlus, Phone, Mail, Car, Users, Briefcase, Baby, Plane, MapPin, StickyNote, User } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import BookingCalendar from '../components/BookingCalendar'
 import StatusBadge from '../components/StatusBadge'
@@ -11,6 +11,71 @@ const STATUS_FLOW = ['en_route', 'arrived', 'completed']
 
 function sameDay(a, b) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+}
+
+function hasValue(v) {
+  return v !== null && v !== undefined && String(v).trim() !== ''
+}
+
+// Everything the driver needs on the day: who they're picking up and how to
+// reach them, what they're driving, party size, and any special requirements.
+// Contact details fall back to the account holder's when the booking has no
+// separate passenger (an ordinary customer booking — the customer IS the
+// passenger); a provider booking keeps its own passenger details, since the
+// account holder there is the agent, not the rider. Rows with no value are
+// simply left out.
+function RideDetails({ ride }) {
+  const name = ride.passenger_name || ride.customer_name
+  const phone = ride.passenger_phone || ride.customer_phone
+  const email = ride.passenger_email || ride.customer_email
+  const stops = Array.isArray(ride.stop_addresses) ? ride.stop_addresses.filter(hasValue) : []
+  const phoneHref = hasValue(phone) ? String(phone).replace(/[^0-9+]/g, '') : ''
+
+  const Row = ({ icon: Icon, children }) => (
+    <div className="flex items-start gap-2 text-sm text-brand-black/70">
+      <Icon size={14} className="mt-0.5 shrink-0 text-brand-gold" />
+      <div>{children}</div>
+    </div>
+  )
+
+  return (
+    <div className="mt-3 grid grid-cols-1 gap-x-8 gap-y-1.5 border-t border-brand-black/5 pt-3 sm:grid-cols-2">
+      {hasValue(name) && <Row icon={User}><span className="font-medium text-brand-black">{name}</span></Row>}
+      {hasValue(phone) && (
+        <Row icon={Phone}>
+          {phoneHref ? <a href={`tel:${phoneHref}`} className="hover:text-brand-gold">{phone}</a> : phone}
+        </Row>
+      )}
+      {hasValue(email) && (
+        <Row icon={Mail}>
+          <a href={`mailto:${email}`} className="break-all hover:text-brand-gold">{email}</a>
+        </Row>
+      )}
+      {hasValue(ride.vehicle_name) && <Row icon={Car}>{ride.vehicle_name}</Row>}
+      {hasValue(ride.passengers) && (
+        <Row icon={Users}>{ride.passengers} passenger{Number(ride.passengers) === 1 ? '' : 's'}</Row>
+      )}
+      {hasValue(ride.suitcases) && (
+        <Row icon={Briefcase}>{ride.suitcases} bag{Number(ride.suitcases) === 1 ? '' : 's'}</Row>
+      )}
+      {Number(ride.child_seats) > 0 && (
+        <Row icon={Baby}>{ride.child_seats} child seat{Number(ride.child_seats) === 1 ? '' : 's'}</Row>
+      )}
+      {hasValue(ride.flight_number) && <Row icon={Plane}>Flight {ride.flight_number}</Row>}
+      {hasValue(ride.hours) && <Row icon={CalendarDays}>{ride.hours} hour{Number(ride.hours) === 1 ? '' : 's'} booked</Row>}
+      {stops.length > 0 && (
+        <Row icon={MapPin}>
+          <span className="text-brand-black/50">Stops: </span>
+          {stops.map((s, i) => `${i + 1}. ${s}`).join(' · ')}
+        </Row>
+      )}
+      {hasValue(ride.notes) && (
+        <div className="sm:col-span-2">
+          <Row icon={StickyNote}>{ride.notes}</Row>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function DriverDashboard() {
@@ -126,6 +191,7 @@ export default function DriverDashboard() {
                   </div>
                   <RideActions ride={ride} />
                 </div>
+                <RideDetails ride={ride} />
               </div>
             ))}
           </div>
@@ -154,7 +220,8 @@ export default function DriverDashboard() {
                         </span>
                       )}
                     </div>
-                    <div className="mt-2">
+                    <RideDetails ride={ride} />
+                    <div className="mt-3">
                       <RideActions ride={ride} />
                     </div>
                   </div>
