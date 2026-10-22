@@ -11,14 +11,34 @@
 # already on disk (i.e. not one of the built JS/CSS/image assets), just
 # serve index.html instead. React Router then reads the URL and renders the
 # right page client-side, exactly as if you'd navigated there normally.
+# Never redirect /services -> /services/ — the build step writes a
+# services.html next to a services/ folder (for /services/<slug> pages), and
+# without this Apache would send the bare /services URL to the folder.
+<IfModule mod_dir.c>
+  DirectorySlash Off
+</IfModule>
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # Canonical host: blackstonechauffeur.co.nz -> www.blackstonechauffeur.co.nz
+  # (one permanent 301, so Google treats www as the only version of the site).
+  RewriteCond %{HTTP_HOST} ^blackstonechauffeur\.co\.nz$ [NC]
+  RewriteRule ^ https://www.blackstonechauffeur.co.nz%{REQUEST_URI} [L,R=301]
 
   # Leave real API calls alone if they're ever proxied through this same
   # domain instead of a separate API subdomain — harmless no-op otherwise.
   RewriteCond %{REQUEST_URI} ^/api/ [NC]
   RewriteRule ^ - [L]
+
+  # Pre-rendered pages: the build step (scripts/seoPrerender.js) writes a
+  # static <route>.html for every public page, with that page's own title,
+  # description and heading already in the HTML. Serve it for /<route> so
+  # crawlers get real content without running JavaScript.
+  RewriteCond %{REQUEST_URI} !\.[a-zA-Z0-9]+$
+  RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}.html -f
+  RewriteRule ^(.+)$ /$1.html [L]
 
   # Already-existing files/folders (JS, CSS, images, favicon, etc.) are
   # served as-is.
