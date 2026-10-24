@@ -34,19 +34,29 @@ if (!key || key.startsWith('replace-with')) {
 }
 
 if (searchText) {
-  const u = new URL('https://maps.googleapis.com/maps/api/place/findplacefromtext/json')
-  u.searchParams.set('input', searchText)
-  u.searchParams.set('inputtype', 'textquery')
-  u.searchParams.set('fields', 'place_id,name,formatted_address,rating,user_ratings_total')
-  u.searchParams.set('key', key)
-  const data = await getJson(u)
-  console.log(`\nSearch "${searchText}" → ${data.status}`)
-  if (data.error_message) console.log('  Google says:', data.error_message)
-  for (const c of data.candidates || []) {
-    console.log(`  • ${c.name} — ${c.formatted_address || '(no address)'} — ${c.rating ?? 'no rating'} (${c.user_ratings_total ?? 0} reviews)`)
-    console.log(`    PLACE ID: ${c.place_id}`)
+  // A service-area business (address hidden on Google) often can't be found
+  // by name + city, so also try the bare name and the business phone number.
+  const attempts = [
+    { input: searchText, inputtype: 'textquery' },
+    { input: 'BlackStone Chauffeur', inputtype: 'textquery' },
+    { input: 'Blackstone Chauffeur Ltd', inputtype: 'textquery' },
+    { input: '+64204525000', inputtype: 'phonenumber' },
+  ]
+  for (const a of attempts) {
+    const u = new URL('https://maps.googleapis.com/maps/api/place/findplacefromtext/json')
+    u.searchParams.set('input', a.input)
+    u.searchParams.set('inputtype', a.inputtype)
+    u.searchParams.set('fields', 'place_id,name,formatted_address,rating,user_ratings_total')
+    u.searchParams.set('key', key)
+    const data = await getJson(u)
+    console.log(`\nSearch (${a.inputtype}) "${a.input}" → ${data.status}`)
+    if (data.error_message) console.log('  Google says:', data.error_message)
+    for (const c of data.candidates || []) {
+      console.log(`  • ${c.name} — ${c.formatted_address || '(no address)'} — ${c.rating ?? 'no rating'} (${c.user_ratings_total ?? 0} reviews)`)
+      console.log(`    PLACE ID: ${c.place_id}`)
+    }
+    if (data.status === 'REQUEST_DENIED' && HINTS[data.status]) { console.log('  →', HINTS[data.status]); break }
   }
-  if (HINTS[data.status]) console.log('  →', HINTS[data.status])
 }
 
 if (!placeId) {
