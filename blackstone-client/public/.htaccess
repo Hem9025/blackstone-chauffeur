@@ -32,6 +32,16 @@
   RewriteCond %{REQUEST_URI} ^/api/ [NC]
   RewriteRule ^ - [L]
 
+  # /fleet has no page of its own (the app redirects it to the luxury fleet),
+  # but the build creates a real /fleet/ folder for the vehicle pages — which
+  # Apache answers with 403 Forbidden. Send it to the right page instead.
+  RewriteRule ^fleet/?$ /fleet/luxury [L,R=301]
+
+  # /services/ -> /services (and the same for any pre-rendered page) so there
+  # is one URL per page instead of a folder-style duplicate.
+  RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+  RewriteRule ^(.+)/$ /$1 [L,R=301]
+
   # Pre-rendered pages: the build step (scripts/seoPrerender.js) writes a
   # static <route>.html for every public page, with that page's own title,
   # description and heading already in the HTML. Serve it for /<route> so
@@ -40,10 +50,11 @@
   RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}.html -f
   RewriteRule ^(.+)$ /$1.html [L]
 
-  # Already-existing files/folders (JS, CSS, images, favicon, etc.) are
-  # served as-is.
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
-  RewriteCond %{REQUEST_FILENAME} -d
+  # Already-existing files (JS, CSS, images, favicon, etc.) are served
+  # as-is. Folders are deliberately NOT served directly: a folder with no
+  # index file answers 403 Forbidden, so any folder URL falls through to the
+  # app below instead.
+  RewriteCond %{REQUEST_FILENAME} -f
   RewriteRule ^ - [L]
 
   # Everything else falls back to index.html.
