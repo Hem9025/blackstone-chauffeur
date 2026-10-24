@@ -32,6 +32,14 @@
   RewriteCond %{REQUEST_URI} ^/api/ [NC]
   RewriteRule ^ - [L]
 
+  # Old WordPress addresses that Google still has on file (they look like
+  # /index.php/book-a-ride/, /index.php/shop/?add_to_wishlist=1480). Send them
+  # to the closest page on the new site with a permanent 301; QSD drops the old
+  # ?query strings. Anything else under /index.php/ goes to the homepage.
+  RewriteRule ^index\.php/book-a-ride/?$ /booking [L,R=301,QSD]
+  RewriteRule ^index\.php/category/ /blog [L,R=301,QSD]
+  RewriteRule ^index\.php/(.+)$ / [L,R=301,QSD]
+
   # /fleet has no page of its own (the app redirects it to the luxury fleet),
   # but the build creates a real /fleet/ folder for the vehicle pages — which
   # Apache answers with 403 Forbidden. Send it to the right page instead.
