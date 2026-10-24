@@ -10,7 +10,14 @@ export default function TestimonialCard({ name, role, quote, avatar }) {
       </div>
       <p className="mt-4 flex-1 text-sm text-brand-black/70">&ldquo;{quote}&rdquo;</p>
       <div className="mt-6 flex items-center gap-3">
-        <img src={avatar} alt={name} className="h-10 w-10 rounded-full object-cover" />
+        {avatar ? (
+          <img src={avatar} alt={name} className="h-10 w-10 rounded-full object-cover" />
+        ) : (
+          // No photo for this reviewer — show their initial instead of a stock image.
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-gold/15 text-sm font-medium text-brand-gold">
+            {(name || '?').trim().charAt(0).toUpperCase()}
+          </span>
+        )}
         <div>
           <p className="text-sm font-medium text-brand-black">{name}</p>
           <p className="text-xs text-brand-black/50">{role}</p>

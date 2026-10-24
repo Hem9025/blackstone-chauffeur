@@ -27,10 +27,22 @@ const features = [
   { icon: Lock, title: 'Private & Discreet', desc: 'Professional, confidential service for business and personal travel alike.' },
 ]
 
+// Real 5-star Google reviews, copied word for word from the BlackStone
+// Google Business Profile. Shown while the live Google feed (/api/reviews)
+// isn't available — Google's API can't currently serve this listing (it is
+// a hidden-address, service-area profile), so these are kept by hand. Add new
+// ones here as they come in; only use reviews customers posted publicly.
 const testimonials = [
-  { name: 'James H.', role: 'Corporate Client', quote: 'Immaculate car, and the driver tracked our delayed flight without us even asking. Exactly the reliability we need for client pickups.', avatar: IMAGES.testimonialAvatars[0] },
-  { name: 'Sarah M.', role: 'Wedding Booking', quote: 'Booked the wedding car package — punctual, beautifully presented, and made the whole day feel effortless.', avatar: IMAGES.testimonialAvatars[1] },
-  { name: 'Priya R.', role: 'Airport Transfer', quote: 'Simple online booking, clear pricing upfront, and a genuinely five-star ride. Will be using BlackStone again.', avatar: IMAGES.testimonialAvatars[2] },
+  {
+    name: 'Seb Saad',
+    role: 'Google review',
+    quote: 'Great service, top-notch vehicle, very accommodating when making an on-the-fly change as well as a timing adjustment. Massive thanks to Gautam, great driving and very friendly guy. Would happily choose BC again in future',
+  },
+  {
+    name: "Megan O'Brien",
+    role: 'Google review · Wedding transport',
+    quote: 'Recently used Blackstone Chauffeur to get home after our wedding. The driver arrived slightly ahead of time and had no issue waiting for us. The driver was so friendly and professional and the car was clean and tidy. Would definitely use again. Thank you!',
+  },
 ]
 
 const homeStats = [
@@ -315,13 +327,12 @@ export default function Home() {
                 </a>
               </div>
             </div>
-            {!googleReviews && (
-              <p className="mt-2 text-sm text-black/50">
-                Sample testimonials — replace with real client reviews once collected.
-              </p>
-            )}
           </Reveal>
-          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <div
+            className={`mt-8 grid grid-cols-1 gap-6 ${
+              googleReviews || testimonials.length >= 3 ? 'sm:grid-cols-3' : 'mx-auto max-w-4xl sm:grid-cols-2'
+            }`}
+          >
             {(googleReviews ? googleReviews.reviews.slice(0, 3) : testimonials).map((t, i) =>
               googleReviews ? (
                 <Reveal key={`${t.author}-${t.time}`} delay={i * 100}>
