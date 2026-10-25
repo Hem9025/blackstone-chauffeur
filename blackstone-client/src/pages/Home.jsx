@@ -76,8 +76,8 @@ export default function Home() {
   return (
     <div>
       <PageMeta
-        title="VVIP & Corporate Chauffeur Service | Auckland & NZ"
-        description="Trusted VVIP, corporate and international travel partner in Auckland, NZ — plus airport transfers, wedding cars and private tours. Book your chauffeur online with transparent, upfront pricing."
+        title="Auckland VVIP & Corporate Chauffeur"
+        description="VVIP, corporate and airport chauffeur service in Auckland and across NZ, plus wedding cars and private tours. Book online with upfront pricing."
         jsonLd={[organizationJsonLd, faqJsonLd(faqs)]}
       />
 

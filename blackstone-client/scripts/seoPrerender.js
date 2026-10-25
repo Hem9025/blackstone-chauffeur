@@ -28,7 +28,7 @@ import { TOURS } from '../src/constants/tours.js'
 
 const SITE_URL = 'https://www.blackstonechauffeur.co.nz'
 const TITLE_SUFFIX = ' | BlackStone Chauffeur'
-const MARKER = 'data-rh="true"' // react-helmet-async removes/replaces tags carrying this
+const MARKER = 'data-static-seo="true"' // removed by src/main.jsx once the app runs (react-helmet-async then owns these tags)
 
 const esc = (s) =>
   String(s ?? '')
