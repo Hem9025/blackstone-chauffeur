@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Bell } from 'lucide-react'
 import { notifications as notificationsApi } from '../utils/api'
 import { useAuth } from '../context/AuthContext'
+import { enablePush, disablePush, isSubscribed, pushSupported, pushPermission } from '../utils/push'
 
 const POLL_MS = 20000
 
@@ -39,6 +40,35 @@ export default function NotificationBell({ dark = false, className = '' }) {
   const containerRef = useRef(null)
 
   const eligible = user && ELIGIBLE_ROLES.includes(user.role)
+  const [pushOn, setPushOn] = useState(false)
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushError, setPushError] = useState('')
+
+  useEffect(() => {
+    if (!eligible) return
+    isSubscribed()
+      .then(setPushOn)
+      .catch(() => {})
+  }, [eligible])
+
+  // Must run from a click (browsers refuse permission prompts otherwise).
+  async function togglePush() {
+    setPushBusy(true)
+    setPushError('')
+    try {
+      if (pushOn) {
+        await disablePush()
+        setPushOn(false)
+      } else {
+        await enablePush()
+        setPushOn(true)
+      }
+    } catch (err) {
+      setPushError(err.message || 'Could not change notification settings.')
+    } finally {
+      setPushBusy(false)
+    }
+  }
 
   function load() {
     notificationsApi
@@ -110,6 +140,24 @@ export default function NotificationBell({ dark = false, className = '' }) {
               </button>
             )}
           </div>
+          {pushSupported() && pushPermission() !== 'denied' && (
+            <div className="border-b border-black/10 bg-black/[0.02] px-4 py-2.5">
+              <button
+                type="button"
+                onClick={togglePush}
+                disabled={pushBusy}
+                className="text-xs text-brand-gold hover:underline disabled:opacity-50"
+              >
+                {pushBusy ? 'Please wait…' : pushOn ? 'Turn off phone notifications' : 'Turn on phone notifications'}
+              </button>
+              {pushError && <p className="mt-1 text-[11px] text-red-600">{pushError}</p>}
+            </div>
+          )}
+          {pushPermission() === 'denied' && (
+            <p className="border-b border-black/10 px-4 py-2.5 text-[11px] text-brand-black/50">
+              Phone notifications are blocked — allow them in your browser's site settings.
+            </p>
+          )}
           <div className="max-h-96 overflow-y-auto">
             {!list.length && <p className="px-4 py-6 text-center text-sm text-brand-black/40">Nothing yet.</p>}
             {list.map((n) => (

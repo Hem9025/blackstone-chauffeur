@@ -1,4 +1,5 @@
 import { query } from '../db/index.js'
+import { sendPush } from './push.js'
 
 // Creates one notification row per recipient — never throws, matching the
 // established fire-and-forget pattern used for transactional emails
@@ -11,6 +12,8 @@ export async function notify(userIds, { type, title, message = null, link = null
     const values = ids.map(() => '(?, ?, ?, ?, ?)').join(', ')
     const params = ids.flatMap((id) => [id, type, title, message, link])
     await query(`INSERT INTO notifications (user_id, type, title, message, link) VALUES ${values}`, params)
+    // Also push to the user's phone(s) — not awaited, never blocks the booking action.
+    sendPush(ids, { title, url: link || '/' })
   } catch (err) {
     console.error('Failed to create notification', err)
   }

@@ -16,6 +16,7 @@ import bannerRoutes from './routes/banner.js'
 import subscriberRoutes from './routes/subscribers.js'
 import referralRoutes from './routes/referrals.js'
 import blogRoutes from './routes/blog.js'
+import pushRoutes from './routes/push.js'
 
 dotenv.config()
 
@@ -69,6 +70,7 @@ app.use('/api/banner', bannerRoutes)
 app.use('/api/subscribers', subscriberRoutes)
 app.use('/api/referrals', referralRoutes)
 app.use('/api/blog', blogRoutes)
+app.use('/api/push', pushRoutes)
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Not found' })

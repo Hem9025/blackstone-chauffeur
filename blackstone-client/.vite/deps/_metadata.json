@@ -1,0 +1,78 @@
+{
+  "hash": "e314c79b",
+  "configHash": "8f3cdda0",
+  "lockfileHash": "be54efe6",
+  "browserHash": "28ecfbcc",
+  "optimized": {
+    "@react-google-maps/api": {
+      "src": "../../node_modules/@react-google-maps/api/dist/esm.js",
+      "file": "@react-google-maps_api.js",
+      "fileHash": "f0b176f9",
+      "needsInterop": false
+    },
+    "@stripe/react-stripe-js": {
+      "src": "../../node_modules/@stripe/react-stripe-js/dist/react-stripe.esm.mjs",
+      "file": "@stripe_react-stripe-js.js",
+      "fileHash": "feb2c098",
+      "needsInterop": false
+    },
+    "@stripe/stripe-js": {
+      "src": "../../node_modules/@stripe/stripe-js/lib/index.mjs",
+      "file": "@stripe_stripe-js.js",
+      "fileHash": "5f896485",
+      "needsInterop": false
+    },
+    "lucide-react": {
+      "src": "../../node_modules/lucide-react/dist/esm/lucide-react.mjs",
+      "file": "lucide-react.js",
+      "fileHash": "1492d3af",
+      "needsInterop": false
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "8b34df81",
+      "needsInterop": true
+    },
+    "react-helmet-async": {
+      "src": "../../node_modules/react-helmet-async/lib/index.esm.js",
+      "file": "react-helmet-async.js",
+      "fileHash": "7230f0e4",
+      "needsInterop": false
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.mjs",
+      "file": "react-router-dom.js",
+      "fileHash": "404d3efc",
+      "needsInterop": false
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "2e8e4ddd",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "8129f119",
+      "needsInterop": true
+    },
+    "yet-another-react-lightbox": {
+      "src": "../../node_modules/yet-another-react-lightbox/dist/index.js",
+      "file": "yet-another-react-lightbox.js",
+      "fileHash": "35649ed9",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "react-dom-DqDThkcF": {
+      "file": "react-dom-DqDThkcF.js",
+      "isDynamicEntry": false
+    },
+    "rolldown-runtime-B-1-B7_t": {
+      "file": "rolldown-runtime-B-1-B7_t.js",
+      "isDynamicEntry": false
+    }
+  }
+}

@@ -209,6 +209,20 @@ CREATE TABLE IF NOT EXISTS notifications (
   INDEX idx_notifications_user (user_id, is_read)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Web push subscriptions — one row per browser/device a user has turned phone
+-- notifications on for (see utils/push.js). endpoint is unique per device.
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  endpoint VARCHAR(500) NOT NULL,
+  p256dh VARCHAR(255) NOT NULL,
+  auth VARCHAR(255) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_push_endpoint (endpoint),
+  CONSTRAINT fk_push_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_push_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS add_ons (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,

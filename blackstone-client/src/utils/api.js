@@ -141,6 +141,12 @@ export const notifications = {
   markAllRead: () => api.patch('/notifications/read-all'),
 }
 
+export const push = {
+  publicKey: () => api.get('/push/public-key', { auth: false }),
+  subscribe: (subscription) => api.post('/push/subscribe', subscription),
+  unsubscribe: (endpoint) => api.post('/push/unsubscribe', { endpoint }),
+}
+
 export const admin = {
   users: () => api.get('/admin/users'),
   createUser: (payload) => api.post('/admin/users', payload),
