@@ -357,7 +357,11 @@ export default function SecondAdminDashboard() {
         actions={
           selectedBooking && (
             <>
-              <AssignDriverControl b={selectedBooking} />
+              {/* Called as a plain function (not <AssignDriverControl />) on purpose:
+                  it's defined inside this component, so as a JSX element it was a
+                  brand-new component type on every keystroke — React remounted the
+                  inputs each time and the keyboard closed after one digit. */}
+              {AssignDriverControl({ b: selectedBooking })}
               <button
                 onClick={() => bookingsApi.downloadInvoice(selectedBooking.id)}
                 className="text-xs text-brand-gold hover:underline"
