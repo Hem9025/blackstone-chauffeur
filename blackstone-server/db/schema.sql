@@ -165,7 +165,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   payment_status VARCHAR(20) NOT NULL DEFAULT 'pending'
     CHECK (payment_status IN ('pending', 'paid', 'failed', 'refunded')),
   booking_status VARCHAR(20) NOT NULL DEFAULT 'pending'
-    CHECK (booking_status IN ('pending', 'assigned', 'en_route', 'arrived', 'completed', 'cancelled')),
+    CHECK (booking_status IN ('pending', 'assigned', 'en_route', 'arrived', 'completed', 'archived', 'cancelled')),
   stripe_payment_intent_id VARCHAR(255),
   distance_km DECIMAL(10, 2),
   duration_min INT,

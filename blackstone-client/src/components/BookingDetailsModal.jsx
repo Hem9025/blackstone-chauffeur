@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Pencil } from 'lucide-react'
 import Modal from './Modal'
-import StatusBadge from './StatusBadge'
 import { bookings as bookingsApi, vehicles as vehiclesApi } from '../utils/api'
 import { formatCurrency, formatDate } from '../utils/helpers'
 
@@ -12,7 +11,16 @@ const TRIP_TYPES = [
   { id: 'hourly', label: 'Hourly' },
 ]
 const SERVICE_TYPES = ['Chauffeur Service', 'Airport Transfer']
-const PAYMENT_STATUS_OPTIONS = ['pending', 'paid', 'failed', 'refunded']
+const BOOKING_STATUS_OPTIONS = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'assigned', label: 'Assigned' },
+  { value: 'en_route', label: 'En Route' },
+  { value: 'arrived', label: 'Arrived' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'archived', label: 'Archived' },
+  { value: 'cancelled', label: 'Cancelled' },
+]
+const PAYMENT_STATUS_OPTIONS =['pending', 'paid', 'failed', 'refunded']
 const CHILD_SEAT_MAX = 2
 const MAX_PASSENGERS = 20
 const MAX_LUGGAGE = 20
@@ -71,6 +79,7 @@ const inputClass = 'w-full border border-black/15 px-3 py-2 text-sm'
 // vanish it from their dashboard).
 export default function BookingDetailsModal({ booking, drivers = [], providers = [], onClose, actions, onUpdated }) {
   const [savingPayment, setSavingPayment] = useState(false)
+  const [savingStatus, setSavingStatus] = useState(false)
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState(null)
   const [vehicleList, setVehicleList] = useState([])
@@ -98,6 +107,24 @@ export default function BookingDetailsModal({ booking, drivers = [], providers =
       window.alert(err.message || 'Failed to update payment status')
     } finally {
       setSavingPayment(false)
+    }
+  }
+
+  async function handleBookingStatusChange(e) {
+    const status = e.target.value
+    if (status === booking.booking_status) return
+    if (status === 'cancelled' && !window.confirm("Cancel this booking? This can't be undone.")) return
+    setSavingStatus(true)
+    try {
+      // Cancelling goes through its own route so customers/drivers still get
+      // the cancellation emails and notifications.
+      if (status === 'cancelled') await bookingsApi.cancel(booking.id)
+      else await bookingsApi.setBookingStatus(booking.id, status)
+      onUpdated?.()
+    } catch (err) {
+      window.alert(err.message || 'Failed to update status')
+    } finally {
+      setSavingStatus(false)
     }
   }
 
@@ -215,7 +242,19 @@ export default function BookingDetailsModal({ booking, drivers = [], providers =
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge status={booking.booking_status} />
+            <label className="flex items-center gap-1.5 text-xs text-black/60">
+              Status:
+              <select
+                value={booking.booking_status}
+                onChange={handleBookingStatusChange}
+                disabled={savingStatus || editing || booking.booking_status === 'cancelled'}
+                className="rounded-full border border-black/15 bg-white px-2.5 py-1 text-xs text-black/80 disabled:opacity-40"
+              >
+                {BOOKING_STATUS_OPTIONS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            </label>
             <label className="flex items-center gap-1.5 text-xs text-black/60">
               Payment:
               <select

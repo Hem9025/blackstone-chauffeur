@@ -9,6 +9,7 @@ export const STATUS_DOT = {
   en_route: 'bg-indigo-500',
   arrived: 'bg-purple-500',
   completed: 'bg-green-500',
+  archived: 'bg-gray-400',
   cancelled: 'bg-red-400',
 }
 

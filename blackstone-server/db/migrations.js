@@ -93,6 +93,33 @@ async function ensureUserStatusAllowsInactive(rawQuery, databaseName) {
   }
 }
 
+// Same idea as above, for bookings.booking_status gaining 'archived'
+// (admin-only status for finished bookings that should be tucked away).
+async function ensureBookingStatusAllowsArchived(rawQuery, databaseName) {
+  try {
+    const { rows: checks } = await rawQuery(
+      `SELECT tc.CONSTRAINT_NAME AS name, cc.CHECK_CLAUSE AS clause
+       FROM information_schema.TABLE_CONSTRAINTS tc
+       JOIN information_schema.CHECK_CONSTRAINTS cc
+         ON cc.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA AND cc.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+       WHERE tc.TABLE_SCHEMA = ? AND tc.TABLE_NAME = 'bookings' AND tc.CONSTRAINT_TYPE = 'CHECK'`,
+      [databaseName],
+    )
+    const statusChecks = checks.filter((c) => /booking_status/i.test(c.clause))
+    if (!statusChecks.length || statusChecks.some((c) => /archived/i.test(c.clause))) return
+
+    for (const { name } of statusChecks) {
+      await rawQuery(`ALTER TABLE bookings DROP CHECK \`${name}\``)
+    }
+    await rawQuery(
+      `ALTER TABLE bookings ADD CONSTRAINT chk_bookings_status CHECK (booking_status IN ('pending', 'assigned', 'en_route', 'arrived', 'completed', 'archived', 'cancelled'))`,
+    )
+    console.log(`[db] Migration: bookings.booking_status now allows 'archived'`)
+  } catch (err) {
+    console.error('[db] Migration: failed to update bookings.booking_status check constraint', err)
+  }
+}
+
 export async function runMigrations(rawQuery, databaseName) {
   for (const { table, column, definition } of COLUMN_ADDITIONS) {
     const { rows } = await rawQuery(
@@ -121,4 +148,5 @@ export async function runMigrations(rawQuery, databaseName) {
   }
 
   await ensureUserStatusAllowsInactive(rawQuery, databaseName)
+  await ensureBookingStatusAllowsArchived(rawQuery, databaseName)
 }

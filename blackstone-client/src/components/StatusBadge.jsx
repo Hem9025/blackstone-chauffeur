@@ -6,6 +6,7 @@ const STATUS_LABELS = {
   en_route: 'En Route',
   arrived: 'Arrived',
   completed: 'Completed',
+  archived: 'Archived',
   cancelled: 'Cancelled',
 }
 

@@ -81,8 +81,9 @@ export default function CustomerDashboard() {
     }
   }
 
-  const upcoming = list.filter((b) => b.booking_status !== 'completed' && b.booking_status !== 'cancelled')
-  const past = list.filter((b) => b.booking_status === 'completed' || b.booking_status === 'cancelled')
+  const FINISHED = ['completed', 'archived', 'cancelled']
+  const upcoming = list.filter((b) => !FINISHED.includes(b.booking_status))
+  const past = list.filter((b) => FINISHED.includes(b.booking_status))
 
   return (
     <div>
@@ -144,7 +145,7 @@ function BookingTable({ rows, empty, onCancel, cancellingId }) {
               <td className="py-2 pr-4">{formatCurrency(b.total_price)}</td>
               {onCancel && (
                 <td className="py-2 pr-4">
-                  {!['completed', 'cancelled'].includes(b.booking_status) && (
+                  {!['completed', 'archived', 'cancelled'].includes(b.booking_status) && (
                     <button
                       disabled={cancellingId === b.id}
                       onClick={() => onCancel(b.id)}

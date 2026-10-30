@@ -1686,6 +1686,32 @@ router.patch('/:id/payment-status', authCheck, requirePermission('can_manage_boo
   }
 })
 
+// PATCH /api/bookings/:id/booking-status — admin/second_admin, set a booking's
+// ride status directly from the booking popup's dropdown. 'cancelled' is
+// deliberately not accepted here — it must go through PATCH /:id/cancel,
+// which also sends the cancellation emails and notifications.
+const ADMIN_BOOKING_STATUSES = ['pending', 'assigned', 'en_route', 'arrived', 'completed', 'archived']
+router.patch('/:id/booking-status', authCheck, requirePermission('can_manage_bookings'), async (req, res) => {
+  const { status } = req.body || {}
+  if (!ADMIN_BOOKING_STATUSES.includes(status)) {
+    return res.status(400).json({ message: `status must be one of: ${ADMIN_BOOKING_STATUSES.join(', ')}` })
+  }
+  try {
+    const { rows: existingRows } = await query('SELECT id, driver_id FROM bookings WHERE id = ?', [req.params.id])
+    if (!existingRows.length) return res.status(404).json({ message: 'Booking not found' })
+    if (['assigned', 'en_route', 'arrived'].includes(status) && !existingRows[0].driver_id) {
+      return res.status(400).json({ message: 'Assign a driver first.' })
+    }
+
+    await query('UPDATE bookings SET booking_status = ? WHERE id = ?', [status, req.params.id])
+    const { rows } = await query('SELECT * FROM bookings WHERE id = ?', [req.params.id])
+    res.json(rows[0])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to update status' })
+  }
+})
+
 // PATCH /api/bookings/:id/status — driver, update ride status
 router.patch('/:id/status', authCheck, requireRole('driver'), async (req, res) => {
   const { status } = req.body || {} // en_route | arrived | completed

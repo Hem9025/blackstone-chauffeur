@@ -13,7 +13,7 @@ const STATUS_LABELS = {
   completed: 'Completed',
   cancelled: 'Cancelled',
 }
-const STATUS_ORDER = ['pending', 'assigned', 'en_route', 'arrived', 'completed', 'cancelled']
+const STATUS_ORDER = ['pending', 'assigned', 'en_route', 'arrived', 'completed', 'archived', 'cancelled']
 
 function monthLabel(key) {
   const [year, month] = key.split('-').map(Number)

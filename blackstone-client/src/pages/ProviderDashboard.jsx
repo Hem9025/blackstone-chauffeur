@@ -39,7 +39,7 @@ const TRIP_TYPES = [
 ]
 const SERVICE_TYPES = ['Chauffeur Service', 'Airport Transfer']
 
-const STATUS_OPTIONS = ['pending', 'assigned', 'en_route', 'arrived', 'completed', 'cancelled']
+const STATUS_OPTIONS = ['pending', 'assigned', 'en_route', 'arrived', 'completed', 'archived', 'cancelled']
 
 function ProviderDashboardWithMapsLoader() {
   const { isLoaded } = useJsApiLoader({
@@ -863,7 +863,7 @@ function PastBookingsTab() {
                     </button>
                   </td>
                   <td className="py-2 pr-4">
-                    {['completed', 'cancelled'].includes(b.booking_status) ? (
+                    {['completed', 'archived', 'cancelled'].includes(b.booking_status) ? (
                       <span className="text-xs text-brand-black/30">—</span>
                     ) : (
                       <button

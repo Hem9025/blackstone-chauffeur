@@ -11,7 +11,7 @@ import { formatCurrency, formatDate } from '../utils/helpers'
 import { bookingsToCSV } from '../utils/exportBookings'
 import { googleCalendarUrl } from '../utils/googleCalendar'
 
-const STATUS_OPTIONS = ['pending', 'assigned', 'en_route', 'arrived', 'completed', 'cancelled']
+const STATUS_OPTIONS = ['pending', 'assigned', 'en_route', 'arrived', 'completed', 'archived', 'cancelled']
 const PAYMENT_OPTIONS = ['pending', 'paid', 'failed', 'refunded']
 
 function sameDay(a, b) {
@@ -138,7 +138,7 @@ export default function SecondAdminDashboard() {
   }
 
   function CancelControl({ b }) {
-    if (['completed', 'cancelled'].includes(b.booking_status)) return <span className="text-xs text-brand-black/30">—</span>
+    if (['completed', 'archived', 'cancelled'].includes(b.booking_status)) return <span className="text-xs text-brand-black/30">—</span>
     return (
       <button
         disabled={cancellingId === b.id}
