@@ -24,7 +24,7 @@ export default function FleetCard({ vehicle }) {
           isPortrait ? 'bg-gradient-to-br from-black/[0.04] to-black/[0.08] p-2' : 'bg-black/5'
         }`}
       >
-        <img
+        <img loading="lazy" decoding="async"
           src={vehicle.heroImage}
           alt={vehicle.title}
           onLoad={(e) => setIsPortrait(e.currentTarget.naturalHeight > e.currentTarget.naturalWidth)}

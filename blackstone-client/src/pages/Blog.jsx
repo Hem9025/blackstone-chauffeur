@@ -55,7 +55,7 @@ export default function Blog() {
               >
                 {p.cover_image && (
                   <div className="aspect-[16/10] overflow-hidden bg-black/5">
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={p.cover_image}
                       alt={p.title}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"

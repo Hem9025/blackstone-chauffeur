@@ -48,7 +48,7 @@ export default function Gallery() {
                 className="group relative mb-4 block w-full overflow-hidden rounded-2xl break-inside-avoid"
                 aria-label={`Open image ${i + 1}`}
               >
-                <img
+                <img loading="lazy" decoding="async"
                   src={img.src}
                   alt={img.alt}
                   className="w-full transition-transform duration-500 group-hover:scale-105"

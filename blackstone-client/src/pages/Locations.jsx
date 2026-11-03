@@ -47,7 +47,7 @@ export default function Locations() {
                 className="group flex flex-col overflow-hidden rounded-3xl border border-black/10 transition-colors hover:border-brand-gold"
               >
                 <div className="h-48 overflow-hidden">
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={l.image}
                     alt={l.name}
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"

@@ -7,26 +7,27 @@ import ProtectedRoute from './components/ProtectedRoute'
 import AdminLayout from './components/AdminLayout'
 import AdminPermissionGate from './components/AdminPermissionGate'
 
-// Public marketing pages load eagerly — this is the content real visitors
-// and search engines land on first, so it stays in the main bundle.
+// Only the homepage loads eagerly (it is the most common landing page). Every
+// other page is fetched when visited, which keeps the first download small —
+// the biggest lever for the mobile PageSpeed score.
 import Home from './pages/Home'
-import About from './pages/About'
-import Services from './pages/Services'
-import ServiceDetail from './pages/ServiceDetail'
-import Locations from './pages/Locations'
-import LocationDetail from './pages/LocationDetail'
-import FleetCategory from './pages/FleetCategory'
-import FleetDetail from './pages/FleetDetail'
-import Tour from './pages/Tour'
-import TourDetail from './pages/TourDetail'
-import Gallery from './pages/Gallery'
-import Blog from './pages/Blog'
-import BlogPost from './pages/BlogPost'
-import Contact from './pages/Contact'
-import Booking from './pages/Booking'
-import BookingSuccess from './pages/BookingSuccess'
-import PrivacyPolicy from './pages/Privacy'
-import TermsConditions from './pages/TermsConditions'
+const About = lazy(() => import('./pages/About'))
+const Services = lazy(() => import('./pages/Services'))
+const ServiceDetail = lazy(() => import('./pages/ServiceDetail'))
+const Locations = lazy(() => import('./pages/Locations'))
+const LocationDetail = lazy(() => import('./pages/LocationDetail'))
+const FleetCategory = lazy(() => import('./pages/FleetCategory'))
+const FleetDetail = lazy(() => import('./pages/FleetDetail'))
+const Tour = lazy(() => import('./pages/Tour'))
+const TourDetail = lazy(() => import('./pages/TourDetail'))
+const Gallery = lazy(() => import('./pages/Gallery'))
+const Blog = lazy(() => import('./pages/Blog'))
+const BlogPost = lazy(() => import('./pages/BlogPost'))
+const Contact = lazy(() => import('./pages/Contact'))
+const Booking = lazy(() => import('./pages/Booking'))
+const BookingSuccess = lazy(() => import('./pages/BookingSuccess'))
+const PrivacyPolicy = lazy(() => import('./pages/Privacy'))
+const TermsConditions = lazy(() => import('./pages/TermsConditions'))
 
 // Everything below is behind a login (or is the login flow itself) — the
 // vast majority of visitors never touch it, so it's split into its own

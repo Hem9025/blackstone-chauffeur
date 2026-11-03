@@ -142,18 +142,29 @@ function renderPage(template, page, navPages) {
     `<meta property="og:description" content="${esc(page.description)}" ${MARKER} />`,
     `<meta property="og:url" content="${esc(canonical)}" ${MARKER} />`,
     `<meta property="og:type" content="${page.og || 'website'}" ${MARKER} />`,
-    image ? `<meta property="og:image" content="${esc(image)}" ${MARKER} />` : '',
+    `<meta property="og:image" content="${esc(image || `${SITE_URL}/images/home/hero-bmw-i7.jpg`)}" ${MARKER} />`,
+    `<meta name="twitter:card" content="summary_large_image" ${MARKER} />`,
+    `<meta name="twitter:title" content="${esc(page.title)}" ${MARKER} />`,
+    `<meta name="twitter:description" content="${esc(page.description)}" ${MARKER} />`,
+    `<meta name="twitter:image" content="${esc(image || `${SITE_URL}/images/home/hero-bmw-i7.jpg`)}" ${MARKER} />`,
   ]
     .filter(Boolean)
     .join('\n    ')
 
   const intro = (page.intro || []).map((t) => `<p>${esc(t)}</p>`).join('')
+  const sections = (page.sections || [])
+    .map(
+      (s) =>
+        `<h2>${esc(s.heading)}</h2>` +
+        s.items.map((i) => `<h3>${esc(i.title)}</h3><p>${esc(i.text)}</p>`).join(''),
+    )
+    .join('')
   const links = navPages
     .map((p) => `<li><a href="${esc(p.path)}">${esc(p.h1)}</a></li>`)
     .join('')
   const placeholder =
     `<div id="root"><main style="max-width:720px;margin:0 auto;padding:48px 20px;font-family:sans-serif">` +
-    `<h1>${esc(page.h1)}</h1><p>${esc(page.description)}</p>${intro}` +
+    `<h1>${esc(page.h1)}</h1><p>${esc(page.description)}</p>${intro}${sections}` +
     `<nav aria-label="Main"><ul>${links}</ul></nav></main></div>`
 
   let html = template

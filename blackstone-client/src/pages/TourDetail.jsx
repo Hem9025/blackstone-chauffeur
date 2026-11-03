@@ -69,7 +69,7 @@ export default function TourDetail() {
               {tour.gallery.map((place) => (
                 <figure key={place.title}>
                   <div className="aspect-[16/10] overflow-hidden">
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={place.src}
                       alt={place.title}
                       className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"

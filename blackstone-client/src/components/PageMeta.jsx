@@ -24,7 +24,8 @@ export default function PageMeta({ title, description, image, jsonLd, canonicalP
     ? `${title} | BlackStone Chauffeur`
     : 'BlackStone Chauffeur | Premium Chauffeur Service'
 
-  const canonicalUrl = `${SITE_URL}${(canonicalPath ?? pathname).replace(/\/+$/, '') || '/'}`
+  const shareImage = image || `${SITE_URL}/images/home/hero-bmw-i7.jpg`
+  const canonicalUrl =`${SITE_URL}${(canonicalPath ?? pathname).replace(/\/+$/, '') || '/'}`
   const jsonLdItems = Array.isArray(jsonLd) ? jsonLd.filter(Boolean) : jsonLd ? [jsonLd] : []
 
   return (
@@ -34,9 +35,14 @@ export default function PageMeta({ title, description, image, jsonLd, canonicalP
       <link rel="canonical" href={canonicalUrl} />
       <meta property="og:title" content={fullTitle} />
       {description && <meta property="og:description" content={description} />}
-      {image && <meta property="og:image" content={image} />}
+      <meta property="og:image" content={shareImage} />
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:type" content="website" />
+      {/* X (Twitter) cards — controls how the page looks when shared on X */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={fullTitle} />
+      {description && <meta name="twitter:description" content={description} />}
+      <meta name="twitter:image" content={shareImage} />
       {jsonLdItems.map((item, i) => (
         <script key={i} type="application/ld+json">{JSON.stringify(item)}</script>
       ))}

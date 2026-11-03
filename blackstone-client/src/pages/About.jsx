@@ -142,7 +142,7 @@ export default function About() {
             </div>
 
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl md:aspect-[3/4]">
-              <img
+              <img loading="lazy" decoding="async"
                 src={IMAGES.gallery[7]}
                 alt="BlackStone Chauffeur guests boarding at a hotel arrival"
                 className="h-full w-full object-cover"
@@ -177,7 +177,7 @@ export default function About() {
                         than dead centre — several of these photos (e.g. Sky
                         Tower) have their subject higher in frame, and a plain
                         centre crop was cutting the top off inside the circle. */}
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={city.image}
                       alt={city.name}
                       className="h-full w-full object-cover object-[50%_25%]"
@@ -211,7 +211,7 @@ export default function About() {
               </p>
             </div>
             <div className="aspect-[4/3] overflow-hidden md:aspect-auto md:h-full">
-              <img
+              <img loading="lazy" decoding="async"
                 src={IMAGES.aboutSecondary}
                 alt="BlackStone Chauffeur fleet arriving at Palm Court Luxury Tours"
                 className="h-full w-full object-cover"
@@ -230,7 +230,7 @@ export default function About() {
           <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {differences.map((d) => (
               <div key={d.title} className="group relative aspect-[4/5] overflow-hidden rounded-2xl">
-                <img
+                <img loading="lazy" decoding="async"
                   src={d.image}
                   alt={d.title}
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"

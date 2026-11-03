@@ -12,10 +12,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Fonts load without blocking the first paint: the stylesheet is fetched
+         as a preload and switched on once it arrives (display=swap shows text
+         in a fallback font meanwhile). The <noscript> line is the fallback. -->
     <link
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap"
+      />
+    </noscript>
     <title>BlackStone Chauffeur</title>
 
     <!-- Google tag (gtag.js) -->

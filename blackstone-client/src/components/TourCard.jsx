@@ -7,7 +7,7 @@ export default function TourCard({ tour }) {
       className="group flex flex-col overflow-hidden border border-black/10 bg-white"
     >
       <div className="aspect-[4/3] overflow-hidden">
-        <img
+        <img loading="lazy" decoding="async"
           src={tour.heroImage}
           alt={tour.title}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"

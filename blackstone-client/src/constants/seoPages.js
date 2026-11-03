@@ -13,6 +13,8 @@
 // Detail pages (services, locations, fleet, tours, blog posts) are generated
 // from their own data in scripts/seoPrerender.js — only the fixed pages live here.
 
+import { HOME_INTRO, HOME_SEO_TEXT, HOME_SERVICES, HOME_FAQS } from './homeContent.js'
+
 export const STATIC_PAGES = [
   {
     path: '/',
@@ -20,6 +22,13 @@ export const STATIC_PAGES = [
     description:
       'VVIP, corporate and airport chauffeur service in Auckland and across NZ, plus wedding cars and private tours. Book online with upfront pricing.',
     h1: 'VVIP & Corporate Chauffeur Service in Auckland & New Zealand',
+    // Extra text baked into the raw HTML (see homeContent.js) so crawlers and
+    // AI tools that don't run JavaScript still see the homepage content.
+    intro: [...HOME_INTRO, ...HOME_SEO_TEXT.paragraphs],
+    sections: [
+      { heading: 'Our chauffeur services', items: HOME_SERVICES.map((s) => ({ title: s.title, text: s.desc })) },
+      { heading: 'Frequently asked questions', items: HOME_FAQS.map((f) => ({ title: f.question, text: f.answer })) },
+    ],
     priority: '1.0',
   },
   {

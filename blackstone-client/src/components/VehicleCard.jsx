@@ -5,7 +5,7 @@ export default function VehicleCard({ vehicle }) {
 
   return (
     <div className="flex flex-col overflow-hidden border border-black/10 bg-brand-black text-white">
-      <img
+      <img loading="lazy" decoding="async"
         src={image_url || '/vehicle-placeholder.jpg'}
         alt={name}
         className="h-48 w-full object-cover"

@@ -120,7 +120,7 @@ export default function FleetDetail() {
           {vehicle.gallery.length === 1 ? (
             <figure className="mt-8 overflow-hidden rounded-2xl bg-white">
               <div className="aspect-[16/9] overflow-hidden">
-                <img
+                <img loading="lazy" decoding="async"
                   src={vehicle.gallery[0].src}
                   alt={vehicle.gallery[0].title}
                   className="h-full w-full object-cover"
@@ -136,7 +136,7 @@ export default function FleetDetail() {
               {vehicle.gallery.map((shot) => (
                 <figure key={shot.title + shot.src} className="overflow-hidden rounded-2xl bg-white">
                   <div className="aspect-square overflow-hidden">
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={shot.src}
                       alt={shot.title}
                       className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"

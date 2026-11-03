@@ -13,6 +13,7 @@ import { IMAGES } from '../constants/images'
 import { HOME_FLEET_CATEGORIES } from '../constants/fleet'
 import { reviews as reviewsApi } from '../utils/api'
 import { organizationJsonLd, faqJsonLd, GOOGLE_REVIEW_URL } from '../constants/seo'
+import { HOME_FAQS, HOME_SEO_TEXT } from '../constants/homeContent'
 
 const services = [
   { title: 'Corporate Travel', desc: 'Discreet, reliable chauffeur service for executives, VVIP guests and international travel partners.', image: IMAGES.services.corporate },
@@ -56,12 +57,7 @@ const homeStats = [
   { value: '700+', label: 'Customers' },
 ]
 
-const faqs = [
-  { question: 'How far in advance should I book?', answer: 'We recommend booking at least 3 days ahead, though we do our best to accommodate last-minute requests.' },
-  { question: 'Do you provide airport meet & greet?', answer: "Yes — our chauffeurs track your flight and will be waiting in the arrivals hall with a name board." },
-  { question: 'Can I add extras to my booking?', answer: 'Absolutely. Child seats, extra wait time, VIP airport pickup and more can be added when selecting your vehicle.' },
-  { question: 'What payment methods do you accept?', answer: 'All major credit and debit cards via our secure Stripe checkout.' },
-]
+const faqs = HOME_FAQS
 
 export default function Home() {
   const [googleReviews, setGoogleReviews] = useState(null)
@@ -85,7 +81,11 @@ export default function Home() {
       <section className="relative h-screen w-full overflow-hidden bg-brand-black text-white">
         <img
           src={IMAGES.hero}
-          alt="BlackStone Chauffeur luxury vehicle"
+          alt="BlackStone Chauffeur BMW i7 luxury chauffeur car at a hotel entrance in Auckland"
+          width="1600"
+          height="1067"
+          fetchPriority="high"
+          decoding="async"
           className="absolute inset-0 h-full w-full object-cover object-[50%_30%] opacity-65"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
@@ -106,7 +106,7 @@ export default function Home() {
             <div className="mx-auto w-full max-w-7xl">
               <div className="flex max-w-xl flex-col gap-6">
                 <p className="text-sm uppercase tracking-[0.25em] text-brand-gold">
-                  VVIP & Corporate Chauffeur Service
+                  Auckland VVIP & Corporate Chauffeur Service
                 </p>
                 <h1 className="font-hero text-5xl italic leading-[1.05] tracking-tight md:text-7xl">
                   Arrive in style, every time.
@@ -156,7 +156,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <Reveal>
             <div className="flex items-end justify-between">
-              <h2 className="font-heading text-3xl text-black">Our Fleet</h2>
+              <h2 className="font-heading text-3xl text-black">Our Luxury Chauffeur Fleet</h2>
               <Button to="/fleet/luxury" variant="secondary" className="hidden sm:inline-flex">
                 View All Fleet
               </Button>
@@ -174,7 +174,7 @@ export default function Home() {
                   className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.06] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
                   <div className="aspect-[768/357] overflow-hidden bg-white p-1.5">
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={c.image}
                       alt={c.label}
                       className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
@@ -197,9 +197,11 @@ export default function Home() {
           a flat dark fill) with glass-style cards for a more editorial,
           less "plain corporate" feel. */}
       <section className="relative overflow-hidden bg-brand-black py-20 text-white">
-        <img
+        <img loading="lazy" decoding="async"
           src={IMAGES.heroAlt}
-          alt=""
+          alt="Luxury chauffeur car on a city street at dusk"
+          width="1800"
+          height="1200"
           className="absolute inset-0 h-full w-full object-cover opacity-20"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-brand-black via-brand-black/95 to-brand-black" />
@@ -235,7 +237,7 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <Reveal>
             <div className="flex items-end justify-between">
-              <h2 className="font-heading text-3xl text-black">Our Services</h2>
+              <h2 className="font-heading text-3xl text-black">Our Chauffeur Services</h2>
               <Button to="/services" variant="secondary" className="hidden sm:inline-flex">
                 See All Services
               </Button>
@@ -248,7 +250,7 @@ export default function Home() {
                     has room to cover the whole image without ever clipping
                     the description. */}
                 <div className="group relative aspect-[3/4] overflow-hidden rounded-2xl">
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={s.image}
                     alt={s.title}
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -300,6 +302,29 @@ export default function Home() {
           dark
         />
       </Reveal>
+
+      {/* About-the-service text — gives the page real, keyword-relevant
+          content for search engines, with internal links to the key pages. */}
+      <section className="bg-white py-16">
+        <div className="mx-auto max-w-4xl px-4 md:px-8">
+          <Reveal variant="fade">
+            <h2 className="font-heading text-3xl text-black">{HOME_SEO_TEXT.heading}</h2>
+            <div className="mt-6 space-y-4 text-black/70">
+              {HOME_SEO_TEXT.paragraphs.map((p) => (
+                <p key={p}>{p}</p>
+              ))}
+            </div>
+            <p className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              <Link to="/services/airport-transfers" className="text-brand-gold hover:underline">Airport transfers</Link>
+              <Link to="/services/corporate-travel" className="text-brand-gold hover:underline">Corporate travel</Link>
+              <Link to="/services/weddings" className="text-brand-gold hover:underline">Wedding cars</Link>
+              <Link to="/tour" className="text-brand-gold hover:underline">Private tours</Link>
+              <Link to="/locations/auckland" className="text-brand-gold hover:underline">Auckland chauffeur</Link>
+              <Link to="/locations" className="text-brand-gold hover:underline">All locations</Link>
+            </p>
+          </Reveal>
+        </div>
+      </section>
 
       {/* Testimonials */}
       <section className="bg-white py-16">
@@ -367,9 +392,11 @@ export default function Home() {
           so it stays legible without needing a dark-mode variant of
           FaqAccordion itself. */}
       <section className="relative overflow-hidden bg-brand-black py-20">
-        <img
+        <img loading="lazy" decoding="async"
           src={IMAGES.gallery[3]}
-          alt=""
+          alt="BlackStone Chauffeur guests arriving in a luxury vehicle"
+          width="1600"
+          height="1200"
           className="absolute inset-0 h-full w-full object-cover opacity-50"
         />
 

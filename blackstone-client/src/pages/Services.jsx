@@ -92,7 +92,7 @@ export default function Services() {
                       or padding gaps — a taller box than before so it still
                       doesn't feel over-cropped. */}
                   <div className="h-60 overflow-hidden">
-                    <img src={s.image} alt={s.title} className="h-full w-full object-cover" />
+                    <img loading="lazy" decoding="async" src={s.image} alt={s.title} className="h-full w-full object-cover" />
                   </div>
                   <div className="flex flex-1 flex-col p-6">
                     <h3 className="font-heading text-lg text-black">{s.title}</h3>
@@ -142,7 +142,7 @@ export default function Services() {
               </ul>
             </div>
             <div className="aspect-[4/3] overflow-hidden md:aspect-auto md:h-full">
-              <img
+              <img loading="lazy" decoding="async"
                 src={IMAGES.services.superbVehicles}
                 alt="BlackStone Chauffeur luxury fleet"
                 className="h-full w-full object-cover"

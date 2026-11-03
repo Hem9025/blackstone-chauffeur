@@ -9,7 +9,7 @@ export const IMAGES = {
   // Homepage hero — real client photo (BMW i7, hotel entrance arrival shot),
   // replaces the earlier Rolls-Royce Ghost Unsplash placeholder.
   hero: '/images/home/hero-bmw-i7.jpg',
-  heroAlt: unsplash('photo-1500632907344-a073709b2448', 1800),
+  heroAlt: unsplash('photo-1500632907344-a073709b2448', 1200),
 
   fleet: {
     sedan1: unsplash('photo-1609521233053-345bfa8b6f17'),

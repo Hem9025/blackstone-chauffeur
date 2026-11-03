@@ -10,7 +10,7 @@ export default function OccasionStrip({ eyebrow, title, paragraphs, image, cta, 
           }`}
         >
           <div className="aspect-[4/3] overflow-hidden md:aspect-auto md:h-full">
-            <img src={image} alt={title} className="h-full w-full object-cover" />
+            <img loading="lazy" decoding="async" src={image} alt={title} className="h-full w-full object-cover" />
           </div>
           <div className="flex flex-col justify-center gap-4 px-4 py-12 md:px-12 md:py-0">
             <p className="text-sm uppercase tracking-[0.25em] text-brand-gold">{eyebrow}</p>
