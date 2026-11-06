@@ -1,0 +1,65 @@
+/* Phone-app look. EVERYTHING here is scoped to html.app-mode, which is only
+   ever set inside the installed app (or the ?app=1 browser preview) — see
+   utils/appMode.js. The public website never gets this class, so none of it
+   affects the website, including its phone view. */
+
+html.app-mode {
+  --app-bg: #f6f5f2;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+
+html.app-mode body {
+  background: var(--app-bg);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Allow selecting/typing inside form fields and long text */
+html.app-mode input,
+html.app-mode textarea,
+html.app-mode select,
+html.app-mode [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+  /* 16px stops iOS zooming the page when a field is focused */
+  font-size: 16px;
+}
+
+/* Notch / home-indicator safe areas */
+html.app-mode .app-header {
+  padding-top: env(safe-area-inset-top);
+}
+html.app-mode .app-tabbar {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+html.app-mode main {
+  /* room for the fixed bottom tab bar (~56px) + home indicator */
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+}
+
+/* Lighter, cleaner, softer: rounded white cards, no heavy dark blocks */
+html.app-mode main .bg-white,
+html.app-mode main .bg-brand-white {
+  border-radius: 16px;
+}
+html.app-mode main [class*="border-black"],
+html.app-mode main [class*="border-brand"] {
+  border-radius: 14px;
+}
+html.app-mode main button,
+html.app-mode main a[class*="px-"] {
+  min-height: 44px; /* comfortable thumb targets */
+}
+html.app-mode main h1,
+html.app-mode main h2 {
+  letter-spacing: -0.01em;
+}
+
+/* Website-only chrome that should never show in the app */
+html.app-mode .web-only,
+html.app-mode footer {
+  display: none !important;
+}

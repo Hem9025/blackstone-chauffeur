@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { query } from '../db/index.js'
 import authCheck from '../middleware/authCheck.js'
 import { requireRole } from '../middleware/roleCheck.js'
-import { getOrCreateReferralCode, REFERRER_REWARD_AMOUNT } from '../utils/coupons.js'
+import { getOrCreateReferralCode, REFERRER_REWARD_AMOUNT, REFERRALS_ENABLED } from '../utils/coupons.js'
 
 const router = Router()
 
@@ -13,6 +13,7 @@ const router = Router()
 // separate referral-redemption endpoint or UI, only this one to fetch and
 // display your own code.
 router.get('/me', authCheck, requireRole('customer'), async (req, res) => {
+  if (!REFERRALS_ENABLED) return res.status(404).json({ message: 'Referrals are not available' })
   try {
     // The JWT payload only carries id/role/email (see routes/auth.js), not
     // name — looked up fresh here since it's only needed once, the first

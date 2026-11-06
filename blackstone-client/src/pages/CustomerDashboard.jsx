@@ -6,11 +6,16 @@ import StatusBadge from '../components/StatusBadge'
 import { bookings as bookingsApi, referrals as referralsApi } from '../utils/api'
 import { formatCurrency, formatDate } from '../utils/helpers'
 
+// Referral program switched off for now — set true to show the card again
+// (and REFERRALS_ENABLED in blackstone-server/utils/coupons.js).
+const REFERRALS_ENABLED = false
+
 function ReferFriendCard() {
   const [referral, setReferral] = useState(null)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
+    if (!REFERRALS_ENABLED) return
     referralsApi.me().then(setReferral).catch(() => setReferral(null))
   }, [])
 

@@ -37,6 +37,10 @@ const ALLOWED_ORIGINS = [
   'http://blackstonechauffeur.co.nz',
   'http://www.blackstonechauffeur.co.nz',
   'http://localhost:5173',
+  // The phone app (Capacitor) loads from these local origins:
+  // Android = https://localhost, iOS = capacitor://localhost
+  'https://localhost',
+  'capacitor://localhost',
 ].filter(Boolean)
 
 app.use(

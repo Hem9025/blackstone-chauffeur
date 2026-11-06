@@ -6,11 +6,15 @@ import ScrollToTop from './components/ScrollToTop'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminLayout from './components/AdminLayout'
 import AdminPermissionGate from './components/AdminPermissionGate'
+import AppHeader from './components/AppHeader'
+import AppTabBar from './components/AppTabBar'
+import { IS_APP } from './utils/appMode'
 
 // Only the homepage loads eagerly (it is the most common landing page). Every
 // other page is fetched when visited, which keeps the first download small —
 // the biggest lever for the mobile PageSpeed score.
 import Home from './pages/Home'
+const AppWelcome = lazy(() => import('./pages/AppWelcome'))
 const About = lazy(() => import('./pages/About'))
 const Services = lazy(() => import('./pages/Services'))
 const ServiceDetail = lazy(() => import('./pages/ServiceDetail'))
@@ -103,13 +107,15 @@ function App() {
   return (
     <div className="flex min-h-screen flex-col">
       <ScrollToTop />
-      <Navbar />
+      {/* Phone app gets its own slim header + bottom tabs; the website keeps
+          the normal Navbar. IS_APP is false on the website, always. */}
+      {IS_APP ? <AppHeader /> : <Navbar />}
 
       <main className="flex-1">
         <Suspense fallback={<RouteFallback />}>
         <Routes>
           {/* Public */}
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={IS_APP ? <AppWelcome /> : <Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
           <Route path="/services/:slug" element={<ServiceDetail />} />
@@ -267,7 +273,7 @@ function App() {
         </Suspense>
       </main>
 
-      {!isAccountRoute && <Footer />}
+      {IS_APP ? <AppTabBar /> : !isAccountRoute && <Footer />}
     </div>
   )
 }

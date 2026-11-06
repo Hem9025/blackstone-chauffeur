@@ -34,9 +34,16 @@ export async function findCouponByCode(codeRaw) {
  * Returns { ok: true, discountAmount, finalTotal, coupon } or
  * { ok: false, message }.
  */
+// Referral program switched off for now. Set to true to turn it back on
+// (also re-enable the card in client CustomerDashboard.jsx: REFERRALS_ENABLED).
+export const REFERRALS_ENABLED = false
+
 export async function evaluateCoupon(coupon, fare, userId) {
   if (!coupon) return { ok: false, message: 'Invalid coupon code' }
   if (!coupon.active) return { ok: false, message: 'This coupon is no longer active' }
+  if (!REFERRALS_ENABLED && (coupon.kind === 'referral' || coupon.kind === 'reward')) {
+    return { ok: false, message: 'Invalid coupon code' }
+  }
   if (coupon.kind === 'referral' && coupon.owner_user_id === userId) {
     return { ok: false, message: "You can't use your own referral code" }
   }
