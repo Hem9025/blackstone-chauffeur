@@ -3,6 +3,7 @@ import { List, CalendarDays, CalendarPlus, Phone, Mail, Car, Users, Briefcase, B
 import PageMeta from '../components/PageMeta'
 import BookingCalendar from '../components/BookingCalendar'
 import StatusBadge from '../components/StatusBadge'
+import DriverDownloads from '../components/DriverDownloads'
 import { bookings as bookingsApi } from '../utils/api'
 import { formatDate, formatCurrency } from '../utils/helpers'
 import { googleCalendarUrl } from '../utils/googleCalendar'
@@ -24,7 +25,7 @@ function hasValue(v) {
 // passenger); a provider booking keeps its own passenger details, since the
 // account holder there is the agent, not the rider. Rows with no value are
 // simply left out.
-function RideDetails({ ride }) {
+export function RideDetails({ ride }) {
   const name = ride.passenger_name || ride.customer_name
   const phone = ride.passenger_phone || ride.customer_phone
   const email = ride.passenger_email || ride.customer_email
@@ -143,6 +144,7 @@ export default function DriverDashboard() {
       <section className="mx-auto max-w-5xl px-4 py-16 md:px-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="font-heading text-3xl text-brand-black">Assigned Rides</h1>
+          <DriverDownloads disabled={list.length === 0} />
           <div className="flex border border-brand-black/15">
             <button
               onClick={() => setView('list')}

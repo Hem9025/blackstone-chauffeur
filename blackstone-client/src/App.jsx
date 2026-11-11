@@ -15,6 +15,9 @@ import { IS_APP } from './utils/appMode'
 // the biggest lever for the mobile PageSpeed score.
 import Home from './pages/Home'
 const AppWelcome = lazy(() => import('./pages/AppWelcome'))
+const AppCustomerHome = lazy(() => import('./pages/AppCustomerHome'))
+const AppDriverJobs = lazy(() => import('./pages/AppDriverJobs'))
+const AppAdminMore = lazy(() => import('./pages/AppAdminMore'))
 const About = lazy(() => import('./pages/About'))
 const Services = lazy(() => import('./pages/Services'))
 const ServiceDetail = lazy(() => import('./pages/ServiceDetail'))
@@ -151,12 +154,12 @@ function App() {
 
           {/* Customer */}
           <Route element={<ProtectedRoute roles={['customer']} />}>
-            <Route path="/dashboard" element={<CustomerDashboard />} />
+            <Route path="/dashboard" element={IS_APP ? <AppCustomerHome /> : <CustomerDashboard />} />
           </Route>
 
           {/* Driver */}
           <Route element={<ProtectedRoute roles={['driver']} />}>
-            <Route path="/driver" element={<DriverDashboard />} />
+            <Route path="/driver" element={IS_APP ? <AppDriverJobs /> : <DriverDashboard />} />
           </Route>
 
           {/* Provider */}
@@ -173,6 +176,7 @@ function App() {
               every request) rather than blocked at the route level. */}
           <Route element={<ProtectedRoute roles={['admin', 'second_admin']} />}>
             <Route element={<AdminLayout />}>
+              <Route path="/admin/more" element={<AppAdminMore />} />
               <Route
                 path="/admin/dashboard"
                 element={

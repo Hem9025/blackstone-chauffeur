@@ -1766,6 +1766,30 @@ router.get('/driver', authCheck, requireRole('driver'), async (req, res) => {
   }
 })
 
+// GET /api/bookings/driver/report and /report-csv — the driver's own ride
+// history as PDF / CSV. Built from loadDriverRides (the same explicit column
+// list as GET /driver), so the customer's price never appears — the money
+// column is the driver's own pay (driver_price) only.
+router.get('/driver/report', authCheck, requireRole('driver'), async (req, res) => {
+  try {
+    const rows = await loadDriverRides(req.user.id)
+    streamBookingsReport(res, rows, 'My Rides', { priceKey: 'driver_price', priceLabel: 'Your pay' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to generate report' })
+  }
+})
+
+router.get('/driver/report-csv', authCheck, requireRole('driver'), async (req, res) => {
+  try {
+    const rows = await loadDriverRides(req.user.id)
+    streamBookingsCsv(res, rows, 'My Rides', { priceKey: 'driver_price', priceLabel: 'Your pay', includePayment: false })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to generate CSV' })
+  }
+})
+
 // GET /api/bookings/drivers — admin/second_admin, active drivers for the
 // "Assign Driver" dropdown. Lives here (rather than /api/admin, which is
 // admin-only) so second_admin can use it too. Name is what the dropdown

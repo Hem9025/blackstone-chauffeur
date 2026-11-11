@@ -21,7 +21,8 @@ const COLUMNS = [
  * Streams a landscape tabular PDF report of a booking list directly to an
  * Express response — used for the admin/provider "download as PDF" export.
  */
-export function streamBookingsReport(res, bookings, title) {
+export function streamBookingsReport(res, bookings, title, { priceKey = 'total_price', priceLabel = 'Total' } = {}) {
+  const columns = COLUMNS.map((c) => (c.key === 'total_price' ? { ...c, label: priceLabel } : c))
   const doc = new PDFDocument({ size: 'A4', margin: 40, layout: 'landscape' })
 
   res.setHeader('Content-Type', 'application/pdf')
@@ -46,15 +47,15 @@ export function streamBookingsReport(res, bookings, title) {
   function drawRow(values, { bold = false, color = BLACK } = {}) {
     let x = startX
     doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(8).fillColor(color)
-    COLUMNS.forEach((col, i) => {
+    columns.forEach((col, i) => {
       doc.text(String(values[i] ?? '—'), x, y, { width: col.width, ellipsis: true })
       x += col.width
     })
     y += 16
   }
 
-  drawRow(COLUMNS.map((c) => c.label), { bold: true })
-  doc.strokeColor('#e5e5e5').lineWidth(1).moveTo(startX, y).lineTo(startX + COLUMNS.reduce((s, c) => s + c.width, 0), y).stroke()
+  drawRow(columns.map((c) => c.label), { bold: true })
+  doc.strokeColor('#e5e5e5').lineWidth(1).moveTo(startX, y).lineTo(startX + columns.reduce((s, c) => s + c.width, 0), y).stroke()
   y += 4
 
   bookings.forEach((b) => {
@@ -72,7 +73,7 @@ export function streamBookingsReport(res, bookings, title) {
       `${b.pickup || ''} -> ${b.dropoff || ''}`,
       b.vehicle_name || '—',
       b.booking_status,
-      money(b.total_price),
+      money(b[priceKey]),
     ])
   })
 

@@ -54,6 +54,7 @@ export const auth = {
   me: () => api.get('/auth/me'),
   updateProfile: (payload) => api.patch('/auth/me', payload),
   changePassword: (payload) => api.patch('/auth/password', payload),
+  deleteAccount: (password) => api.post('/auth/delete-account', { password }),
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }, { auth: false }),
   resetPassword: (payload) => api.post('/auth/reset-password', payload, { auth: false }),
 }
@@ -90,6 +91,8 @@ export const bookings = {
   cancel: (id) => api.patch(`/bookings/${id}/cancel`),
   remove: (id) => api.delete(`/bookings/${id}`),
   driver: () => api.get('/bookings/driver'),
+  downloadDriverReport: () => downloadFile('/bookings/driver/report', 'my-rides.pdf'),
+  downloadDriverCsv: () => downloadFile('/bookings/driver/report-csv', 'my-rides.csv'),
   downloadInvoice: (id) => downloadFile(`/bookings/${id}/invoice`, `invoice-${id}.pdf`),
   downloadMyReport: (query = '') => downloadFile(`/bookings/my/report${query}`, 'my-bookings.pdf'),
   downloadAllReport: (query = '') => downloadFile(`/bookings/all/report${query}`, 'all-bookings.pdf'),
@@ -118,6 +121,23 @@ async function downloadFile(path, filename) {
     throw new Error(data?.message || 'Download failed')
   }
   const blob = await res.blob()
+
+  // Inside the installed phone app a WebView can't save a blob via a link, so
+  // write the file to the device and open the share sheet (Save to Files, email,
+  // WhatsApp...). Uses the Capacitor Filesystem + Share plugins.
+  const cap = window.Capacitor
+  if (cap?.isNativePlatform?.() && cap.Plugins?.Filesystem && cap.Plugins?.Share) {
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(String(reader.result).split(',')[1])
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    })
+    const saved = await cap.Plugins.Filesystem.writeFile({ path: filename, data: base64, directory: 'CACHE' })
+    await cap.Plugins.Share.share({ title: filename, url: saved.uri, dialogTitle: 'Save or share' })
+    return
+  }
+
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url

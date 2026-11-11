@@ -3,6 +3,7 @@ import { Outlet, Link, NavLink, useLocation } from 'react-router-dom'
 import { LayoutDashboard, ClipboardList, Users, Car, UserCog, Building2, ShieldCheck, Globe, LogOut, Menu, X, Tag, Mail, Newspaper } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useAdminPermissions } from '../hooks/useAdminPermissions'
+import { IS_APP } from '../utils/appMode'
 
 // Every admin-area page (Dashboard, Bookings, Users, Vehicles, Drivers,
 // Providers, Second Admin Management) renders inside this shell via
@@ -16,7 +17,7 @@ import { useAdminPermissions } from '../hooks/useAdminPermissions'
 // and that page itself is always admin-only.
 // Drivers and Providers were previously one combined page with a toggle —
 // now two separate sections, each with its own per-person detail page.
-const NAV_ITEMS = [
+export const NAV_ITEMS = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, flag: 'can_view_stats' },
   { to: '/admin', label: 'Bookings', icon: ClipboardList, end: true, flag: 'can_manage_bookings' },
   { to: '/admin/users', label: 'Users', icon: Users, flag: 'can_manage_users' },
@@ -110,6 +111,18 @@ export default function AdminLayout() {
         <p className="mt-2 truncate px-3 text-xs text-brand-white/30">
           {user?.name} · {user?.role === 'second_admin' ? 'Second Admin' : 'Admin'}
         </p>
+      </div>
+    )
+  }
+
+  // Phone app: the bottom tab bar + "More" page replace the sidebar, the
+  // slide-over drawer and the second title bar, so just render the page.
+  if (IS_APP) {
+    return (
+      <div className="flex-1 bg-[#f6f5f2]">
+        <div className="min-w-0 px-3 py-4">
+          <Outlet />
+        </div>
       </div>
     )
   }

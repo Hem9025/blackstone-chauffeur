@@ -63,3 +63,11 @@ html.app-mode .web-only,
 html.app-mode footer {
   display: none !important;
 }
+
+/* Admin pages are wide desktop tables — keep them inside the screen and
+   let the table itself scroll sideways instead of the whole page. */
+html.app-mode main main { padding-bottom: 0; }
+html.app-mode main table { font-size: 13px; }
+html.app-mode main h1.font-heading { font-size: 1.5rem; }
+html.app-mode main > div > section,
+html.app-mode main section { padding-top: 1rem; padding-bottom: 1rem; }

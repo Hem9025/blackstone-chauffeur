@@ -26,28 +26,28 @@ function csvCell(value) {
  * the CSV counterpart to streamBookingsReport (PDF). Same row shape, so the
  * two "Download" buttons next to each other always describe the same data.
  */
-export function streamBookingsCsv(res, bookings, title) {
+export function streamBookingsCsv(res, bookings, title, { priceKey = 'total_price', priceLabel = 'Total', includePayment = true } = {}) {
+  const columns = COLUMNS.filter((c) => includePayment || c.key !== 'payment_status').map((c) =>
+    c.key === 'total_price' ? { ...c, label: priceLabel } : c,
+  )
   res.setHeader('Content-Type', 'text/csv; charset=utf-8')
   res.setHeader('Content-Disposition', `attachment; filename="${title.toLowerCase().replace(/\s+/g, '-')}.csv"`)
 
-  const lines = [COLUMNS.map((c) => csvCell(c.label)).join(',')]
+  const lines = [columns.map((c) => csvCell(c.label)).join(',')]
 
   bookings.forEach((b) => {
-    lines.push(
-      [
-        b.date ? new Date(b.date).toLocaleDateString('en-NZ') : '',
-        b.time ? String(b.time).slice(0, 5) : '',
-        b.passenger_name || b.customer_name || '',
-        b.pickup || '',
-        b.dropoff || '',
-        b.vehicle_name || '',
-        b.booking_status || '',
-        b.payment_status || '',
-        Number(b.total_price || 0).toFixed(2),
-      ]
-        .map(csvCell)
-        .join(','),
-    )
+    const cells = {
+      date: b.date ? new Date(b.date).toLocaleDateString('en-NZ') : '',
+      time: b.time ? String(b.time).slice(0, 5) : '',
+      passenger: b.passenger_name || b.customer_name || '',
+      pickup: b.pickup || '',
+      dropoff: b.dropoff || '',
+      vehicle_name: b.vehicle_name || '',
+      booking_status: b.booking_status || '',
+      payment_status: b.payment_status || '',
+      total_price: Number(b[priceKey] || 0).toFixed(2),
+    }
+    lines.push(columns.map((c) => csvCell(cells[c.key])).join(','))
   })
 
   // Leading BOM so Excel (which otherwise guesses the wrong encoding for

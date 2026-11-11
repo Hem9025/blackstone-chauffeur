@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { LogOut } from 'lucide-react'
+import { IS_APP } from '../utils/appMode'
 import PageMeta from '../components/PageMeta'
 import Button from '../components/Button'
 import PasswordInput from '../components/PasswordInput'
@@ -6,7 +9,32 @@ import { useAuth } from '../context/AuthContext'
 import { auth as authApi } from '../utils/api'
 
 export default function Profile() {
-  const { user, refresh } = useAuth()
+  const { user, refresh, logout } = useAuth()
+  const navigate = useNavigate()
+
+  function handleLogout() {
+    logout()
+    navigate('/', { replace: true })
+  }
+
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteError, setDeleteError] = useState('')
+  const [deleting, setDeleting] = useState(false)
+
+  async function handleDelete(e) {
+    e.preventDefault()
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await authApi.deleteAccount(deletePassword)
+      handleLogout()
+    } catch (err) {
+      setDeleteError(err.message || 'Failed to delete account')
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const [form, setForm] = useState({ name: user?.name || '', phone: user?.phone || '' })
   const [savingProfile, setSavingProfile] = useState(false)
@@ -142,6 +170,67 @@ export default function Profile() {
             </Button>
           </form>
         </div>
+
+        {/* Phone app only — the website has Logout in its navbar. */}
+        {IS_APP && (
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-white py-3.5 text-base font-semibold text-red-600 active:bg-red-50"
+          >
+            <LogOut size={18} /> Log out
+          </button>
+        )}
+
+        {IS_APP && !['admin', 'second_admin'].includes(user.role) && (
+          <div className="mt-10 rounded-2xl border border-red-100 bg-white p-5">
+            <h2 className="text-base font-semibold text-brand-black">Delete my account</h2>
+            <p className="mt-1 text-sm text-black/55">
+              This removes your name, email, phone and login. Past ride records are kept for our books but are no longer
+              linked to you. This can't be undone.
+            </p>
+            {!confirmingDelete ? (
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(true)}
+                className="mt-4 text-sm font-semibold text-red-600"
+              >
+                Delete my account…
+              </button>
+            ) : (
+              <form onSubmit={handleDelete} className="mt-4 flex flex-col gap-3">
+                <PasswordInput
+                  required
+                  placeholder="Enter your password to confirm"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  className="border border-brand-black/15 px-4 py-3"
+                />
+                {deleteError && <p className="text-sm text-red-500">{deleteError}</p>}
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={deleting}
+                    className="flex-1 rounded-xl bg-red-600 py-3 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    {deleting ? 'Deleting…' : 'Permanently delete'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setConfirmingDelete(false)
+                      setDeletePassword('')
+                      setDeleteError('')
+                    }}
+                    className="flex-1 rounded-xl border border-black/10 py-3 text-sm font-medium"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
       </section>
     </div>
   )

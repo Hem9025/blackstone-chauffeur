@@ -10,6 +10,7 @@ import { bookings as bookingsApi } from '../utils/api'
 import { formatCurrency, formatDate } from '../utils/helpers'
 import { bookingsToCSV } from '../utils/exportBookings'
 import { googleCalendarUrl } from '../utils/googleCalendar'
+import { IS_APP } from '../utils/appMode'
 
 const STATUS_OPTIONS = ['pending', 'assigned', 'en_route', 'arrived', 'completed', 'archived', 'cancelled']
 const PAYMENT_OPTIONS = ['pending', 'paid', 'failed', 'refunded']
@@ -29,7 +30,7 @@ export default function SecondAdminDashboard() {
   const [assigningId, setAssigningId] = useState(null)
   const [cancellingId, setCancellingId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
-  const [view, setView] = useState('list')
+  const [view, setView] = useState(() => (new URLSearchParams(window.location.search).get('view') === 'new' ? 'new' : 'list'))
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedBooking, setSelectedBooking] = useState(null)
 
@@ -39,6 +40,13 @@ export default function SecondAdminDashboard() {
   // loaded, filtering here still works purely off local state as before —
   // this doesn't keep the URL in sync with later changes.
   const [searchParams] = useSearchParams()
+  // Phone app: the bottom bar's "New" tab links to /admin?view=new, so follow
+  // that param after the first render too (the page stays mounted between tabs).
+  const viewParam = searchParams.get('view')
+  useEffect(() => {
+    if (viewParam === 'new') setView('new')
+    else setView((v) => (v === 'new' ? 'list' : v))
+  }, [viewParam])
   const [status, setStatus] = useState(searchParams.get('status') || '')
   const [paymentStatus, setPaymentStatus] = useState(searchParams.get('payment_status') || '')
   const [dateFrom, setDateFrom] = useState(searchParams.get('date_from') || '')
@@ -212,12 +220,15 @@ export default function SecondAdminDashboard() {
               >
                 <CalendarDays size={14} /> Calendar
               </button>
-              <button
-                onClick={() => setView('new')}
-                className={`flex items-center gap-1 px-3 py-2 text-xs ${view === 'new' ? 'bg-brand-black text-white' : 'text-brand-black/60'}`}
-              >
-                <PlusCircle size={14} /> New Booking
-              </button>
+              {/* In the phone app, New Booking lives in the bottom bar instead. */}
+              {!IS_APP && (
+                <button
+                  onClick={() => setView('new')}
+                  className={`flex items-center gap-1 px-3 py-2 text-xs ${view === 'new' ? 'bg-brand-black text-white' : 'text-brand-black/60'}`}
+                >
+                  <PlusCircle size={14} /> New Booking
+                </button>
+              )}
             </div>
             {view !== 'new' && (
               <>

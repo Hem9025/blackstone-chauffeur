@@ -22,13 +22,14 @@ const TITLES = {
   '/admin/coupons': 'Coupons',
   '/admin/subscribers': 'Subscribers',
   '/admin/blog': 'Blog',
-  '/admin/settings': 'Settings',
+  '/admin/settings': 'Second admins',
+  '/admin/more': 'More',
   '/contact': 'Contact us',
   '/privacy': 'Privacy',
   '/terms': 'Terms',
 }
 
-const ROOTS = ['/', '/dashboard', '/driver', '/provider', '/admin', '/admin/dashboard', '/profile', '/booking', '/login']
+const ROOTS = ['/', '/dashboard', '/driver', '/provider', '/admin', '/admin/dashboard', '/admin/more', '/profile', '/booking', '/login']
 
 export default function AppHeader() {
   const { pathname } = useLocation()

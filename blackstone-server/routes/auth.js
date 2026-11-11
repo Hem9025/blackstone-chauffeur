@@ -176,6 +176,59 @@ router.patch('/password', authCheck, async (req, res) => {
   }
 })
 
+// POST /api/auth/delete-account — a user deletes their own account (required
+// by the App Store / Play Store). Needs the current password. The account is
+// anonymised rather than the row removed: bookings, payments and provider
+// invoices reference users by id and must stay for the business's records, but
+// the person's name, email, phone and login are wiped and they can no longer
+// sign in. Admin accounts can't self-delete (an admin removes those), and
+// anyone with a ride still in progress must finish or cancel it first.
+router.post('/delete-account', authCheck, async (req, res) => {
+  const { password } = req.body || {}
+  if (!password) return res.status(400).json({ message: 'Please enter your password to confirm' })
+
+  try {
+    const { rows } = await query('SELECT id, role, password_hash FROM users WHERE id = ?', [req.user.id])
+    if (!rows.length) return res.status(404).json({ message: 'User not found' })
+    const user = rows[0]
+
+    if (['admin', 'second_admin'].includes(user.role)) {
+      return res.status(403).json({ message: 'Admin accounts must be removed by the main administrator' })
+    }
+
+    const valid = await bcrypt.compare(password, user.password_hash)
+    if (!valid) return res.status(401).json({ message: 'Password is incorrect' })
+
+    const { rows: active } = await query(
+      `SELECT COUNT(*) AS count FROM bookings
+       WHERE (customer_id = ? OR driver_id = ?)
+         AND booking_status NOT IN ('completed', 'archived', 'cancelled')`,
+      [user.id, user.id],
+    )
+    if (Number(active[0].count) > 0) {
+      return res.status(409).json({
+        message: 'You have upcoming rides. Please cancel or complete them before deleting your account.',
+      })
+    }
+
+    const randomHash = await bcrypt.hash(crypto.randomBytes(24).toString('hex'), 10)
+    await query('DELETE FROM push_subscriptions WHERE user_id = ?', [user.id])
+    await query('DELETE FROM notifications WHERE user_id = ?', [user.id])
+    await query(
+      `UPDATE users
+       SET name = 'Deleted user', email = ?, phone = NULL, password_hash = ?,
+           status = 'inactive', reset_token = NULL, reset_token_expires = NULL
+       WHERE id = ?`,
+      [`deleted-${user.id}-${Date.now()}@deleted.invalid`, randomHash, user.id],
+    )
+
+    res.json({ message: 'Your account has been deleted' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to delete account' })
+  }
+})
+
 // POST /api/auth/forgot-password — always responds with the same generic
 // message whether or not the email is registered, so this can't be used to
 // probe which emails have an account. If it *is* registered, fires off a
