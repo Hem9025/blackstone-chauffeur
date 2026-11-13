@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Download, FileText, List, CalendarDays, CalendarPlus, PlusCircle, ChevronRight } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { Download, FileText, List, CalendarDays, CalendarPlus, PlusCircle, ChevronRight, Wand2 } from 'lucide-react'
 import PageMeta from '../components/PageMeta'
 import BookingCalendar from '../components/BookingCalendar'
 import StatusBadge from '../components/StatusBadge'
@@ -251,6 +251,14 @@ export default function SecondAdminDashboard() {
           </div>
         </div>
 
+        {view === 'new' && IS_APP && (
+          <Link
+            to="/admin/paste"
+            className="mt-4 flex items-center justify-center gap-2 rounded-2xl border border-brand-gold bg-white py-3 text-sm font-semibold text-brand-black"
+          >
+            <Wand2 size={16} className="text-brand-gold" /> Paste multiple bookings
+          </Link>
+        )}
         {view === 'new' && <AdminNewBookingTab onCreated={load} />}
 
         {view !== 'new' && (

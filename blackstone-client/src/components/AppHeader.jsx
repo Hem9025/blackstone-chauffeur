@@ -24,6 +24,7 @@ const TITLES = {
   '/admin/blog': 'Blog',
   '/admin/settings': 'Second admins',
   '/admin/more': 'More',
+  '/admin/paste': 'Paste bookings',
   '/contact': 'Contact us',
   '/privacy': 'Privacy',
   '/terms': 'Terms',

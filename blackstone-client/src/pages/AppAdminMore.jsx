@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ChevronRight, LogOut, User, Globe } from 'lucide-react'
+import { ChevronRight, LogOut, User, Globe, Wand2 } from 'lucide-react'
 import { NAV_ITEMS } from '../components/AdminLayout'
 import { useAdminPermissions } from '../hooks/useAdminPermissions'
 import { useAuth } from '../context/AuthContext'
@@ -25,6 +25,11 @@ export default function AppAdminMore() {
       </p>
 
       <div className="divide-y divide-black/5 overflow-hidden rounded-2xl bg-white shadow-sm">
+        <Link to="/admin/paste" className={row}>
+          <Wand2 size={20} className="text-brand-gold" />
+          <span className="flex-1">Paste multiple bookings</span>
+          <ChevronRight size={18} className="text-black/25" />
+        </Link>
         {items.map((item) => (
           <Link key={item.to} to={item.to} className={row}>
             <item.icon size={20} className="text-brand-gold" />

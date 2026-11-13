@@ -18,6 +18,7 @@ const AppWelcome = lazy(() => import('./pages/AppWelcome'))
 const AppCustomerHome = lazy(() => import('./pages/AppCustomerHome'))
 const AppDriverJobs = lazy(() => import('./pages/AppDriverJobs'))
 const AppAdminMore = lazy(() => import('./pages/AppAdminMore'))
+const AppBulkBooking = lazy(() => import('./pages/AppBulkBooking'))
 const About = lazy(() => import('./pages/About'))
 const Services = lazy(() => import('./pages/Services'))
 const ServiceDetail = lazy(() => import('./pages/ServiceDetail'))
@@ -177,6 +178,7 @@ function App() {
           <Route element={<ProtectedRoute roles={['admin', 'second_admin']} />}>
             <Route element={<AdminLayout />}>
               <Route path="/admin/more" element={<AppAdminMore />} />
+              <Route path="/admin/paste" element={<AppBulkBooking />} />
               <Route
                 path="/admin/dashboard"
                 element={
