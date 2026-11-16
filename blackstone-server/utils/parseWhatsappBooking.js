@@ -291,6 +291,79 @@ function guessName(text) {
   return null
 }
 
+
+// ---------------------------------------------------------------------------
+// "Label: value" records — the format partner companies (Holiday Taxis,
+// Signature Golf Tours, ...) send transfers in, often with every field on ONE
+// line:
+//   Callan Ric Contact: +1970... Client: Signature Golf Tours - NZ Bookings
+//   Client Ref: TCS-27760244 Flight: NZ644 (Departure) Pickup: 32 Frankton Road
+// The leading text before the first label is the passenger; "Client" is the
+// booking company (not the passenger), so it goes to Notes. Returns null when
+// the text doesn't look like this style so the normal parser is used untouched.
+// ---------------------------------------------------------------------------
+const RECORD_LABELS = [
+  'client reference', 'client ref', 'booking reference', 'booking ref', 'drop-off', 'drop off', 'dropoff',
+  'pick-up', 'pick up', 'pickup', 'destination', 'passengers', 'passenger', 'customer', 'contact', 'client',
+  'flight', 'phone', 'mobile', 'date', 'time', 'pax', 'vehicle', 'notes', 'note', 'name', 'luggage', 'bags',
+  'reference', 'ref',
+]
+const RECORD_RE = new RegExp(`(?:^|[\\s,;])(${RECORD_LABELS.join('|')})\\s*:\\s*`, 'gi')
+
+function parseRecord(text) {
+  const matches = [...text.matchAll(RECORD_RE)]
+  const distinct = new Set(matches.map((m) => m[1].toLowerCase()))
+  if (matches.length < 2 || distinct.size < 2) return null
+
+  const fields = {}
+  matches.forEach((m, i) => {
+    const start = m.index + m[0].length
+    const end = i + 1 < matches.length ? matches[i + 1].index : text.length
+    const key = m[1].toLowerCase().replace(/[\s-]+/g, ' ')
+    const value = text.slice(start, end).replace(/\s+/g, ' ').replace(/[,;\s]+$/, '').trim()
+    if (value && !(key in fields)) fields[key] = value
+  })
+
+  const lead = text.slice(0, matches[0].index + (matches[0][0].match(/^[\s,;]/) ? 1 : 0)).replace(/\s+/g, ' ').trim()
+  const get = (...keys) => keys.map((k) => fields[k]).find(Boolean) || null
+  return { fields, lead, get }
+}
+
+
+// Anything in the pasted text that didn't land in a field is kept, so nothing
+// the sender wrote is lost: lines that still say something after every
+// detected value, label and filler word is taken out are returned (original
+// wording) and added to the booking's Notes by the caller.
+const FILLER = /\b(?:hi|hello|hey|please|thanks|thank you|regards|from|to|at|on|the|a|an|and|for|pick\s?up|drop\s?off|drop|pickup|dropoff|destination|contact|client|ref|reference|flight|name|passenger|passengers|pax|date|time|phone|mobile|vehicle|notes?|booking|transfer)\b/gi
+
+function escapeRe(v) {
+  return v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function findLeftover(text, used) {
+  const snippets = used
+    .filter((u) => typeof u === 'string' && u.trim().length >= 2)
+    .map((u) => u.trim())
+    .sort((a, b) => b.length - a.length)
+  const leftovers = []
+  for (const line of String(text).split(/\n/)) {
+    const original = line.trim()
+    if (!original) continue
+    let rest = original
+    for (const snip of snippets) rest = rest.replace(new RegExp(escapeRe(snip), 'ig'), ' ')
+    rest = rest
+      .replace(/(\d+)\s*(?:passengers?|pax|people|persons?|adults?|guests?|bags?|suitcases?|luggage|hours?|hrs?)\b/gi, ' ')
+      .replace(/\bparty\s+of\s+\d+\b/gi, ' ')
+      .replace(/\b(?:am|pm)\b/gi, ' ')
+      .replace(RECORD_RE, ' ')
+      .replace(FILLER, ' ')
+      .replace(/[^A-Za-z0-9]+/g, ' ')
+      .trim()
+    if (rest.replace(/\s+/g, '').length >= 3) leftovers.push(original)
+  }
+  return leftovers
+}
+
 // `vehicles` is optional — the list of currently active vehicles (from
 // GET /api/vehicles), used only to try to match a mentioned car/vehicle
 // type to a specific one. Parsing still works fine without it; it just
@@ -353,7 +426,43 @@ export function parseWhatsappBooking(rawText, vehicles = []) {
   if (/point.to.point/i.test(text)) warnings.push('Mentions "point-to-point" — that is no longer a separate service type; check trip type.')
   if (vehicleMatch) warnings.push(`Guessed vehicle: ${vehicleMatch.name} — please confirm it's right.`)
 
-  return {
+  // Label: value records (partner-company transfer requests) override the
+  // free-text guesses above with the real labelled values.
+  const rec = parseRecord(text)
+  let recOverride = null
+  if (rec) {
+    // An unlabelled date/time written after the last field would otherwise be
+    // read as part of that field's value — cut it back out.
+    const stripWhen = (v) => {
+      if (!v) return v
+      let out = v
+      for (const raw of [dateMatch?.raw, timeMatch?.raw]) if (raw) out = out.replace(raw, ' ')
+      return out.replace(/\s+/g, ' ').replace(/[,;\s]+$/, '').trim() || null
+    }
+    const nameFromLead = rec.lead && rec.lead.split(' ').length <= 5 && /^[A-Za-z .'-]+$/.test(rec.lead) ? rec.lead : null
+    const flightRaw = rec.get('flight')
+    const flightCode = flightRaw ? (flightRaw.match(/[A-Z]{2}\s?\d{2,4}/i) || [])[0] : null
+    const client = rec.get('client')
+    const clientRef = rec.get('client ref', 'client reference', 'booking ref', 'booking reference', 'ref', 'reference')
+    const extraNotes = [
+      client ? `Client: ${client}` : '',
+      clientRef ? `Client Ref: ${clientRef}` : '',
+      flightRaw ? `Flight: ${flightRaw}` : '',
+      rec.get('notes', 'note') || '',
+    ].filter(Boolean).join('\n').slice(0, 250)
+    recOverride = {
+      passenger_name: nameFromLead || rec.get('name', 'passenger', 'customer') || passenger_name,
+      passenger_phone: (rec.get('contact', 'phone', 'mobile') && findPhone(rec.get('contact', 'phone', 'mobile'))) || passenger_phone,
+      pickup: stripWhen(rec.get('pickup', 'pick up', 'pick-up')) || pickup,
+      dropoff: stripWhen(rec.get('dropoff', 'drop off', 'drop-off', 'destination')) || dropoff,
+      service_type: flightRaw ? 'Airport Transfer' : serviceType,
+      flight_number: flightCode ? flightCode.replace(/\s+/, '').toUpperCase() : flight_number,
+      reference_number: clientRef || reference_number,
+      notes: extraNotes || notes,
+    }
+  }
+
+  const result = {
     passenger_name,
     passenger_phone,
     passenger_email,
@@ -373,4 +482,32 @@ export function parseWhatsappBooking(rawText, vehicles = []) {
     vehicle_name: vehicleMatch?.name || null,
     warnings,
   }
+
+  if (recOverride) {
+    Object.assign(result, recOverride)
+    if (!needsDropoff) result.dropoff = null
+    // Re-check the fields the labelled values may have filled in, so stale
+    // "could not detect ..." warnings don't linger.
+    const stale = /passenger.s name|phone number|pickup location|destination/
+    result.warnings = warnings.filter((w) => !stale.test(w))
+    if (!result.passenger_name) result.warnings.push('Could not detect the passenger’s name — please fill it in.')
+    if (!result.passenger_phone) result.warnings.push('Could not detect a phone number.')
+    if (!result.pickup) result.warnings.push('Could not detect the pickup location.')
+    if (needsDropoff && !result.dropoff) result.warnings.push('Could not detect the destination.')
+  }
+
+  // Keep whatever didn't fit a field: added to Notes under "Other:".
+  const used = [
+    result.passenger_name, result.passenger_phone, result.passenger_email, result.pickup, result.dropoff,
+    dateMatch?.raw, timeMatch?.raw, result.flight_number, result.reference_number, vehicleMatch?.name,
+    findNotes(text),
+  ]
+  if (rec) used.push(rec.lead, ...Object.values(rec.fields))
+  const leftover = findLeftover(text, used)
+  result.leftover = leftover.join(' | ')
+  if (leftover.length) {
+    result.notes = [result.notes, `Other: ${leftover.join(' | ')}`].filter(Boolean).join('\n').slice(0, 250)
+  }
+
+  return result
 }

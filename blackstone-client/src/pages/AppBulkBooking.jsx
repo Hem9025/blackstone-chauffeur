@@ -69,8 +69,13 @@ export default function AppBulkBooking() {
             passengers: r.passengers || 1,
             suitcases: r.suitcases ?? 0,
             vehicle_id: r.vehicle_id || '',
-            notes: [r.reference_number ? `Reference: ${r.reference_number}` : '', r.notes || ''].filter(Boolean).join('\n').slice(0, 250),
+            notes: [
+              r.reference_number && !String(r.notes || '').includes(r.reference_number) ? `Reference: ${r.reference_number}` : '',
+              r.notes || '',
+            ].filter(Boolean).join('\n').slice(0, 250),
             price: '',
+            warnings: r.warnings || [],
+            editing: !r.passenger_name,
           }
         }),
       )
@@ -164,8 +169,8 @@ export default function AppBulkBooking() {
       ) : (
         <>
           <p className="text-sm text-black/55">
-            Found {rows.length} booking{rows.length === 1 ? '' : 's'}. Check each one, fix anything wrong, untick any
-            you don't want.
+            Found {rows.length} booking{rows.length === 1 ? '' : 's'}. Tap Edit on any card to change it. Anything the
+            reader couldn't place is added to that booking's Special note. Untick any you don't want.
           </p>
 
           <div className="mt-3 flex flex-col gap-3">
@@ -192,7 +197,29 @@ export default function AppBulkBooking() {
                     {r.state === 'creating' && <span className="text-xs text-black/45">Creating…</span>}
                   </div>
 
-                  {r.state !== 'done' && (
+                  {r.state !== 'done' && !r.editing && (
+                    <div className="mt-3 text-sm">
+                      <p className="font-semibold text-brand-black">{r.passenger_name || 'No name yet'}</p>
+                      {r.passenger_phone && <p className="text-black/55">{r.passenger_phone}</p>}
+                      <p className="mt-1 text-black/70">
+                        {[r.date, r.time].filter(Boolean).join(' · ') || 'No date or time'}
+                      </p>
+                      <p className="text-black/70">
+                        {r.pickup || 'No pickup'}
+                        {r.trip_type !== 'hourly' && r.dropoff ? ` → ${r.dropoff}` : ''}
+                        {r.trip_type === 'hourly' && r.hours ? ` · ${r.hours}h hire` : ''}
+                      </p>
+                      {r.notes && (
+                        <p className="mt-2 whitespace-pre-wrap rounded-lg bg-black/[0.04] px-3 py-2 text-xs text-black/60">
+                          <span className="font-semibold">Special note: </span>
+                          {r.notes}
+                        </p>
+                      )}
+                      {r.price !== '' && <p className="mt-1 text-black/55">Price: ${r.price}</p>}
+                    </div>
+                  )}
+
+                  {r.state !== 'done' && r.editing && (
                     <div className="mt-3 grid gap-2">
                       <input className={field} placeholder="Passenger name *" value={r.passenger_name} onChange={(e) => update(r.key, { passenger_name: e.target.value })} />
                       <input className={field} placeholder="Phone" value={r.passenger_phone} onChange={(e) => update(r.key, { passenger_phone: e.target.value })} />
@@ -208,13 +235,38 @@ export default function AppBulkBooking() {
                         <input type="time" className={field} value={r.time} onChange={(e) => update(r.key, { time: e.target.value })} />
                       </div>
                       <input className={field} inputMode="decimal" placeholder="Price (optional)" value={r.price} onChange={(e) => update(r.key, { price: e.target.value })} />
+                      <label className="text-xs text-black/50">
+                        Special note (anything that didn't fit goes here)
+                        <textarea
+                          rows={3}
+                          maxLength={250}
+                          className={`${field} mt-1`}
+                          value={r.notes}
+                          onChange={(e) => update(r.key, { notes: e.target.value })}
+                        />
+                        <span className="block text-right text-[11px] text-black/35">{r.notes.length}/250</span>
+                      </label>
                     </div>
+                  )}
+
+                  {r.state !== 'done' && (
+                    <button
+                      type="button"
+                      disabled={creating}
+                      onClick={() => update(r.key, { editing: !r.editing })}
+                      className="mt-3 text-sm font-semibold text-brand-gold"
+                    >
+                      {r.editing ? 'Done editing' : 'Edit'}
+                    </button>
                   )}
 
                   {p && r.include && (
                     <p className="mt-2 flex items-center gap-1 text-xs text-amber-600">
                       <AlertTriangle size={13} /> {p}
                     </p>
+                  )}
+                  {r.state !== 'done' && r.warnings.filter((w) => !/Guessed vehicle/.test(w)).length > 0 && !r.editing && (
+                    <p className="mt-2 text-xs text-black/40">Check: {r.warnings.filter((w) => !/Guessed vehicle/.test(w)).join(' ')}</p>
                   )}
                   {r.state === 'failed' && <p className="mt-2 text-xs text-red-500">{r.message}</p>}
                   <details className="mt-2">
