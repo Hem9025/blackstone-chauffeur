@@ -182,7 +182,7 @@ export default function Profile() {
           </button>
         )}
 
-        {IS_APP && !['admin', 'second_admin'].includes(user.role) && (
+        {!['admin', 'second_admin'].includes(user.role) && (
           <div className="mt-10 rounded-2xl border border-red-100 bg-white p-5">
             <h2 className="text-base font-semibold text-brand-black">Delete my account</h2>
             <p className="mt-1 text-sm text-black/55">

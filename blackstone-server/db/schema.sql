@@ -223,6 +223,20 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   INDEX idx_push_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Phone-app (Capacitor) push tokens from Firebase Cloud Messaging — one row per
+-- installed app a user is signed in on (see utils/nativePush.js). token is
+-- unique per install; signing in as someone else on that phone moves it.
+CREATE TABLE IF NOT EXISTS device_tokens (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  token VARCHAR(500) NOT NULL,
+  platform VARCHAR(10) NOT NULL DEFAULT 'android',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_device_token (token),
+  CONSTRAINT fk_device_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_device_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS add_ons (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,

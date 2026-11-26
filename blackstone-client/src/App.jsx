@@ -36,6 +36,7 @@ const Booking = lazy(() => import('./pages/Booking'))
 const BookingSuccess = lazy(() => import('./pages/BookingSuccess'))
 const PrivacyPolicy = lazy(() => import('./pages/Privacy'))
 const TermsConditions = lazy(() => import('./pages/TermsConditions'))
+const DeleteAccount = lazy(() => import('./pages/DeleteAccount'))
 
 // Everything below is behind a login (or is the login flow itself) — the
 // vast majority of visitors never touch it, so it's split into its own
@@ -138,6 +139,7 @@ function App() {
           <Route path="/booking" element={<Booking />} />
           <Route path="/booking/success" element={<BookingSuccess />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/delete-account" element={<DeleteAccount />} />
           <Route path="/terms" element={<TermsConditions />} />
 
           {/* Auth */}

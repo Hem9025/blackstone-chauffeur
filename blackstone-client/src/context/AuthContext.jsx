@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { stopNativePush } from '../utils/nativePush'
 import { auth as authApi } from '../utils/api'
 
 // App-wide login state — who's logged in (if anyone), and the actions that
@@ -68,6 +69,7 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
+    stopNativePush() // phone app only; no-op on the website
     localStorage.removeItem(TOKEN_KEY)
     setUser(null)
   }

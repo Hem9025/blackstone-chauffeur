@@ -10,13 +10,15 @@
     "preview": "vite preview",
     "app:sync": "vite build && cap sync",
     "app:android": "npm run app:sync && cap open android",
-    "app:ios": "npm run app:sync && cap open ios"
+    "app:ios": "npm run app:sync && cap open ios",
+    "app:assets": "capacitor-assets generate --iconBackgroundColor \"#030303\" --splashBackgroundColor \"#030303\""
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",
     "@capacitor/core": "^7.4.3",
     "@capacitor/filesystem": "^7.1.4",
     "@capacitor/ios": "^7.4.3",
+    "@capacitor/push-notifications": "^7.0.3",
     "@capacitor/share": "^7.0.2",
     "@react-google-maps/api": "^2.20.8",
     "@stripe/react-stripe-js": "^6.7.0",
@@ -29,6 +31,7 @@
     "yet-another-react-lightbox": "^3.32.1"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^7.4.3",
     "@tailwindcss/vite": "^4.3.2",
     "@types/react": "^19.2.17",

@@ -42,4 +42,35 @@ router.post('/unsubscribe', authCheck, async (req, res) => {
   }
 })
 
+// POST /api/push/device — the phone app registers its Firebase token for the
+// logged-in user (moves to this user if the phone was used by someone else).
+router.post('/device', authCheck, async (req, res) => {
+  const { token, platform } = req.body || {}
+  if (!token || typeof token !== 'string') return res.status(400).json({ message: 'token required' })
+  try {
+    await query(
+      `INSERT INTO device_tokens (user_id, token, platform) VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE user_id = VALUES(user_id), platform = VALUES(platform)`,
+      [req.user.id, token.slice(0, 500), platform === 'ios' ? 'ios' : 'android'],
+    )
+    res.json({ message: 'Registered' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to register device' })
+  }
+})
+
+// POST /api/push/device/remove — on log out, stop pushing to this phone.
+router.post('/device/remove', authCheck, async (req, res) => {
+  const { token } = req.body || {}
+  if (!token) return res.status(400).json({ message: 'token required' })
+  try {
+    await query('DELETE FROM device_tokens WHERE token = ? AND user_id = ?', [token, req.user.id])
+    res.json({ message: 'Removed' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Failed to remove device' })
+  }
+})
+
 export default router

@@ -152,6 +152,7 @@ export default function Footer() {
             <Link to="/contact" className="hover:text-brand-gold">Contact</Link>
             <Link to="/terms" className="hover:text-brand-gold">Terms &amp; Conditions</Link>
             <Link to="/privacy" className="hover:text-brand-gold">Privacy Policy</Link>
+            <Link to="/delete-account" className="hover:text-brand-gold">Delete Account</Link>
           </div>
 
           <div className="flex flex-col gap-3 text-sm">

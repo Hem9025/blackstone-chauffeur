@@ -304,7 +304,7 @@ function guessName(text) {
 // ---------------------------------------------------------------------------
 const RECORD_LABELS = [
   'client reference', 'client ref', 'booking reference', 'booking ref', 'drop-off', 'drop off', 'dropoff',
-  'pick-up', 'pick up', 'pickup', 'destination', 'passengers', 'passenger', 'customer', 'contact', 'client',
+  'pick-up', 'pick up', 'pickup', 'destination', 'drop', 'passengers', 'passenger', 'customer', 'contact', 'client',
   'flight', 'phone', 'mobile', 'date', 'time', 'pax', 'vehicle', 'notes', 'note', 'name', 'luggage', 'bags',
   'reference', 'ref',
 ]
@@ -320,7 +320,9 @@ function parseRecord(text) {
     const start = m.index + m[0].length
     const end = i + 1 < matches.length ? matches[i + 1].index : text.length
     const key = m[1].toLowerCase().replace(/[\s-]+/g, ' ')
-    const value = text.slice(start, end).replace(/\s+/g, ' ').replace(/[,;\s]+$/, '').trim()
+    // A value ends at the next label OR the end of its line, so extra lines
+    // below it ("4 passengers", "please bring a child seat") aren't swallowed.
+    const value = text.slice(start, end).split('\n')[0].replace(/\s+/g, ' ').replace(/[,;\s]+$/, '').trim()
     if (value && !(key in fields)) fields[key] = value
   })
 
@@ -454,7 +456,7 @@ export function parseWhatsappBooking(rawText, vehicles = []) {
       passenger_name: nameFromLead || rec.get('name', 'passenger', 'customer') || passenger_name,
       passenger_phone: (rec.get('contact', 'phone', 'mobile') && findPhone(rec.get('contact', 'phone', 'mobile'))) || passenger_phone,
       pickup: stripWhen(rec.get('pickup', 'pick up', 'pick-up')) || pickup,
-      dropoff: stripWhen(rec.get('dropoff', 'drop off', 'drop-off', 'destination')) || dropoff,
+      dropoff: stripWhen(rec.get('dropoff', 'drop off', 'drop-off', 'drop', 'destination')) || dropoff,
       service_type: flightRaw ? 'Airport Transfer' : serviceType,
       flight_number: flightCode ? flightCode.replace(/\s+/, '').toUpperCase() : flight_number,
       reference_number: clientRef || reference_number,

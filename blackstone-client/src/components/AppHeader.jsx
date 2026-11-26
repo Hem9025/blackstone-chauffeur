@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { startNativePush } from '../utils/nativePush'
 import { ChevronLeft } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import NotificationBell from './NotificationBell'
@@ -36,6 +38,9 @@ export default function AppHeader() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { user } = useAuth()
+  useEffect(() => {
+    if (user) startNativePush(navigate)
+  }, [user, navigate])
   const title = TITLES[pathname] || (pathname.startsWith('/admin/') ? 'Admin' : 'BlackStone')
   const showBack = !ROOTS.includes(pathname)
 

@@ -83,14 +83,21 @@ async function ensureReady() {
         const { runMigrations } = await import('./migrations.js')
         await runMigrations(rawQuery, dbConfig.database)
 
-        const { runSeed } = await import('./seed.js')
-        // Bypass the public query()/ensureReady() gate below — calling back
-        // through query() here would await this very promise and deadlock.
-        await runSeed({ silent: true, queryFn: rawQuery })
-
         console.log(`[db] Connected to MySQL database "${dbConfig.database}" on ${dbConfig.host}:${dbConfig.port}.`)
-        console.log('[db] Schema verified, demo data seeded.')
-        console.log('[db] Demo logins ready (password: Password123!): admin@demo.com, provider@demo.com, customer@demo.com, driver@demo.com')
+        console.log('[db] Schema verified.')
+
+        // Demo accounts (admin@demo.com etc., all with a publicly-known
+        // password) and demo vehicles are ONLY created when SEED_DEMO_DATA=true
+        // is set — i.e. on a developer's own machine. They are never created
+        // on the live server, so nobody can log in with the demo password.
+        if (process.env.SEED_DEMO_DATA === 'true') {
+          const { runSeed } = await import('./seed.js')
+          // Bypass the public query()/ensureReady() gate below — calling back
+          // through query() here would await this very promise and deadlock.
+          await runSeed({ silent: true, queryFn: rawQuery })
+          console.log('[db] Demo data seeded (SEED_DEMO_DATA=true).')
+          console.log('[db] Demo logins ready (password: Password123!): admin@demo.com, provider@demo.com, customer@demo.com, driver@demo.com')
+        }
       } catch (err) {
         readyPromise = null // allow a retry on the next query instead of failing forever
         if (err.code === 'ER_BAD_DB_ERROR') {
